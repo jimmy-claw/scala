@@ -42,6 +42,7 @@ set_target_properties(scala_plugin PROPERTIES
 target_sources(scala_plugin PRIVATE
     src/calendar_module.cpp
     src/calendar_store.cpp
+    src/calendar_sync.cpp
     src/plugin.cpp
 )
 
