@@ -17,40 +17,53 @@ void CalendarStore::setClient(LogosAPIClient *client) {
 }
 #endif
 
+// ── Namespace ────────────────────────────────────────────────────────────────
+
+void CalendarStore::setNamespace(const QString &ns) {
+    m_namespace = ns.isEmpty() ? QStringLiteral("default") : ns;
+}
+
+QString CalendarStore::namespacedKey(const QString &key) const {
+    return QStringLiteral("scala:") + m_namespace + QStringLiteral(":") + key;
+}
+
 // ── KV helpers ───────────────────────────────────────────────────────────────
 
 void CalendarStore::kvSet(const QString &key, const QString &value) const {
+    const QString nsKey = namespacedKey(key);
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "set",
-                                       QString(KV_NS), key, value);
+                                       QString(KV_NS), nsKey, value);
     }
 #else
-    m_mem[key] = value;
+    m_mem[nsKey] = value;
 #endif
 }
 
 QString CalendarStore::kvGet(const QString &key) const {
+    const QString nsKey = namespacedKey(key);
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         QVariant result = m_kvClient->invokeRemoteMethod("kv_module", "get",
-                                                         QString(KV_NS), key);
+                                                         QString(KV_NS), nsKey);
         return result.toString();
     }
     return {};
 #else
-    return m_mem.value(key);
+    return m_mem.value(nsKey);
 #endif
 }
 
 void CalendarStore::kvRemove(const QString &key) const {
+    const QString nsKey = namespacedKey(key);
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "remove",
-                                       QString(KV_NS), key);
+                                       QString(KV_NS), nsKey);
     }
 #else
-    m_mem.remove(key);
+    m_mem.remove(nsKey);
 #endif
 }
 

@@ -41,6 +41,12 @@ LogosCalendar::LogosCalendar(QObject *parent)
     }
 }
 
+// ── Namespace ────────────────────────────────────────────────────────────────
+
+void LogosCalendar::setNamespace(const QString &ns) {
+    m_store.setNamespace(ns);
+}
+
 // ── Identity ─────────────────────────────────────────────────────────────────
 
 QString LogosCalendar::getIdentity() const {
