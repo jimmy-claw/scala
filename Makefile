@@ -38,7 +38,7 @@ screenshot: standalone
 setup-logoscore:
 	@echo "Building logoscore via Nix (this may take a while on first run)..."
 	mkdir -p $(TOOLS_DIR)
-	nix build github:logos-co/logos-liblogos -o $(TOOLS_DIR)/logoscore
+	nix --extra-experimental-features 'nix-command flakes' build github:logos-co/logos-liblogos -o $(TOOLS_DIR)/logoscore
 	@echo "logoscore ready at: $(LOGOSCORE)"
 
 ## Build and install kv_module
@@ -46,7 +46,7 @@ setup-kv-module:
 	@echo "Building kv_module..."
 	mkdir -p /tmp/logos-kv-module
 	cd /tmp/logos-kv-module && git clone --depth 1 https://github.com/jimmy-claw/logos-kv-module . 2>/dev/null || git pull
-	cd /tmp/logos-kv-module && nix build .#module -o ./result
+	cd /tmp/logos-kv-module && nix --extra-experimental-features 'nix-command flakes' build .#module -o ./result
 	mkdir -p $(MODULES_DIR)/kv_module
 	cp /tmp/logos-kv-module/result/lib/kv_module_plugin.so $(MODULES_DIR)/kv_module/
 	cp /tmp/logos-kv-module/manifest.json $(MODULES_DIR)/kv_module/
