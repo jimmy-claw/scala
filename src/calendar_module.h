@@ -78,6 +78,9 @@ public:
     Q_INVOKABLE QString version() const { return QStringLiteral("0.1.0"); }
 #endif
 
+    // ── Namespace API ─────────────────────────────────────────────────────
+    Q_INVOKABLE void setNamespace(const QString &ns);
+
     // ── Identity API ────────────────────────────────────────────────────────
     Q_INVOKABLE QString getIdentity() const;
     Q_INVOKABLE void setIdentity(const QString &pubkeyHex);

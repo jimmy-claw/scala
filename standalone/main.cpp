@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
     qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
 
     LogosCalendar module;
+    module.setNamespace(qEnvironmentVariable("SCALA_NAMESPACE", "default"));
 
     QQuickView view;
     view.rootContext()->setContextProperty("calendarModule", &module);

@@ -52,8 +52,13 @@ public:
     QString kvGet(const QString &key) const;
     void kvRemove(const QString &key) const;
 
+    // Namespace support for multi-instance testing
+    void setNamespace(const QString &ns);
+    QString namespacedKey(const QString &key) const;
+
 private:
     static constexpr const char *KV_NS = "scala";
+    QString m_namespace = QStringLiteral("default");
 
     // Index helpers
     QStringList getIndex(const QString &indexKey) const;
