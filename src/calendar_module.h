@@ -106,6 +106,10 @@ public:
     Q_INVOKABLE QString parseShareLink(const QString &link) override;
     Q_INVOKABLE bool handleShareLink(const QString &link) override;
 
+    // ── Settings API ─────────────────────────────────────────────────────
+    Q_INVOKABLE void setSetting(const QString &key, const QString &value);
+    Q_INVOKABLE QString getSetting(const QString &key, const QString &defaultValue = QString());
+
 signals:
     void eventResponse(const QString &eventName, const QVariantList &args);
     void syncStatusChanged(const QString &calendarId, const QString &status);

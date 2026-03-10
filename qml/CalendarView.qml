@@ -205,6 +205,12 @@ Item {
     Component.onCompleted: {
         refreshCalendars()
         refreshEvents()
+        // Load settings
+        if (typeof calendarModule !== "undefined") {
+            var dv = calendarModule.getSetting("defaultView", "month")
+            if (dv === "month" || dv === "week" || dv === "day")
+                viewMode = dv
+        }
     }
 
     RowLayout {
@@ -349,6 +355,30 @@ Item {
                             color: "white"
                             font.pixelSize: 14
                             font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Item { width: 4 }
+
+                    // Settings button
+                    Button {
+                        text: "\u2699"
+                        flat: true
+                        onClicked: settingsPanel.open()
+                        implicitWidth: 36
+                        implicitHeight: 36
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Settings"
+                        background: Rectangle {
+                            radius: 4
+                            color: parent.hovered ? "#1976D2" : "transparent"
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 18
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -1052,6 +1082,20 @@ Item {
                 refreshEvents()
                 calendarGrid.events = eventsForGrid()
                 shareDialog.close()
+            }
+        }
+    }
+
+    // ── Settings panel ───────────────────────────────────────────────────
+    SettingsPanel {
+        id: settingsPanel
+
+        onSettingsSaved: {
+            // Apply default view setting
+            if (typeof calendarModule !== "undefined") {
+                var dv = calendarModule.getSetting("defaultView", "month")
+                if (dv === "month" || dv === "week" || dv === "day")
+                    viewMode = dv
             }
         }
     }
