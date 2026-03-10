@@ -53,7 +53,8 @@ Item {
                 calId: c.id,
                 calName: c.name,
                 calColor: c.color,
-                calVisible: true
+                calVisible: true,
+                creatorId: c.creatorId || ""
             })
         }
     }
@@ -215,6 +216,7 @@ Item {
             Layout.preferredWidth: 220
             Layout.fillHeight: true
             calendarModel: sidebarCalendarModel
+            currentIdentity: typeof calendarModule !== "undefined" ? calendarModule.getIdentity() : ""
 
             onCalendarToggled: function(calId, vis) {
                 console.log("Calendar toggled:", calId, vis);
