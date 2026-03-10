@@ -59,7 +59,7 @@ setup: setup-logoscore setup-kv-module
 
 ## Start Logos Core with kv_module (run in separate terminal)
 run-core:
-	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load kv_module
+	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module
 
 ## Run Scala standalone (connects to Logos Core if running)
 run: standalone
