@@ -1,11 +1,24 @@
 name: scala
+display_name: Scala Calendar
 version: 0.1.0
-type: core
-category: general
-description: "Secure Calendar App — privacy-first shared calendar module for Logos Core"
+description: Privacy-first shared calendar app built on Logos Core
+author: jimmy-claw
+license: MIT
+entry_point: scala_plugin.so
+qt_version: "6"
 
 dependencies:
   - kv_module
+  - messaging_module
+  - accounts_module
+
+qml_files:
+  - qml/CalendarView.qml
+  - qml/CalendarGrid.qml
+  - qml/CalendarSidebar.qml
+  - qml/EventModal.qml
+  - qml/EventDetails.qml
+  - qml/ShareDialog.qml
 
 nix_packages:
   build: []

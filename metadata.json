@@ -14,6 +14,6 @@
     "darwin-arm64": "scala_plugin.dylib",
     "windows-x86_64": "scala_plugin.dll"
   },
-  "dependencies": ["kv_module", "messaging_module"],
+  "dependencies": ["kv_module", "messaging_module", "accounts_module"],
   "capabilities": []
 }
