@@ -64,17 +64,45 @@ cmake --build build-standalone -j4 --target scala_standalone
 
 ### Run with Logos Core (recommended — real KV + messaging)
 
-Scala uses Logos Core modules for storage and messaging. For real persistence, run `logoscore` with `kv_module` alongside the standalone runner:
+Scala uses Logos Core modules for storage and messaging. For real persistence, run `logoscore` with `kv_module` alongside the standalone runner.
+
+**Step 1: Get logoscore**
+
+There is no pre-built binary yet — you need to build it from source via Nix:
 
 ```bash
-# Terminal 1 — start Logos Core with kv_module
-logoscore --modules-dir ./modules --load kv_module
+# Requires Nix with flakes enabled
+nix build github:logos-co/logos-liblogos
+# Binary will be at: ./result/bin/logoscore
+```
 
-# Terminal 2 — run Scala (connects via QtRO)
+Or if your team has a pre-built binary (e.g. from Václav's laptop e2e tests):
+```
+/nix/store/<hash>-logos-liblogos-build-0.1.0/bin/logoscore
+```
+
+**Step 2: Build and install kv_module**
+
+```bash
+git clone https://github.com/jimmy-claw/logos-kv-module
+cd logos-kv-module
+nix build .#module
+mkdir -p ~/.local/share/logos/modules/kv_module
+cp result/lib/kv_module_plugin.so ~/.local/share/logos/modules/kv_module/
+cp manifest.json ~/.local/share/logos/modules/kv_module/
+```
+
+**Step 3: Run**
+
+```bash
+# Terminal 1 — Logos Core with kv_module
+logoscore --modules-dir ~/.local/share/logos/modules --load kv_module
+
+# Terminal 2 — Scala
 LOGOS_CORE_AVAILABLE=1 ./build-standalone/scala_standalone
 ```
 
-This gives you real persistent storage, real identity, and real P2P sync — no in-memory fallback.
+> **Note:** Logos Core is under active development. If you hit issues, the standalone runner (without Logos Core) works for UI development — data will be in-memory only.
 
 ### Run locally
 
