@@ -1,0 +1,13 @@
+build/
+*.o
+*.so
+*.dylib
+*.dll
+moc_*
+*.user
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+result
+.direnv/
