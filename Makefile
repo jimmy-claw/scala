@@ -19,7 +19,7 @@ build:
 
 standalone:
 	mkdir -p $(BUILD_STANDALONE)
-	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) -DBUILD_STANDALONE=ON && make -j$$(nproc) --target scala_standalone
+	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) -DBUILD_STANDALONE=ON && cmake --build . -j$$(nproc) --target scala_standalone
 
 test: build
 	cd $(BUILD_DIR) && ctest --output-on-failure -V
