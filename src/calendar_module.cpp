@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMessageAuthenticationCode>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QUuid>
@@ -29,6 +30,38 @@ LogosCalendar::LogosCalendar(QObject *parent)
             this, [this](const QString &calendarId) {
         emit syncStatusChanged(calendarId, QStringLiteral("offline"));
     });
+
+    // Load stored identity or generate stable fallback
+    QString stored = m_store.kvGet(QStringLiteral("identity"));
+    if (!stored.isEmpty()) {
+        m_identity = stored;
+    } else {
+        m_identity = generateStableIdentity();
+        m_store.kvSet(QStringLiteral("identity"), m_identity);
+    }
+}
+
+// ── Identity ─────────────────────────────────────────────────────────────────
+
+QString LogosCalendar::getIdentity() const {
+    return m_identity;
+}
+
+void LogosCalendar::setIdentity(const QString &pubkeyHex) {
+    if (m_identity != pubkeyHex) {
+        m_identity = pubkeyHex;
+        m_store.kvSet(QStringLiteral("identity"), m_identity);
+        emit identityChanged();
+    }
+}
+
+QString LogosCalendar::generateStableIdentity() {
+    QByteArray machineId = QSysInfo::machineUniqueId();
+    if (machineId.isEmpty())
+        machineId = QByteArray("scala-fallback-id");
+    QByteArray hash = QCryptographicHash::hash(
+        machineId, QCryptographicHash::Sha256);
+    return QString::fromLatin1(hash.toHex());
 }
 
 // ── Logos Core lifecycle ─────────────────────────────────────────────────────
@@ -62,7 +95,20 @@ void LogosCalendar::initLogos(LogosAPI *logosAPIInstance) {
         m_sync->setMessagingClient(m_messagingClient);
     }
 
-    qInfo() << "LogosCalendar: initialized. version:" << version();
+    // Get identity from accounts module
+    auto accountsClient = m_logosAPI->getClient("accounts_module");
+    if (accountsClient) {
+        QVariant result = accountsClient->invokeRemoteMethod(
+            "accounts_module", "getActiveAccountPubkey");
+        QString pubkey = result.toString();
+        if (!pubkey.isEmpty()) {
+            m_identity = pubkey;
+            m_store.kvSet(QStringLiteral("identity"), m_identity);
+        }
+    }
+
+    qInfo() << "LogosCalendar: initialized. version:" << version()
+            << "identity:" << m_identity.left(8) + "...";
     emit eventResponse("initialized", QVariantList() << "scala" << "0.1.0");
 }
 #endif
@@ -113,6 +159,7 @@ QString LogosCalendar::createEvent(const QString &calendarId, const QString &eve
     scala::CalendarEvent ev = scala::CalendarEvent::fromJson(obj);
     ev.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     ev.calendarId = calendarId;
+    ev.creatorId = m_identity;
     qint64 now = QDateTime::currentMSecsSinceEpoch();
     ev.createdAt = now;
     ev.updatedAt = now;
@@ -124,6 +171,7 @@ QString LogosCalendar::createEvent(const QString &calendarId, const QString &eve
         SyncMessage msg;
         msg.type = SyncMessageType::CreateEvent;
         msg.calendarId = calendarId;
+        msg.senderId = m_identity;
         msg.payload = QString::fromUtf8(
             QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact));
         msg.timestamp = now;
@@ -134,11 +182,22 @@ QString LogosCalendar::createEvent(const QString &calendarId, const QString &eve
     return ev.id;
 }
 
-bool LogosCalendar::updateEvent(const QString &eventJson) {
+QString LogosCalendar::updateEvent(const QString &eventJson) {
     QJsonDocument doc = QJsonDocument::fromJson(eventJson.toUtf8());
     QJsonObject obj = doc.object();
 
     scala::CalendarEvent ev = scala::CalendarEvent::fromJson(obj);
+
+    // Ownership check: only creator can update
+    auto existing = m_store.getEvent(ev.id);
+    if (!existing.id.isEmpty() && !existing.creatorId.isEmpty()
+        && existing.creatorId != m_identity) {
+        QJsonObject err;
+        err["error"] = QStringLiteral("not_authorized");
+        return QString::fromUtf8(QJsonDocument(err).toJson(QJsonDocument::Compact));
+    }
+
+    ev.creatorId = existing.creatorId;
     ev.updatedAt = QDateTime::currentMSecsSinceEpoch();
 
     bool ok = m_store.updateEvent(ev);
@@ -148,32 +207,45 @@ bool LogosCalendar::updateEvent(const QString &eventJson) {
             SyncMessage msg;
             msg.type = SyncMessageType::UpdateEvent;
             msg.calendarId = ev.calendarId;
+            msg.senderId = m_identity;
             msg.payload = QString::fromUtf8(
                 QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact));
             msg.timestamp = ev.updatedAt;
             m_sync->sendMessage(ev.calendarId, msg);
         }
         emit eventResponse("event_updated", QVariantList() << ev.id);
+        return ev.id;
     }
-    return ok;
+    return {};
 }
 
-bool LogosCalendar::deleteEvent(const QString &id) {
-    // Get event before deleting to know the calendarId
+QString LogosCalendar::deleteEvent(const QString &id) {
+    // Get event before deleting to check ownership and know calendarId
     auto ev = m_store.getEvent(id);
+
+    // Ownership check: only creator can delete
+    if (!ev.id.isEmpty() && !ev.creatorId.isEmpty()
+        && ev.creatorId != m_identity) {
+        QJsonObject err;
+        err["error"] = QStringLiteral("not_authorized");
+        return QString::fromUtf8(QJsonDocument(err).toJson(QJsonDocument::Compact));
+    }
+
     bool ok = m_store.deleteEvent(id);
     if (ok) {
         if (!ev.calendarId.isEmpty() && m_sync->isSyncing(ev.calendarId)) {
             SyncMessage msg;
             msg.type = SyncMessageType::DeleteEvent;
             msg.calendarId = ev.calendarId;
+            msg.senderId = m_identity;
             msg.payload = id;
             msg.timestamp = QDateTime::currentMSecsSinceEpoch();
             m_sync->sendMessage(ev.calendarId, msg);
         }
         emit eventResponse("event_deleted", QVariantList() << id);
+        return id;
     }
-    return ok;
+    return {};
 }
 
 QString LogosCalendar::listEvents(const QString &calendarId) {
@@ -244,6 +316,7 @@ bool LogosCalendar::joinSharedCalendar(const QString &calendarId,
     SyncMessage msg;
     msg.type = SyncMessageType::SyncEvents;
     msg.calendarId = calendarId;
+    msg.senderId = m_identity;
     msg.timestamp = QDateTime::currentMSecsSinceEpoch();
     m_sync->sendMessage(calendarId, msg);
 
@@ -390,6 +463,7 @@ void LogosCalendar::onSyncMessageReceived(const QString &calendarId,
             SyncMessage reply;
             reply.type = SyncMessageType::CreateEvent;
             reply.calendarId = calendarId;
+            reply.senderId = m_identity;
             reply.payload = QString::fromUtf8(
                 QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact));
             reply.timestamp = QDateTime::currentMSecsSinceEpoch();

@@ -47,13 +47,13 @@ public:
     bool updateEvent(const scala::CalendarEvent &ev);
     bool deleteEvent(const QString &id);
 
-private:
-    static constexpr const char *KV_NS = "scala";
-
-    // KV helpers
+    // KV helpers (public for identity storage)
     void kvSet(const QString &key, const QString &value) const;
     QString kvGet(const QString &key) const;
     void kvRemove(const QString &key) const;
+
+private:
+    static constexpr const char *KV_NS = "scala";
 
     // Index helpers
     QStringList getIndex(const QString &indexKey) const;
