@@ -24,7 +24,7 @@ NIX_QTDECL     ?= $(shell ls -d /nix/store/*-qtdeclarative-6.9.* 2>/dev/null | g
 NIX_QTREMOBJ   ?= $(shell ls -d /nix/store/*-qtremoteobjects-6.9.* 2>/dev/null | grep -v '\.drv$$' | grep -v dev | head -1)
 NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
-.PHONY: all build test clean standalone screenshot \
+.PHONY: all build test test-cli clean standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli
 
@@ -46,6 +46,10 @@ standalone:
 
 test: build
 	cd $(BUILD_DIR) && ctest --output-on-failure -V
+
+test-cli:
+	@echo "Running CLI integration tests (requires make run-core in another terminal)..."
+	bash tests/cli/test_cli.sh ./cli/scala-cli.sh
 
 clean:
 	rm -rf $(BUILD_DIR) $(BUILD_STANDALONE)

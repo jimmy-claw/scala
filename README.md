@@ -23,6 +23,7 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ Standalone runner for local development and screenshots
 - ✅ CLI wrapper (`scala-cli.sh`) for headless use
 - ✅ 59 tests across 6 test suites
+- ✅ CLI integration tests (`make test-cli`)
 
 **Planned:**
 - Logos Core IComponent packaging (lgpm)
@@ -30,7 +31,6 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - At-rest KV encryption (#34)
 - Logos Storage attachments
 - QML UI tests with QQuickTest (#41)
-- CLI integration tests (#51)
 
 ## Background
 
@@ -57,6 +57,7 @@ Other targets:
 ```bash
 make build          # build plugin only (no standalone)
 make test           # run all tests (59 tests, 6 suites)
+make test-cli       # CLI integration tests (requires make run-core)
 make standalone     # build standalone runner
 make screenshot     # take a headless screenshot (requires xvfb + scrot)
 make install-cli    # install scala-cli.sh to ~/.local/bin/scala-cli
