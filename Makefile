@@ -3,7 +3,26 @@ BUILD_STANDALONE ?= build-standalone
 CMAKE_FLAGS      ?= -DCMAKE_BUILD_TYPE=Debug
 TOOLS_DIR        ?= ./tools
 MODULES_DIR      ?= ./modules
-LOGOSCORE        ?= $(TOOLS_DIR)/logoscore/bin/logoscore
+
+# ── Nix store auto-detection ─────────────────────────────────────────────────
+# Split packages: headers, lib, and bin are separate nix outputs
+LOGOS_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-liblogos-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
+LOGOS_LIB_NIX     ?= $(shell ls -d /nix/store/*logos-liblogos-lib-* 2>/dev/null | grep -v '\.drv$$' | head -1)
+LOGOS_BIN_NIX     ?= $(shell ls -d /nix/store/*logos-liblogos-bin-* 2>/dev/null | grep -v '\.drv$$' | head -1)
+LOGOS_SDK_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-cpp-sdk-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
+LOGOS_SDK_LIB_NIX     ?= $(shell ls -d /nix/store/*logos-cpp-sdk-lib-* 2>/dev/null | grep -v '\.drv$$' | head -1)
+
+# Fallback: unsplit package (from nix build)
+LOGOS_LIBLOGOS_NIX ?= $(shell ls -d $(TOOLS_DIR)/logoscore 2>/dev/null)
+
+# logoscore binary: prefer split bin package, fall back to tools dir
+LOGOSCORE ?= $(if $(LOGOS_BIN_NIX),$(LOGOS_BIN_NIX)/bin/logoscore,$(TOOLS_DIR)/logoscore/bin/logoscore)
+
+# Nix Qt paths for building against nix Qt 6.9
+NIX_QTBASE     ?= $(shell ls -d /nix/store/*-qtbase-6.9.* 2>/dev/null | grep -v '\.drv$$' | grep -v dev | grep -v plugins | head -1)
+NIX_QTDECL     ?= $(shell ls -d /nix/store/*-qtdeclarative-6.9.* 2>/dev/null | grep -v '\.drv$$' | grep -v dev | head -1)
+NIX_QTREMOBJ   ?= $(shell ls -d /nix/store/*-qtremoteobjects-6.9.* 2>/dev/null | grep -v '\.drv$$' | grep -v dev | head -1)
+NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
 .PHONY: all build test clean standalone screenshot \
         setup setup-logoscore setup-kv-module \
@@ -19,7 +38,11 @@ build:
 
 standalone:
 	mkdir -p $(BUILD_STANDALONE)
-	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) -DBUILD_STANDALONE=ON && cmake --build . -j$$(nproc) --target scala_standalone
+	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) \
+		-DBUILD_STANDALONE=ON \
+		$(if $(LOGOS_HEADERS_NIX),-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged -DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged,) \
+		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
+		&& cmake --build . -j$$(nproc) --target scala_standalone
 
 test: build
 	cd $(BUILD_DIR) && ctest --output-on-failure -V
@@ -41,22 +64,34 @@ setup-logoscore:
 	nix --extra-experimental-features 'nix-command flakes' build github:logos-co/logos-liblogos -o $(TOOLS_DIR)/logoscore
 	@echo "logoscore ready at: $(LOGOSCORE)"
 
-## Build and install kv_module (requires logos-liblogos headers from nix)
-## Set LOGOS_LIBLOGOS_NIX to the nix store path of logos-liblogos-build
-## e.g. make setup-kv-module LOGOS_LIBLOGOS_NIX=/nix/store/<hash>-logos-liblogos-build-0.1.0
-LOGOS_LIBLOGOS_NIX ?= $(shell ls -d /nix/store/*logos-liblogos-build* 2>/dev/null | head -1)
+## Create merged symlink dirs for split nix packages
+setup-nix-merged:
+	@if [ -z "$(LOGOS_HEADERS_NIX)" ]; then echo "ERROR: logos-liblogos-headers not found in nix store."; exit 1; fi
+	@if [ -z "$(LOGOS_SDK_HEADERS_NIX)" ]; then echo "ERROR: logos-cpp-sdk-headers not found in nix store."; exit 1; fi
+	@echo "Creating merged SDK dirs from split nix packages..."
+	rm -rf /tmp/logos-cpp-sdk-merged /tmp/logos-liblogos-merged
+	mkdir -p /tmp/logos-cpp-sdk-merged/include /tmp/logos-cpp-sdk-merged/lib
+	ln -sf $(LOGOS_SDK_HEADERS_NIX)/include/* /tmp/logos-cpp-sdk-merged/include/
+	ln -sf $(LOGOS_SDK_LIB_NIX)/lib/* /tmp/logos-cpp-sdk-merged/lib/
+	mkdir -p /tmp/logos-liblogos-merged/include /tmp/logos-liblogos-merged/lib
+	ln -sf $(LOGOS_HEADERS_NIX)/include/* /tmp/logos-liblogos-merged/include/
+	ln -sf $(LOGOS_LIB_NIX)/lib/* /tmp/logos-liblogos-merged/lib/
+	@echo "Merged dirs ready at /tmp/logos-{cpp-sdk,liblogos}-merged/"
 
-setup-kv-module:
+## Build and install kv_module (requires split nix packages or nix build output)
+setup-kv-module: setup-nix-merged
 	@echo "Building kv_module with Logos Core headers..."
-	@if [ -z "$(LOGOS_LIBLOGOS_NIX)" ]; then echo "ERROR: logos-liblogos not found in nix store. Run 'make setup-logoscore' first."; exit 1; fi
-	@echo "Using logos-liblogos at: $(LOGOS_LIBLOGOS_NIX)"
-	mkdir -p /tmp/logos-kv-module
-	cd /tmp/logos-kv-module && git clone --depth 1 https://github.com/jimmy-claw/logos-kv-module . 2>/dev/null || git pull
-	cd /tmp/logos-kv-module && cmake -B build-logos 		-DCMAKE_BUILD_TYPE=Release 		-DLOGOS_CORE_AVAILABLE=ON 		-DCMAKE_CXX_FLAGS="-I$(LOGOS_LIBLOGOS_NIX)/include" 		&& cmake --build build-logos -j$$(nproc)
+	rm -rf /tmp/logos-kv-module
+	git clone --depth 1 https://github.com/jimmy-claw/logos-kv-module /tmp/logos-kv-module
+	cd /tmp/logos-kv-module && cmake -B build-logos \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
+		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
+		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
+		&& cmake --build build-logos -j$$(nproc)
 	mkdir -p $(MODULES_DIR)/kv_module
 	cp $$(find /tmp/logos-kv-module/build-logos -name '*.so' | head -1) $(MODULES_DIR)/kv_module/kv_module_plugin.so
 	echo '{"name":"kv_module","version":"0.1.0","main":{"linux-x86_64":"kv_module_plugin.so","linux-aarch64":"kv_module_plugin.so","darwin-arm64":"kv_module_plugin.so","darwin-x86_64":"kv_module_plugin.so"}}' > $(MODULES_DIR)/kv_module/manifest.json
-	@echo "kv_module ready at: $(MODULES_DIR)/kv_module/"
 	@echo "kv_module ready at: $(MODULES_DIR)/kv_module/"
 
 ## Full setup: logoscore + kv_module
@@ -72,11 +107,18 @@ run-core:
 
 ## Run Scala standalone (connects to Logos Core if running)
 run: standalone
-	LOGOS_CORE_AVAILABLE=1 ./$(BUILD_STANDALONE)/scala_standalone
+	QT_QPA_PLATFORM=offscreen \
+	QT_PLUGIN_PATH=$(NIX_QTBASE)/lib/qt-6/plugins \
+	QML_IMPORT_PATH=$(NIX_QTDECL)/lib/qt-6/qml \
+	LOGOS_CORE_AVAILABLE=1 \
+	./$(BUILD_STANDALONE)/scala_standalone
 
 ## Full dev stack: build everything and run
 ## Run 'make run-core' in a separate terminal first
 dev: standalone
 	@echo "Starting Scala..."
 	@echo "TIP: Run 'make run-core' in another terminal for persistent storage."
-	LOGOS_CORE_AVAILABLE=1 ./$(BUILD_STANDALONE)/scala_standalone
+	QT_PLUGIN_PATH=$(NIX_QTBASE)/lib/qt-6/plugins \
+	QML_IMPORT_PATH=$(NIX_QTDECL)/lib/qt-6/qml \
+	LOGOS_CORE_AVAILABLE=1 \
+	./$(BUILD_STANDALONE)/scala_standalone
