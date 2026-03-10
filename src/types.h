@@ -68,6 +68,7 @@ struct Calendar {
     QString id;
     QString name;
     QString color;
+    QString creatorId;
     bool isShared = false;
     QString encryptionKey;
     qint64 createdAt = 0;
@@ -78,6 +79,7 @@ struct Calendar {
         obj["id"] = id;
         obj["name"] = name;
         obj["color"] = color;
+        obj["creatorId"] = creatorId;
         obj["isShared"] = isShared;
         obj["encryptionKey"] = encryptionKey;
         obj["createdAt"] = createdAt;
@@ -90,6 +92,7 @@ struct Calendar {
         cal.id = obj["id"].toString();
         cal.name = obj["name"].toString();
         cal.color = obj["color"].toString();
+        cal.creatorId = obj["creatorId"].toString();
         cal.isShared = obj["isShared"].toBool();
         cal.encryptionKey = obj["encryptionKey"].toString();
         cal.createdAt = static_cast<qint64>(obj["createdAt"].toDouble());

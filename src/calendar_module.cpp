@@ -126,6 +126,7 @@ QString LogosCalendar::createCalendar(const QString &name, const QString &color)
     cal.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     cal.name = name;
     cal.color = color;
+    cal.creatorId = m_identity;
     cal.isShared = false;
     qint64 now = QDateTime::currentMSecsSinceEpoch();
     cal.createdAt = now;
