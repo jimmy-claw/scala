@@ -20,6 +20,7 @@ Rectangle {
     signal calendarToggled(string calendarId, bool visible)
     signal newCalendarRequested()
     signal calendarSelected(string calendarId)
+    signal shareRequested(string calendarId, string calendarName)
 
     // ── Default calendars (mock) ───────────────────────────────────────────
     ListModel {
@@ -94,6 +95,23 @@ Rectangle {
                         color: titleColor
                         elide: Text.ElideRight
                         Layout.fillWidth: true
+                    }
+
+                    // Share button
+                    Button {
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        flat: true
+                        text: "\u21AA"
+                        font.pixelSize: 14
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Share"
+                        onClicked: shareRequested(calId, calName)
+
+                        background: Rectangle {
+                            radius: 4
+                            color: parent.hovered ? "#e3f2fd" : "transparent"
+                        }
                     }
 
                     // Visibility toggle
