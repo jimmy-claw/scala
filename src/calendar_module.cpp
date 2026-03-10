@@ -431,6 +431,17 @@ bool LogosCalendar::handleShareLink(const QString &link) {
     return joinSharedCalendar(id, key);
 }
 
+// ── Settings API ─────────────────────────────────────────────────────────────
+
+void LogosCalendar::setSetting(const QString &key, const QString &value) {
+    m_store.kvSet(QStringLiteral("setting_") + key, value);
+}
+
+QString LogosCalendar::getSetting(const QString &key, const QString &defaultValue) {
+    QString val = m_store.kvGet(QStringLiteral("setting_") + key);
+    return val.isEmpty() ? defaultValue : val;
+}
+
 // ── Incoming sync messages ───────────────────────────────────────────────────
 
 void LogosCalendar::onSyncMessageReceived(const QString &calendarId,

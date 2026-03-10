@@ -19,6 +19,7 @@ qml_files:
   - qml/EventModal.qml
   - qml/EventDetails.qml
   - qml/ShareDialog.qml
+  - qml/SettingsPanel.qml
 
 nix_packages:
   build: []

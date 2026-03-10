@@ -119,6 +119,7 @@ if(BUILD_STANDALONE)
             qml/EventModal.qml
             qml/EventDetails.qml
             qml/ShareDialog.qml
+            qml/SettingsPanel.qml
         RESOURCE_PREFIX "/ScalaApp"
     )
 
