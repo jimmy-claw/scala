@@ -1,0 +1,12 @@
+{
+  "name": "scala",
+  "version": "0.1.0",
+  "description": "Privacy-first shared calendar app built on Logos Core",
+  "main": {
+    "linux-x86_64": "scala_plugin.so",
+    "linux-aarch64": "scala_plugin.so",
+    "darwin-arm64": "scala_plugin.so",
+    "darwin-x86_64": "scala_plugin.so"
+  },
+  "dependencies": ["kv_module", "messaging_module", "accounts_module"]
+}
