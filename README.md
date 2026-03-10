@@ -45,8 +45,13 @@ sudo apt install xvfb scrot
 ### Build the plugin
 
 ```bash
+# cmake (recommended for local dev)
 cmake -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j4
+
+# Nix (for Logos Core packaging)
+nix build .#module   # builds scala_plugin.so
+nix build .#ui       # packages QML files
 ```
 
 ### Build the standalone runner
