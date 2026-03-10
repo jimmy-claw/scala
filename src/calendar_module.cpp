@@ -432,6 +432,44 @@ bool LogosCalendar::handleShareLink(const QString &link) {
     return joinSharedCalendar(id, key);
 }
 
+// ── Reminders API ────────────────────────────────────────────────────────────
+
+QString LogosCalendar::getPendingReminders() {
+    QJsonArray pending;
+    QDateTime now = QDateTime::currentDateTime();
+
+    auto calendars = m_store.listCalendars();
+    for (const auto &cal : calendars) {
+        auto events = m_store.listEvents(cal.id);
+        for (const auto &ev : events) {
+            if (ev.reminderMinutes < 0)
+                continue;
+
+            // Check if already reminded
+            QString reminderKey = QStringLiteral("reminder:") + ev.id;
+            if (m_store.kvGet(reminderKey) == QStringLiteral("fired"))
+                continue;
+
+            // Check if event starts within the reminder window
+            qint64 msBefore = static_cast<qint64>(ev.reminderMinutes) * 60 * 1000;
+            QDateTime reminderTime = ev.startTime.addMSecs(-msBefore);
+            if (now >= reminderTime && now < ev.startTime) {
+                QJsonObject obj;
+                obj[QStringLiteral("id")] = ev.id;
+                obj[QStringLiteral("title")] = ev.title;
+                obj[QStringLiteral("startTime")] = ev.startTime.toMSecsSinceEpoch();
+                obj[QStringLiteral("calendarId")] = ev.calendarId;
+                pending.append(obj);
+
+                // Mark as fired
+                m_store.kvSet(reminderKey, QStringLiteral("fired"));
+            }
+        }
+    }
+
+    return QString::fromUtf8(QJsonDocument(pending).toJson(QJsonDocument::Compact));
+}
+
 // ── Settings API ─────────────────────────────────────────────────────────────
 
 void LogosCalendar::setSetting(const QString &key, const QString &value) {

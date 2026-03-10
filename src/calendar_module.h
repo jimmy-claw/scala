@@ -106,6 +106,9 @@ public:
     Q_INVOKABLE QString parseShareLink(const QString &link) override;
     Q_INVOKABLE bool handleShareLink(const QString &link) override;
 
+    // ── Reminders API ────────────────────────────────────────────────────
+    Q_INVOKABLE QString getPendingReminders();
+
     // ── Settings API ─────────────────────────────────────────────────────
     Q_INVOKABLE void setSetting(const QString &key, const QString &value);
     Q_INVOKABLE QString getSetting(const QString &key, const QString &defaultValue = QString());
