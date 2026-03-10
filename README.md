@@ -32,6 +32,30 @@ This repo is a rewrite on Logos Core — native C++/QML module with Logos Messag
 
 ## Building & Running
 
+### Quick start (Makefile)
+
+```bash
+# One-time setup — builds logoscore + kv_module via Nix (~10-30 min first time)
+make setup
+
+# Terminal 1 — start Logos Core with kv_module
+make run-core
+
+# Terminal 2 — build and run Scala
+make dev
+```
+
+Other targets:
+```bash
+make build        # build plugin only (no standalone)
+make test         # run all tests
+make standalone   # build standalone runner
+make screenshot   # take a headless screenshot (requires xvfb + scrot)
+make clean        # remove build dirs
+```
+
+### Manual setup
+
 ### Prerequisites
 
 ```bash
