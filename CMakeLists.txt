@@ -100,15 +100,17 @@ if(BUILD_STANDALONE)
 
     qt_add_executable(scala_standalone standalone/main.cpp)
 
-    qt_add_resources(scala_standalone "qml_resources"
-        PREFIX "/"
-        FILES
+    qt_add_qml_module(scala_standalone
+        URI "ScalaApp"
+        VERSION 1.0
+        QML_FILES
             qml/CalendarView.qml
             qml/CalendarGrid.qml
             qml/CalendarSidebar.qml
             qml/EventModal.qml
             qml/EventDetails.qml
             qml/ShareDialog.qml
+        RESOURCE_PREFIX "/ScalaApp"
     )
 
     target_link_libraries(scala_standalone PRIVATE
