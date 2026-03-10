@@ -26,7 +26,7 @@ NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
 .PHONY: all build test clean standalone screenshot \
         setup setup-logoscore setup-kv-module \
-        run-core run dev
+        run-core run dev install-cli
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -98,6 +98,12 @@ setup-kv-module: setup-nix-merged
 setup: setup-logoscore setup-kv-module
 	@echo ""
 	@echo "Setup complete! Run 'make dev' to start."
+
+# ── CLI ──────────────────────────────────────────────────────────────────────
+
+install-cli:
+	install -m 755 cli/scala-cli.sh ~/.local/bin/scala-cli
+	@echo "scala-cli installed to ~/.local/bin/scala-cli"
 
 # ── Run ──────────────────────────────────────────────────────────────────────
 
