@@ -23,6 +23,8 @@ Item {
     property string viewMode: "month"   // "month", "week", or "day"
     property date weekStartDate: getMonday(new Date())
     property date dayViewDate: new Date()
+    property bool searchActive: false
+    property var searchResults: []
 
     // ── Preset colors for new calendar dialog ──────────────────────────────
     property var presetColors: [
@@ -213,6 +215,15 @@ Item {
         }
     }
 
+    // ── Ctrl+F shortcut ───────────────────────────────────────────────────
+    Shortcut {
+        sequence: "Ctrl+F"
+        onActivated: {
+            searchActive = true
+            searchField.forceActiveFocus()
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -362,6 +373,58 @@ Item {
 
                     Item { width: 4 }
 
+                    // Search button
+                    Button {
+                        text: "\uD83D\uDD0D"
+                        flat: true
+                        onClicked: {
+                            searchActive = !searchActive
+                            if (searchActive) searchField.forceActiveFocus()
+                            else { searchResults = []; searchField.text = "" }
+                        }
+                        implicitWidth: 36
+                        implicitHeight: 36
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Search events (Ctrl+F)"
+                        background: Rectangle {
+                            radius: 4
+                            color: searchActive ? "#1976D2" : (parent.hovered ? "#1976D2" : "transparent")
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 16
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    TextField {
+                        id: searchField
+                        visible: searchActive
+                        placeholderText: "Search events..."
+                        implicitWidth: 180
+                        onTextChanged: {
+                            if (text.length >= 2)
+                                searchResults = JSON.parse(calendarModule.searchEvents(text) || "[]")
+                            else
+                                searchResults = []
+                        }
+                        Keys.onEscapePressed: {
+                            searchActive = false
+                            searchResults = []
+                            text = ""
+                        }
+                        background: Rectangle {
+                            radius: 4
+                            color: "white"
+                            border.color: "#90CAF9"
+                            border.width: 1
+                        }
+                    }
+
+                    Item { width: 4 }
+
                     // Settings button
                     Button {
                         text: "\u2699"
@@ -381,6 +444,79 @@ Item {
                             font.pixelSize: 18
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                }
+            }
+
+            // ── Search results overlay ──────────────────────────────────────
+            ListView {
+                id: searchResultsList
+                visible: searchActive && searchResults.length > 0
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(searchResults.length * 60, 300)
+                clip: true
+                model: searchResults
+                z: 10
+                delegate: Rectangle {
+                    width: searchResultsList.width
+                    height: 56
+                    color: mouseArea.containsMouse ? "#e3f2fd" : (index % 2 === 0 ? "#ffffff" : "#fafafa")
+                    border.color: "#e0e0e0"
+                    border.width: index === searchResults.length - 1 ? 1 : 0
+
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            var ev = searchResults[index]
+                            if (ev.startTime) {
+                                var d = new Date(ev.startTime)
+                                dayViewDate = d
+                                viewMode = "day"
+                            }
+                            searchActive = false
+                            searchResults = []
+                            searchField.text = ""
+                        }
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 10
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Rectangle {
+                            width: 10; height: 10; radius: 5
+                            color: modelData.calendarColor || "#2196F3"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                text: modelData.title || ""
+                                font.pixelSize: 14
+                                font.bold: true
+                                color: "#333"
+                            }
+                            Text {
+                                text: {
+                                    var parts = []
+                                    if (modelData.startTime) {
+                                        var d = new Date(modelData.startTime)
+                                        parts.push(d.toLocaleDateString())
+                                    }
+                                    if (modelData.calendarName)
+                                        parts.push(modelData.calendarName)
+                                    return parts.join(" \u2022 ")
+                                }
+                                font.pixelSize: 11
+                                color: "#888"
+                            }
                         }
                     }
                 }

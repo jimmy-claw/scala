@@ -12,6 +12,7 @@ private slots:
     void updateEvent();
     void deleteEvent();
     void generateShareLink();
+    void searchEvents();
 };
 
 void TestModule::createAndListCalendar() {
@@ -92,6 +93,38 @@ void TestModule::generateShareLink() {
     QString link = module.generateShareLink(calId);
     QVERIFY(!link.isEmpty());
     QVERIFY(link.startsWith("scala://"));
+}
+
+void TestModule::searchEvents() {
+    LogosCalendar module;
+    QString calId = module.createCalendar("Work", "#3b82f6");
+
+    QJsonObject ev;
+    ev["title"] = "Standup";
+    ev["date"] = "2026-03-10";
+    module.createEvent(calId, QJsonDocument(ev).toJson(QJsonDocument::Compact));
+
+    // Search finds it by title substring
+    QString results = module.searchEvents("stand");
+    auto arr = QJsonDocument::fromJson(results.toUtf8()).array();
+    QCOMPARE(arr.size(), 1);
+    QCOMPARE(arr[0].toObject()["title"].toString(), QString("Standup"));
+    QCOMPARE(arr[0].toObject()["calendarName"].toString(), QString("Work"));
+
+    // Case-insensitive
+    results = module.searchEvents("STAND");
+    arr = QJsonDocument::fromJson(results.toUtf8()).array();
+    QCOMPARE(arr.size(), 1);
+
+    // No match
+    results = module.searchEvents("xyz_no_match");
+    arr = QJsonDocument::fromJson(results.toUtf8()).array();
+    QCOMPARE(arr.size(), 0);
+
+    // Empty query returns empty
+    results = module.searchEvents("");
+    arr = QJsonDocument::fromJson(results.toUtf8()).array();
+    QCOMPARE(arr.size(), 0);
 }
 
 QTEST_MAIN(TestModule)
