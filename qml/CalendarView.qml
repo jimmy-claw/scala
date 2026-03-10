@@ -7,54 +7,59 @@ Item {
     width: 800
     height: 600
 
+    // ── Theme colors ───────────────────────────────────────────────────────
+    property color primaryColor: "#2196F3"
+    property color bgColor: "#ffffff"
+    property color toolbarColor: "#2196F3"
+    property color sidebarBg: "#f9f9f9"
+    property color newEventBtnColor: "#4CAF50"
+
+    // ── State ──────────────────────────────────────────────────────────────
+    property var selectedEvent: null
+    property bool showEventDetails: false
+
+    // ── Mock events for demo ───────────────────────────────────────────────
+    property var mockEvents: [
+        { day: 5,  color: "#4CAF50" },
+        { day: 5,  color: "#2196F3" },
+        { day: 12, color: "#4CAF50" },
+        { day: 18, color: "#FF9800" },
+        { day: 22, color: "#2196F3" },
+        { day: 22, color: "#FF9800" },
+        { day: 28, color: "#4CAF50" }
+    ]
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
 
-        // ── Calendar list sidebar ────────────────────────────────────────────
-        Rectangle {
-            Layout.preferredWidth: 200
+        // ── Sidebar ────────────────────────────────────────────────────────
+        CalendarSidebar {
+            Layout.preferredWidth: 220
             Layout.fillHeight: true
-            color: "#f5f5f5"
-            border.color: "#ddd"
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
-
-                Text {
-                    text: "Calendars"
-                    font.pixelSize: 18
-                    font.bold: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "No calendars yet"
-                        color: "#999"
-                        font.pixelSize: 13
-                    }
-                }
+            onCalendarToggled: function(calId, vis) {
+                console.log("Calendar toggled:", calId, vis);
+            }
+            onNewCalendarRequested: {
+                console.log("New calendar requested");
+            }
+            onCalendarSelected: function(calId) {
+                console.log("Calendar selected:", calId);
             }
         }
 
-        // ── Main calendar area ───────────────────────────────────────────────
+        // ── Main area ──────────────────────────────────────────────────────
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 0
 
-            // Header
+            // ── Toolbar ────────────────────────────────────────────────────
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 56
-                color: "#2196F3"
+                Layout.preferredHeight: 52
+                color: toolbarColor
 
                 RowLayout {
                     anchors.fill: parent
@@ -71,70 +76,123 @@ Item {
                     Item { Layout.fillWidth: true }
 
                     Button {
-                        text: "Add Event"
+                        text: "+ New Event"
                         onClicked: {
-                            // No-op placeholder
-                            console.log("Add Event clicked (not yet implemented)")
+                            eventModal.clear();
+                            eventModal.open();
+                        }
+                        background: Rectangle {
+                            radius: 6
+                            color: parent.pressed
+                                ? Qt.darker(newEventBtnColor, 1.2)
+                                : parent.hovered
+                                  ? Qt.lighter(newEventBtnColor, 1.1)
+                                  : newEventBtnColor
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                         }
                     }
                 }
             }
 
-            // Month grid
-            Rectangle {
+            // ── Content: grid + optional details panel ─────────────────────
+            RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: "white"
+                spacing: 0
 
-                GridLayout {
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    columns: 7
-                    rowSpacing: 1
-                    columnSpacing: 1
+                // Calendar grid
+                CalendarGrid {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    events: mockEvents
 
-                    // Day-of-week headers
-                    Repeater {
-                        model: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-                        delegate: Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 32
-                            color: "#e3f2fd"
+                    onDayClicked: function(day, month, year) {
+                        console.log("Day clicked:", day, month + 1, year);
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData
-                                font.bold: true
-                                font.pixelSize: 12
-                                color: "#1565C0"
-                            }
-                        }
-                    }
-
-                    // Static 5x7 day cells (placeholder)
-                    Repeater {
-                        model: 35
-                        delegate: Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            border.color: "#eee"
-                            color: "white"
-
-                            Text {
-                                anchors.top: parent.top
-                                anchors.left: parent.left
-                                anchors.margins: 4
-                                text: {
-                                    var day = index - 5 + 1  // offset for month start
-                                    return (day >= 1 && day <= 31) ? day.toString() : ""
-                                }
-                                font.pixelSize: 11
-                                color: "#333"
-                            }
+                        // Demo: show event details for days with events
+                        var dayEvents = eventsForDay(day);
+                        if (dayEvents.length > 0) {
+                            eventDetails.loadEvent({
+                                id: "evt-" + day,
+                                title: "Sample Event on " + day,
+                                description: "This is a sample event.",
+                                location: "Conference Room A",
+                                startDate: year + "-" + (month+1) + "-" + day,
+                                startTime: "09:00",
+                                endDate: year + "-" + (month+1) + "-" + day,
+                                endTime: "10:00",
+                                allDay: false,
+                                calendarName: "Personal",
+                                calendarColor: dayEvents[0].color
+                            });
+                            showEventDetails = true;
+                        } else {
+                            showEventDetails = false;
+                            eventDetails.eventId = "";
                         }
                     }
                 }
+
+                // Event details panel (right side)
+                EventDetails {
+                    id: eventDetails
+                    Layout.preferredWidth: showEventDetails ? 280 : 0
+                    Layout.fillHeight: true
+                    visible: showEventDetails
+                    clip: true
+
+                    Behavior on Layout.preferredWidth {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
+
+                    onEditRequested: function(evId) {
+                        eventModal.loadEvent({
+                            id: evId,
+                            title: eventDetails.eventTitle,
+                            description: eventDetails.eventDescription,
+                            location: eventDetails.eventLocation,
+                            startDate: eventDetails.eventStartDate,
+                            startTime: eventDetails.eventStartTime,
+                            endDate: eventDetails.eventEndDate,
+                            endTime: eventDetails.eventEndTime,
+                            allDay: eventDetails.eventAllDay,
+                            calendarId: ""
+                        });
+                        eventModal.open();
+                    }
+
+                    onDeleteConfirmed: function(evId) {
+                        console.log("Delete event:", evId);
+                        showEventDetails = false;
+                        eventDetails.eventId = "";
+                    }
+
+                    onCloseRequested: {
+                        showEventDetails = false;
+                        eventDetails.eventId = "";
+                    }
+                }
             }
+        }
+    }
+
+    // ── Event modal (overlay) ──────────────────────────────────────────────
+    EventModal {
+        id: eventModal
+
+        onSaveClicked: function(eventData) {
+            console.log("Event saved:", JSON.stringify(eventData));
+        }
+
+        onCancelClicked: {
+            console.log("Event creation cancelled");
         }
     }
 }
