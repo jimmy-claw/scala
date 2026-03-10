@@ -31,6 +31,39 @@ Popup {
     property string startTime: ""
     property string endDate: ""
     property string endTime: ""
+
+    // Internal: parse "YYYY-MM-DD" → spinbox values
+    function _applyDate(dateStr, yearSpin, monthSpin, daySpin) {
+        if (!dateStr || dateStr === "") {
+            var now = new Date()
+            yearSpin.value = now.getFullYear()
+            monthSpin.value = now.getMonth() + 1
+            daySpin.value = now.getDate()
+            return
+        }
+        var parts = dateStr.split("-")
+        yearSpin.value = parseInt(parts[0])
+        monthSpin.value = parseInt(parts[1])
+        daySpin.value = parseInt(parts[2])
+    }
+    function _applyTime(timeStr, hourSpin, minuteSpin) {
+        if (!timeStr || timeStr === "") {
+            hourSpin.value = 9
+            minuteSpin.value = 0
+            return
+        }
+        var parts = timeStr.split(":")
+        hourSpin.value = parseInt(parts[0])
+        minuteSpin.value = parseInt(parts[1])
+    }
+    function _dateStr(yearSpin, monthSpin, daySpin) {
+        var pad = function(n) { return n < 10 ? "0" + n : "" + n }
+        return yearSpin.value + "-" + pad(monthSpin.value) + "-" + pad(daySpin.value)
+    }
+    function _timeStr(hourSpin, minuteSpin) {
+        var pad = function(n) { return n < 10 ? "0" + n : "" + n }
+        return pad(hourSpin.value) + ":" + pad(minuteSpin.value)
+    }
     property string calendarId: ""
     property string eventId: ""
     property var calendars: []
@@ -42,15 +75,15 @@ Popup {
         titleField.text = "";
         descField.text = "";
         locationField.text = "";
-        startDateField.text = "";
-        startTimeField.text = "";
-        endDateField.text = "";
-        endTimeField.text = "";
         allDaySwitch.checked = false;
         mode = "create";
         eventId = "";
         calendarId = "";
         calendarCombo.currentIndex = 0;
+        _applyDate(startDate, startYearSpin, startMonthSpin, startDaySpin)
+        _applyTime(startTime, startHourSpin, startMinuteSpin)
+        _applyDate(endDate, endYearSpin, endMonthSpin, endDaySpin)
+        _applyTime(endTime, endHourSpin, endMinuteSpin)
     }
 
     function loadEvent(ev) {
@@ -59,12 +92,12 @@ Popup {
         titleField.text = ev.title || "";
         descField.text = ev.description || "";
         locationField.text = ev.location || "";
-        startDateField.text = ev.startDate || "";
-        startTimeField.text = ev.startTime || "";
-        endDateField.text = ev.endDate || "";
-        endTimeField.text = ev.endTime || "";
         allDaySwitch.checked = ev.allDay || false;
         calendarId = ev.calendarId || "";
+        _applyDate(ev.startDate || "", startYearSpin, startMonthSpin, startDaySpin)
+        _applyTime(ev.startTime || "", startHourSpin, startMinuteSpin)
+        _applyDate(ev.endDate || "", endYearSpin, endMonthSpin, endDaySpin)
+        _applyTime(ev.endTime || "", endHourSpin, endMinuteSpin)
         // Select the matching calendar in the combo
         for (var i = 0; i < calendars.length; i++) {
             if (calendars[i].id === calendarId) {
@@ -213,33 +246,60 @@ Popup {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "Start Date"; font.pixelSize: 12;
-                               color: "#555" }
-                        TextField {
-                            id: startDateField
-                            Layout.fillWidth: true
-                            placeholderText: "YYYY-MM-DD"
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 4; color: fieldBg;
-                                border.color: fieldBorder
+                        Text { text: "Start Date"; font.pixelSize: 12; color: "#555" }
+                        RowLayout {
+                            spacing: 4
+                            SpinBox {
+                                id: startYearSpin
+                                from: 2020; to: 2099; value: new Date().getFullYear()
+                                editable: true
+                                implicitWidth: 90
+                                font.pixelSize: 12
+                            }
+                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            SpinBox {
+                                id: startMonthSpin
+                                from: 1; to: 12; value: new Date().getMonth() + 1
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
+                            }
+                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            SpinBox {
+                                id: startDaySpin
+                                from: 1; to: 31; value: new Date().getDate()
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
                             }
                         }
                     }
 
                     ColumnLayout {
-                        Layout.fillWidth: true
                         visible: !allDaySwitch.checked
-                        Text { text: "Start Time"; font.pixelSize: 12;
-                               color: "#555" }
-                        TextField {
-                            id: startTimeField
-                            Layout.fillWidth: true
-                            placeholderText: "HH:MM"
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 4; color: fieldBg;
-                                border.color: fieldBorder
+                        Text { text: "Start Time"; font.pixelSize: 12; color: "#555" }
+                        RowLayout {
+                            spacing: 4
+                            SpinBox {
+                                id: startHourSpin
+                                from: 0; to: 23; value: 9
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
+                                textFromValue: function(value) {
+                                    return value < 10 ? "0" + value : "" + value
+                                }
+                            }
+                            Text { text: ":"; color: "#555"; font.pixelSize: 14; font.bold: true }
+                            SpinBox {
+                                id: startMinuteSpin
+                                from: 0; to: 59; value: 0; stepSize: 5
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
+                                textFromValue: function(value) {
+                                    return value < 10 ? "0" + value : "" + value
+                                }
                             }
                         }
                     }
@@ -252,33 +312,60 @@ Popup {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "End Date"; font.pixelSize: 12;
-                               color: "#555" }
-                        TextField {
-                            id: endDateField
-                            Layout.fillWidth: true
-                            placeholderText: "YYYY-MM-DD"
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 4; color: fieldBg;
-                                border.color: fieldBorder
+                        Text { text: "End Date"; font.pixelSize: 12; color: "#555" }
+                        RowLayout {
+                            spacing: 4
+                            SpinBox {
+                                id: endYearSpin
+                                from: 2020; to: 2099; value: new Date().getFullYear()
+                                editable: true
+                                implicitWidth: 90
+                                font.pixelSize: 12
+                            }
+                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            SpinBox {
+                                id: endMonthSpin
+                                from: 1; to: 12; value: new Date().getMonth() + 1
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
+                            }
+                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            SpinBox {
+                                id: endDaySpin
+                                from: 1; to: 31; value: new Date().getDate()
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
                             }
                         }
                     }
 
                     ColumnLayout {
-                        Layout.fillWidth: true
                         visible: !allDaySwitch.checked
-                        Text { text: "End Time"; font.pixelSize: 12;
-                               color: "#555" }
-                        TextField {
-                            id: endTimeField
-                            Layout.fillWidth: true
-                            placeholderText: "HH:MM"
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 4; color: fieldBg;
-                                border.color: fieldBorder
+                        Text { text: "End Time"; font.pixelSize: 12; color: "#555" }
+                        RowLayout {
+                            spacing: 4
+                            SpinBox {
+                                id: endHourSpin
+                                from: 0; to: 23; value: 10
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
+                                textFromValue: function(value) {
+                                    return value < 10 ? "0" + value : "" + value
+                                }
+                            }
+                            Text { text: ":"; color: "#555"; font.pixelSize: 14; font.bold: true }
+                            SpinBox {
+                                id: endMinuteSpin
+                                from: 0; to: 59; value: 0; stepSize: 5
+                                editable: true
+                                implicitWidth: 70
+                                font.pixelSize: 12
+                                textFromValue: function(value) {
+                                    return value < 10 ? "0" + value : "" + value
+                                }
                             }
                         }
                     }
@@ -352,10 +439,10 @@ Popup {
                             title: titleField.text,
                             description: descField.text,
                             location: locationField.text,
-                            startDate: startDateField.text,
-                            startTime: startTimeField.text,
-                            endDate: endDateField.text,
-                            endTime: endTimeField.text,
+                            startDate: _dateStr(startYearSpin, startMonthSpin, startDaySpin),
+                            startTime: _timeStr(startHourSpin, startMinuteSpin),
+                            endDate: _dateStr(endYearSpin, endMonthSpin, endDaySpin),
+                            endTime: _timeStr(endHourSpin, endMinuteSpin),
                             allDay: allDaySwitch.checked,
                             calendarId: calendarId
                         };
