@@ -61,6 +61,21 @@ cmake -B build-standalone -DCMAKE_BUILD_TYPE=Debug -DBUILD_STANDALONE=ON
 cmake --build build-standalone -j4 --target scala_standalone
 ```
 
+
+### Run with Logos Core (recommended — real KV + messaging)
+
+Scala uses Logos Core modules for storage and messaging. For real persistence, run `logoscore` with `kv_module` alongside the standalone runner:
+
+```bash
+# Terminal 1 — start Logos Core with kv_module
+logoscore --modules-dir ./modules --load kv_module
+
+# Terminal 2 — run Scala (connects via QtRO)
+LOGOS_CORE_AVAILABLE=1 ./build-standalone/scala_standalone
+```
+
+This gives you real persistent storage, real identity, and real P2P sync — no in-memory fallback.
+
 ### Run locally
 
 ```bash
