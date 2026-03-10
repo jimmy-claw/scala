@@ -18,6 +18,7 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ Logos Messaging sync layer — per-calendar topics, CREATE/UPDATE/DELETE/SYNC messages
 - ✅ Calendar sharing — `scala://` invite links, QR placeholder, join flow
 - ✅ Logos Core identity — stable sender ID, event ownership checks, message signing stub
+- ✅ Event search — search across all calendars by title/description/location (Ctrl+F)
 - ✅ Event reminders — QSystemTrayIcon notifications, configurable (15m/30m/1h before)
 - ✅ Multi-instance dev testing — `SCALA_NAMESPACE` env var for isolated KV namespaces
 - ✅ Standalone runner for local development and screenshots

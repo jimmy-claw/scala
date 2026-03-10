@@ -432,6 +432,33 @@ bool LogosCalendar::handleShareLink(const QString &link) {
     return joinSharedCalendar(id, key);
 }
 
+// ── Search API ───────────────────────────────────────────────────────────────
+
+QString LogosCalendar::searchEvents(const QString &query) {
+    if (query.trimmed().isEmpty())
+        return QStringLiteral("[]");
+
+    QString lowerQuery = query.toLower();
+    QJsonArray results;
+
+    auto calendars = m_store.listCalendars();
+    for (const auto &cal : calendars) {
+        auto events = m_store.listEvents(cal.id);
+        for (const auto &ev : events) {
+            if (ev.title.toLower().contains(lowerQuery)
+                || ev.description.toLower().contains(lowerQuery)
+                || ev.location.toLower().contains(lowerQuery)) {
+                QJsonObject obj = ev.toJson();
+                obj[QStringLiteral("calendarName")] = cal.name;
+                obj[QStringLiteral("calendarColor")] = cal.color;
+                results.append(obj);
+            }
+        }
+    }
+
+    return QString::fromUtf8(QJsonDocument(results).toJson(QJsonDocument::Compact));
+}
+
 // ── Reminders API ────────────────────────────────────────────────────────────
 
 QString LogosCalendar::getPendingReminders() {

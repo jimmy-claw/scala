@@ -106,6 +106,9 @@ public:
     Q_INVOKABLE QString parseShareLink(const QString &link) override;
     Q_INVOKABLE bool handleShareLink(const QString &link) override;
 
+    // ── Search API ────────────────────────────────────────────────────────
+    Q_INVOKABLE QString searchEvents(const QString &query);
+
     // ── Reminders API ────────────────────────────────────────────────────
     Q_INVOKABLE QString getPendingReminders();
 
