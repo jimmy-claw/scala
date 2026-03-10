@@ -100,6 +100,15 @@ if(BUILD_STANDALONE)
 
     qt_add_executable(scala_standalone standalone/main.cpp)
 
+    target_sources(scala_standalone PRIVATE
+        src/calendar_module.cpp
+        src/calendar_store.cpp
+        src/calendar_sync.cpp
+        src/qr_generator.cpp
+    )
+
+    target_include_directories(scala_standalone PRIVATE src)
+
     qt_add_qml_module(scala_standalone
         URI "ScalaApp"
         VERSION 1.0

@@ -33,6 +33,7 @@ Popup {
     property string endTime: ""
     property string calendarId: ""
     property string eventId: ""
+    property var calendars: []
 
     signal saveClicked(var eventData)
     signal cancelClicked()
@@ -48,6 +49,8 @@ Popup {
         allDaySwitch.checked = false;
         mode = "create";
         eventId = "";
+        calendarId = "";
+        calendarCombo.currentIndex = 0;
     }
 
     function loadEvent(ev) {
@@ -62,6 +65,13 @@ Popup {
         endTimeField.text = ev.endTime || "";
         allDaySwitch.checked = ev.allDay || false;
         calendarId = ev.calendarId || "";
+        // Select the matching calendar in the combo
+        for (var i = 0; i < calendars.length; i++) {
+            if (calendars[i].id === calendarId) {
+                calendarCombo.currentIndex = i;
+                break;
+            }
+        }
     }
 
     background: Rectangle {
@@ -141,6 +151,41 @@ Popup {
                 anchors.rightMargin: 16
                 anchors.top: parent.top
                 anchors.topMargin: 12
+
+                // Calendar selector
+                Text {
+                    text: "Calendar"
+                    font.pixelSize: 13
+                    color: "#555"
+                    visible: calendars.length > 0
+                }
+                ComboBox {
+                    id: calendarCombo
+                    Layout.fillWidth: true
+                    visible: calendars.length > 0
+                    model: calendars
+                    textRole: "name"
+                    onCurrentIndexChanged: {
+                        if (currentIndex >= 0 && currentIndex < calendars.length) {
+                            calendarId = calendars[currentIndex].id
+                        }
+                    }
+                    delegate: ItemDelegate {
+                        width: calendarCombo.width
+                        contentItem: RowLayout {
+                            spacing: 8
+                            Rectangle {
+                                width: 10; height: 10; radius: 5
+                                color: modelData.color || "#2196F3"
+                            }
+                            Text {
+                                text: modelData.name || ""
+                                font.pixelSize: 13
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+                }
 
                 // Title
                 Text { text: "Title *"; font.pixelSize: 13; color: "#555" }
