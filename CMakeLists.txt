@@ -96,7 +96,7 @@ install(FILES ${CMAKE_SOURCE_DIR}/metadata.json
 # ── Standalone runner ────────────────────────────────────────────────────────
 option(BUILD_STANDALONE "Build standalone runner" OFF)
 if(BUILD_STANDALONE)
-    find_package(Qt6 REQUIRED COMPONENTS Quick Gui)
+    find_package(Qt6 REQUIRED COMPONENTS Quick Gui Widgets)
 
     qt_add_executable(scala_standalone standalone/main.cpp)
 
@@ -124,7 +124,7 @@ if(BUILD_STANDALONE)
     )
 
     target_link_libraries(scala_standalone PRIVATE
-        Qt6::Quick Qt6::Qml Qt6::Gui
+        Qt6::Quick Qt6::Qml Qt6::Gui Qt6::Widgets
     )
 endif()
 

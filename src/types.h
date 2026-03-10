@@ -21,6 +21,7 @@ struct CalendarEvent {
     QString location;
     QStringList attendees;
     QString creatorId;
+    int reminderMinutes = -1;  // -1 = no reminder, 0/15/30/60 = minutes before
     qint64 createdAt = 0;
     qint64 updatedAt = 0;
 
@@ -39,6 +40,7 @@ struct CalendarEvent {
             att.append(a);
         obj["attendees"] = att;
         obj["creatorId"] = creatorId;
+        obj["reminderMinutes"] = reminderMinutes;
         obj["createdAt"] = createdAt;
         obj["updatedAt"] = updatedAt;
         return obj;
@@ -58,6 +60,7 @@ struct CalendarEvent {
         for (const auto &a : att)
             ev.attendees.append(a.toString());
         ev.creatorId = obj["creatorId"].toString();
+        ev.reminderMinutes = obj["reminderMinutes"].toInt(-1);
         ev.createdAt = static_cast<qint64>(obj["createdAt"].toDouble());
         ev.updatedAt = static_cast<qint64>(obj["updatedAt"].toDouble());
         return ev;

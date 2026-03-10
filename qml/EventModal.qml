@@ -66,6 +66,7 @@ Popup {
     }
     property string calendarId: ""
     property string eventId: ""
+    property int reminderMinutes: -1
     property var calendars: []
 
     signal saveClicked(var eventData)
@@ -79,6 +80,8 @@ Popup {
         mode = "create";
         eventId = "";
         calendarId = "";
+        reminderMinutes = -1;
+        reminderCombo.currentIndex = 0;
         calendarCombo.currentIndex = 0;
         _applyDate(startDate, startYearSpin, startMonthSpin, startDaySpin)
         _applyTime(startTime, startHourSpin, startMinuteSpin)
@@ -98,6 +101,15 @@ Popup {
         _applyTime(ev.startTime || "", startHourSpin, startMinuteSpin)
         _applyDate(ev.endDate || "", endYearSpin, endMonthSpin, endDaySpin)
         _applyTime(ev.endTime || "", endHourSpin, endMinuteSpin)
+        // Restore reminder setting
+        reminderMinutes = (ev.reminderMinutes !== undefined) ? ev.reminderMinutes : -1
+        var reminderOptions = [-1, 15, 30, 60]
+        for (var ri = 0; ri < reminderOptions.length; ri++) {
+            if (reminderOptions[ri] === reminderMinutes) {
+                reminderCombo.currentIndex = ri;
+                break;
+            }
+        }
         // Select the matching calendar in the combo
         for (var i = 0; i < calendars.length; i++) {
             if (calendars[i].id === calendarId) {
@@ -396,6 +408,19 @@ Popup {
                         radius: 4; color: fieldBg; border.color: fieldBorder
                     }
                 }
+
+                // Reminder
+                Text { text: "Reminder"; font.pixelSize: 13; color: "#555" }
+                ComboBox {
+                    id: reminderCombo
+                    Layout.fillWidth: true
+                    model: ["None", "15 minutes before", "30 minutes before", "1 hour before"]
+                    currentIndex: 0
+                    onCurrentIndexChanged: {
+                        var values = [-1, 15, 30, 60]
+                        reminderMinutes = values[currentIndex]
+                    }
+                }
             }
         }
 
@@ -444,7 +469,8 @@ Popup {
                             endDate: _dateStr(endYearSpin, endMonthSpin, endDaySpin),
                             endTime: _timeStr(endHourSpin, endMinuteSpin),
                             allDay: allDaySwitch.checked,
-                            calendarId: calendarId
+                            calendarId: calendarId,
+                            reminderMinutes: reminderMinutes
                         };
                         saveClicked(data);
                         root.close();

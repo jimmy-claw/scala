@@ -952,7 +952,8 @@ Item {
                 location: eventData.location,
                 startTime: msFromDateTime(eventData.startDate, eventData.startTime, true),
                 endTime: msFromDateTime(eventData.endDate, eventData.endTime, true),
-                allDay: eventData.allDay
+                allDay: eventData.allDay,
+                reminderMinutes: eventData.reminderMinutes !== undefined ? eventData.reminderMinutes : -1
             }
 
             if (eventData.id && eventData.id !== "") {
