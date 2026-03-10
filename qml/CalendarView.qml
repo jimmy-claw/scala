@@ -73,6 +73,15 @@ Item {
                         font.bold: true
                     }
 
+                    Text {
+                        text: typeof calendarModule !== "undefined" && calendarModule.identity
+                              ? "ID: " + calendarModule.identity.substring(0,8) + "..."
+                              : ""
+                        color: "#ccddee"
+                        font.pixelSize: 11
+                        visible: text !== ""
+                    }
+
                     Item { Layout.fillWidth: true }
 
                     Button {

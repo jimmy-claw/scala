@@ -4,8 +4,10 @@
 #include "calendar_sync.h"
 #include "types.h"
 
+#include <QCryptographicHash>
 #include <QObject>
 #include <QString>
+#include <QSysInfo>
 #include <QUrl>
 #include <QUrlQuery>
 
@@ -25,8 +27,8 @@ public:
     virtual QString listCalendars() = 0;
     virtual bool deleteCalendar(const QString &id) = 0;
     virtual QString createEvent(const QString &calendarId, const QString &eventJson) = 0;
-    virtual bool updateEvent(const QString &eventJson) = 0;
-    virtual bool deleteEvent(const QString &id) = 0;
+    virtual QString updateEvent(const QString &eventJson) = 0;
+    virtual QString deleteEvent(const QString &id) = 0;
     virtual QString listEvents(const QString &calendarId) = 0;
     virtual QString getEvent(const QString &id) = 0;
 
@@ -60,6 +62,8 @@ class LogosCalendar final : public QObject, public ILogosCalendar {
     Q_INTERFACES(ILogosCalendar)
 #endif
 
+    Q_PROPERTY(QString identity READ getIdentity NOTIFY identityChanged)
+
 public:
     explicit LogosCalendar(QObject *parent = nullptr);
     ~LogosCalendar() override = default;
@@ -74,13 +78,17 @@ public:
     Q_INVOKABLE QString version() const { return QStringLiteral("0.1.0"); }
 #endif
 
+    // ── Identity API ────────────────────────────────────────────────────────
+    Q_INVOKABLE QString getIdentity() const;
+    Q_INVOKABLE void setIdentity(const QString &pubkeyHex);
+
     // ── ILogosCalendar ──────────────────────────────────────────────────────
     Q_INVOKABLE QString createCalendar(const QString &name, const QString &color) override;
     Q_INVOKABLE QString listCalendars() override;
     Q_INVOKABLE bool deleteCalendar(const QString &id) override;
     Q_INVOKABLE QString createEvent(const QString &calendarId, const QString &eventJson) override;
-    Q_INVOKABLE bool updateEvent(const QString &eventJson) override;
-    Q_INVOKABLE bool deleteEvent(const QString &id) override;
+    Q_INVOKABLE QString updateEvent(const QString &eventJson) override;
+    Q_INVOKABLE QString deleteEvent(const QString &id) override;
     Q_INVOKABLE QString listEvents(const QString &calendarId) override;
     Q_INVOKABLE QString getEvent(const QString &id) override;
 
@@ -98,12 +106,15 @@ public:
 signals:
     void eventResponse(const QString &eventName, const QVariantList &args);
     void syncStatusChanged(const QString &calendarId, const QString &status);
+    void identityChanged();
 
 private:
     void onSyncMessageReceived(const QString &calendarId, const SyncMessage &msg);
+    static QString generateStableIdentity();
 
     CalendarStore m_store;
     CalendarSync *m_sync = nullptr;
+    QString m_identity;
 
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPI *m_logosAPI = nullptr;

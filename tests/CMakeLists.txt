@@ -69,3 +69,24 @@ target_link_libraries(test_sharing PRIVATE
 )
 
 add_test(NAME test_sharing COMMAND test_sharing)
+
+# ── Identity tests ────────────────────────────────────────────────────────────
+
+add_executable(test_identity
+    test_identity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
+)
+
+target_include_directories(test_identity PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(test_identity PRIVATE
+    Qt6::Core
+    Qt6::Test
+)
+
+add_test(NAME test_identity COMMAND test_identity)

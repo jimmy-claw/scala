@@ -20,6 +20,7 @@ struct CalendarEvent {
     QString description;
     QString location;
     QStringList attendees;
+    QString creatorId;
     qint64 createdAt = 0;
     qint64 updatedAt = 0;
 
@@ -37,6 +38,7 @@ struct CalendarEvent {
         for (const auto &a : attendees)
             att.append(a);
         obj["attendees"] = att;
+        obj["creatorId"] = creatorId;
         obj["createdAt"] = createdAt;
         obj["updatedAt"] = updatedAt;
         return obj;
@@ -55,6 +57,7 @@ struct CalendarEvent {
         QJsonArray att = obj["attendees"].toArray();
         for (const auto &a : att)
             ev.attendees.append(a.toString());
+        ev.creatorId = obj["creatorId"].toString();
         ev.createdAt = static_cast<qint64>(obj["createdAt"].toDouble());
         ev.updatedAt = static_cast<qint64>(obj["updatedAt"].toDouble());
         return ev;

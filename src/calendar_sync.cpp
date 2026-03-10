@@ -6,6 +6,7 @@
 
 #include <QDebug>
 #include <QJsonDocument>
+#include <QMessageAuthenticationCode>
 
 // ── SyncMessage helpers ─────────────────────────────────────────────────────
 
@@ -38,6 +39,8 @@ QJsonObject SyncMessage::toJson() const {
     obj[QLatin1String("payload")]    = payload;
     obj[QLatin1String("senderId")]   = senderId;
     obj[QLatin1String("timestamp")]  = timestamp;
+    if (!signature.isEmpty())
+        obj[QLatin1String("signature")] = signature;
     return obj;
 }
 
@@ -48,6 +51,7 @@ SyncMessage SyncMessage::fromJson(const QJsonObject &obj) {
     msg.payload    = obj[QLatin1String("payload")].toString();
     msg.senderId   = obj[QLatin1String("senderId")].toString();
     msg.timestamp  = static_cast<qint64>(obj[QLatin1String("timestamp")].toDouble());
+    msg.signature  = obj[QLatin1String("signature")].toString();
     return msg;
 }
 
@@ -58,6 +62,17 @@ QByteArray SyncMessage::toBytes() const {
 SyncMessage SyncMessage::fromBytes(const QByteArray &data) {
     QJsonDocument doc = QJsonDocument::fromJson(data);
     return fromJson(doc.object());
+}
+
+QString SyncMessage::sign(const QString &payload, const QString &key) {
+    QByteArray mac = QMessageAuthenticationCode::hash(
+        payload.toUtf8(), key.toUtf8(), QCryptographicHash::Sha256);
+    return QString::fromLatin1(mac.toHex());
+}
+
+bool SyncMessage::verify(const QString &payload, const QString &signature,
+                          const QString &key) {
+    return sign(payload, key) == signature;
 }
 
 // ── CalendarSync ────────────────────────────────────────────────────────────

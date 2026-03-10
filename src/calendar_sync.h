@@ -31,6 +31,8 @@ struct SyncMessage {
     QString senderId;    // Logos identity pubkey
     qint64 timestamp = 0;
 
+    QString signature;
+
     QJsonObject toJson() const;
     static SyncMessage fromJson(const QJsonObject &obj);
     QByteArray toBytes() const;
@@ -38,6 +40,11 @@ struct SyncMessage {
 
     static QString typeToString(SyncMessageType t);
     static SyncMessageType typeFromString(const QString &s);
+
+    // Sign message with identity key (stub — real crypto in follow-up)
+    // For now: HMAC-SHA256(key, payload) as signature field
+    static QString sign(const QString &payload, const QString &key);
+    static bool verify(const QString &payload, const QString &signature, const QString &key);
 };
 
 // ── CalendarSync ────────────────────────────────────────────────────────────
