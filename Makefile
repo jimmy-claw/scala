@@ -44,14 +44,10 @@ setup-logoscore:
 ## Build and install kv_module
 setup-kv-module:
 	@echo "Building kv_module..."
-	mkdir -p /tmp/logos-kv-module
-	cd /tmp/logos-kv-module && git clone --depth 1 https://github.com/jimmy-claw/logos-kv-module . 2>/dev/null || git pull
-	cd /tmp/logos-kv-module && nix --extra-experimental-features 'nix-command flakes' build .# -o ./result 2>/dev/null || \
-		nix --extra-experimental-features 'nix-command flakes' build .#default -o ./result
+	nix --extra-experimental-features 'nix-command flakes' build github:jimmy-claw/logos-kv-module#kv_module-lib -o /tmp/logos-kv-module-result
 	mkdir -p $(MODULES_DIR)/kv_module
-	find /tmp/logos-kv-module/result -name '*.so' | head -1 | xargs -I{} cp {} $(MODULES_DIR)/kv_module/kv_module_plugin.so
-	cp /tmp/logos-kv-module/manifest.json $(MODULES_DIR)/kv_module/ 2>/dev/null || \
-		echo '{"name":"kv_module","version":"0.1.0","main":{"linux-x86_64":"kv_module_plugin.so","linux-aarch64":"kv_module_plugin.so","darwin-arm64":"kv_module_plugin.so"}}' > $(MODULES_DIR)/kv_module/manifest.json
+	find /tmp/logos-kv-module-result -name '*.so' | head -1 | xargs -I{} cp {} $(MODULES_DIR)/kv_module/kv_module_plugin.so
+	echo '{"name":"kv_module","version":"0.1.0","main":{"linux-x86_64":"kv_module_plugin.so","linux-aarch64":"kv_module_plugin.so","darwin-arm64":"kv_module_plugin.so","darwin-x86_64":"kv_module_plugin.so"}}' > $(MODULES_DIR)/kv_module/manifest.json
 	@echo "kv_module ready at: $(MODULES_DIR)/kv_module/"
 
 ## Full setup: logoscore + kv_module
