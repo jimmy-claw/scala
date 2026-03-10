@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Qt6
-        run: sudo apt-get install -y qt6-base-dev qt6-declarative-dev qt6-remoteobjects-dev xvfb qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-window qml6-module-qtquick-controls qml6-module-qttest
+        run: sudo apt-get install -y qt6-base-dev qt6-declarative-dev qt6-remoteobjects-dev xvfb qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-window qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qttest qt6-tools-dev
       - name: Build plugin
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
