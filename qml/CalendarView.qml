@@ -20,6 +20,8 @@ Item {
     property var calendarList: []
     property var allEvents: []
     property string selectedCalendarId: ""
+    property string viewMode: "month"   // "month" or "week"
+    property date weekStartDate: getMonday(new Date())
 
     // ── Preset colors for new calendar dialog ──────────────────────────────
     property var presetColors: [
@@ -75,6 +77,72 @@ Item {
             }
         }
         return dots
+    }
+
+    // ── Week view helpers ────────────────────────────────────────────────
+    function getMonday(d) {
+        var date = new Date(d)
+        var day = date.getDay()
+        var diff = (day === 0 ? -6 : 1) - day  // Monday = 1
+        date.setDate(date.getDate() + diff)
+        date.setHours(0, 0, 0, 0)
+        return date
+    }
+
+    function weekDayDate(dayOffset) {
+        var d = new Date(weekStartDate)
+        d.setDate(d.getDate() + dayOffset)
+        return d
+    }
+
+    function eventsForDate(d) {
+        var result = []
+        for (var i = 0; i < allEvents.length; i++) {
+            var ev = allEvents[i]
+            var evDate = new Date(ev.startTime)
+            if (evDate.getDate() === d.getDate()
+                && evDate.getMonth() === d.getMonth()
+                && evDate.getFullYear() === d.getFullYear()) {
+                result.push(ev)
+            }
+        }
+        // Sort by start time
+        result.sort(function(a, b) { return a.startTime - b.startTime })
+        return result
+    }
+
+    function formatTime(ms) {
+        var d = new Date(ms)
+        var h = d.getHours()
+        var m = d.getMinutes()
+        return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m
+    }
+
+    function goToPrevWeek() {
+        var d = new Date(weekStartDate)
+        d.setDate(d.getDate() - 7)
+        weekStartDate = d
+    }
+
+    function goToNextWeek() {
+        var d = new Date(weekStartDate)
+        d.setDate(d.getDate() + 7)
+        weekStartDate = d
+    }
+
+    function weekRangeLabel() {
+        var start = weekStartDate
+        var end = new Date(weekStartDate)
+        end.setDate(end.getDate() + 6)
+        var months = ["Jan","Feb","Mar","Apr","May","Jun",
+                      "Jul","Aug","Sep","Oct","Nov","Dec"]
+        if (start.getMonth() === end.getMonth()) {
+            return months[start.getMonth()] + " " + start.getDate()
+                   + "–" + end.getDate() + ", " + start.getFullYear()
+        }
+        return months[start.getMonth()] + " " + start.getDate()
+               + " – " + months[end.getMonth()] + " " + end.getDate()
+               + ", " + end.getFullYear()
     }
 
     function msFromDateTime(dateStr, timeStr, fallbackNow) {
@@ -164,6 +232,47 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
+                    // ── View mode toggle ──────────────────────────────
+                    Row {
+                        spacing: 0
+                        Button {
+                            text: "Month"
+                            flat: true
+                            onClicked: viewMode = "month"
+                            background: Rectangle {
+                                radius: 4
+                                color: viewMode === "month" ? "#1976D2" : "transparent"
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                color: "white"
+                                font.pixelSize: 13
+                                font.bold: viewMode === "month"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                        Button {
+                            text: "Week"
+                            flat: true
+                            onClicked: viewMode = "week"
+                            background: Rectangle {
+                                radius: 4
+                                color: viewMode === "week" ? "#1976D2" : "transparent"
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                color: "white"
+                                font.pixelSize: 13
+                                font.bold: viewMode === "week"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+
+                    Item { width: 12 }
+
                     Button {
                         text: "+ New Event"
                         onClicked: {
@@ -197,15 +306,15 @@ Item {
                 Layout.fillHeight: true
                 spacing: 0
 
-                // Calendar grid
+                // Calendar grid (month view)
                 CalendarGrid {
                     id: calendarGrid
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    visible: viewMode === "month"
                     events: eventsForGrid()
 
                     onNavigated: {
-                        // Re-evaluate events binding when month changes
                         events = eventsForGrid()
                     }
 
@@ -246,6 +355,207 @@ Item {
                         } else {
                             showEventDetails = false;
                             eventDetails.eventId = "";
+                        }
+                    }
+                }
+
+                // ── Week view ─────────────────────────────────────────────
+                Item {
+                    id: weekView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: viewMode === "week"
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
+
+                        // Week navigation bar
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 44
+                            color: "#ffffff"
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+
+                                Button {
+                                    text: "<"
+                                    flat: true
+                                    onClicked: goToPrevWeek()
+                                    implicitWidth: 36
+                                    implicitHeight: 36
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                Text {
+                                    text: weekRangeLabel()
+                                    font.pixelSize: 16
+                                    font.bold: true
+                                    color: "#333333"
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                Button {
+                                    text: ">"
+                                    flat: true
+                                    onClicked: goToNextWeek()
+                                    implicitWidth: 36
+                                    implicitHeight: 36
+                                }
+                            }
+                        }
+
+                        // Day columns
+                        Row {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            Repeater {
+                                model: 7
+                                delegate: Rectangle {
+                                    id: dayColumn
+                                    width: weekView.width / 7
+                                    height: weekView.height - 44
+                                    border.color: "#e0e0e0"
+                                    border.width: 1
+                                    color: "#ffffff"
+
+                                    property date columnDate: weekDayDate(index)
+                                    property var dayEvents: eventsForDate(columnDate)
+                                    property bool isToday: {
+                                        var now = new Date()
+                                        return columnDate.getDate() === now.getDate()
+                                            && columnDate.getMonth() === now.getMonth()
+                                            && columnDate.getFullYear() === now.getFullYear()
+                                    }
+
+                                    ColumnLayout {
+                                        anchors.fill: parent
+                                        spacing: 0
+
+                                        // Day header
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 48
+                                            color: dayColumn.isToday ? "#e8f5e9" : "#e3f2fd"
+
+                                            ColumnLayout {
+                                                anchors.centerIn: parent
+                                                spacing: 2
+
+                                                Text {
+                                                    text: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][index]
+                                                    font.pixelSize: 11
+                                                    font.bold: true
+                                                    color: dayColumn.isToday ? "#2e7d32" : "#1565C0"
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                }
+                                                Text {
+                                                    text: dayColumn.columnDate.getDate()
+                                                    font.pixelSize: 16
+                                                    font.bold: dayColumn.isToday
+                                                    color: dayColumn.isToday ? "#2e7d32" : "#333"
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                }
+                                            }
+                                        }
+
+                                        // Events list
+                                        Flickable {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            contentHeight: eventsColumn.height
+                                            clip: true
+
+                                            Column {
+                                                id: eventsColumn
+                                                width: parent.width
+                                                spacing: 4
+                                                topPadding: 4
+                                                leftPadding: 2
+                                                rightPadding: 2
+
+                                                Repeater {
+                                                    model: dayColumn.dayEvents
+
+                                                    delegate: Rectangle {
+                                                        width: eventsColumn.width - 4
+                                                        height: eventContent.height + 8
+                                                        radius: 4
+                                                        color: {
+                                                            var cal = findCalendar(modelData.calendarId)
+                                                            return cal ? cal.color : "#2196F3"
+                                                        }
+                                                        opacity: eventMouse.containsMouse ? 0.85 : 1.0
+
+                                                        MouseArea {
+                                                            id: eventMouse
+                                                            anchors.fill: parent
+                                                            hoverEnabled: true
+                                                            onClicked: {
+                                                                var ev = modelData
+                                                                var startDt = new Date(ev.startTime)
+                                                                var endDt = new Date(ev.endTime)
+                                                                var cal = findCalendar(ev.calendarId)
+                                                                var pad = function(n) { return n < 10 ? "0" + n : "" + n }
+
+                                                                eventDetails.loadEvent({
+                                                                    id: ev.id,
+                                                                    title: ev.title,
+                                                                    description: ev.description || "",
+                                                                    location: ev.location || "",
+                                                                    startDate: startDt.getFullYear() + "-" + pad(startDt.getMonth()+1) + "-" + pad(startDt.getDate()),
+                                                                    startTime: pad(startDt.getHours()) + ":" + pad(startDt.getMinutes()),
+                                                                    endDate: endDt.getFullYear() + "-" + pad(endDt.getMonth()+1) + "-" + pad(endDt.getDate()),
+                                                                    endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
+                                                                    allDay: ev.allDay || false,
+                                                                    calendarName: cal ? cal.name : "",
+                                                                    calendarColor: cal ? cal.color : "#2196F3"
+                                                                });
+                                                                showEventDetails = true
+                                                            }
+                                                        }
+
+                                                        Column {
+                                                            id: eventContent
+                                                            anchors.left: parent.left
+                                                            anchors.right: parent.right
+                                                            anchors.top: parent.top
+                                                            anchors.margins: 4
+                                                            spacing: 1
+
+                                                            Text {
+                                                                width: parent.width
+                                                                text: modelData.allDay ? "All day" : formatTime(modelData.startTime)
+                                                                font.pixelSize: 9
+                                                                color: "white"
+                                                                opacity: 0.85
+                                                                elide: Text.ElideRight
+                                                            }
+                                                            Text {
+                                                                width: parent.width
+                                                                text: modelData.title || "Untitled"
+                                                                font.pixelSize: 11
+                                                                font.bold: true
+                                                                color: "white"
+                                                                elide: Text.ElideRight
+                                                                wrapMode: Text.Wrap
+                                                                maximumLineCount: 2
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
