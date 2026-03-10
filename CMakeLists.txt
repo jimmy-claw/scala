@@ -91,6 +91,28 @@ install(FILES ${CMAKE_SOURCE_DIR}/metadata.json
     RENAME manifest.json
 )
 
+# ── Standalone runner ────────────────────────────────────────────────────────
+option(BUILD_STANDALONE "Build standalone runner" OFF)
+if(BUILD_STANDALONE)
+    find_package(Qt6 REQUIRED COMPONENTS Quick Gui)
+
+    qt_add_executable(scala_standalone standalone/main.cpp)
+
+    qt_add_resources(scala_standalone "qml_resources"
+        PREFIX "/"
+        FILES
+            qml/CalendarView.qml
+            qml/CalendarGrid.qml
+            qml/CalendarSidebar.qml
+            qml/EventModal.qml
+            qml/EventDetails.qml
+    )
+
+    target_link_libraries(scala_standalone PRIVATE
+        Qt6::Quick Qt6::Qml Qt6::Gui
+    )
+endif()
+
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)
