@@ -6,6 +6,8 @@
 
 #include <QObject>
 #include <QString>
+#include <QUrl>
+#include <QUrlQuery>
 
 #ifdef LOGOS_CORE_AVAILABLE
 #include <interface.h>
@@ -33,6 +35,11 @@ public:
     virtual bool joinSharedCalendar(const QString &calendarId,
                                     const QString &encryptionKey) = 0;
     virtual QString getSyncStatus(const QString &calendarId) = 0;
+
+    // ── Share link API ──────────────────────────────────────────────────────
+    virtual QString generateShareLink(const QString &calendarId) = 0;
+    virtual QString parseShareLink(const QString &link) = 0;
+    virtual bool handleShareLink(const QString &link) = 0;
 };
 
 #define ILogosCalendar_iid "com.logos.module.ILogosCalendar"
@@ -82,6 +89,11 @@ public:
     Q_INVOKABLE bool joinSharedCalendar(const QString &calendarId,
                                         const QString &encryptionKey) override;
     Q_INVOKABLE QString getSyncStatus(const QString &calendarId) override;
+
+    // ── Share link API ──────────────────────────────────────────────────────
+    Q_INVOKABLE QString generateShareLink(const QString &calendarId) override;
+    Q_INVOKABLE QString parseShareLink(const QString &link) override;
+    Q_INVOKABLE bool handleShareLink(const QString &link) override;
 
 signals:
     void eventResponse(const QString &eventName, const QVariantList &args);

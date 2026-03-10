@@ -43,6 +43,7 @@ target_sources(scala_plugin PRIVATE
     src/calendar_module.cpp
     src/calendar_store.cpp
     src/calendar_sync.cpp
+    src/qr_generator.cpp
     src/plugin.cpp
 )
 
@@ -107,6 +108,7 @@ if(BUILD_STANDALONE)
             qml/CalendarSidebar.qml
             qml/EventModal.qml
             qml/EventDetails.qml
+            qml/ShareDialog.qml
     )
 
     target_link_libraries(scala_standalone PRIVATE

@@ -9,6 +9,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QUrl>
+#include <QUrlQuery>
 #include <QUuid>
 
 // ── Construction ─────────────────────────────────────────────────────────────
@@ -258,6 +260,96 @@ QString LogosCalendar::getSyncStatus(const QString &calendarId) {
         return QStringLiteral("syncing");
 
     return QStringLiteral("offline");
+}
+
+// ── Share link API ───────────────────────────────────────────────────────────
+
+QString LogosCalendar::generateShareLink(const QString &calendarId) {
+    auto cal = m_store.getCalendar(calendarId);
+    if (cal.id.isEmpty())
+        return {};
+
+    // Ensure calendar is shared (generates key if needed)
+    if (!cal.isShared || cal.encryptionKey.isEmpty())
+        shareCalendar(calendarId);
+
+    // Re-read after shareCalendar may have updated the key
+    cal = m_store.getCalendar(calendarId);
+    if (cal.encryptionKey.isEmpty())
+        return {};
+
+    QByteArray base64Key = cal.encryptionKey.toUtf8().toBase64(QByteArray::Base64UrlEncoding
+                                                               | QByteArray::OmitTrailingEquals);
+
+    QUrl url;
+    url.setScheme(QStringLiteral("scala"));
+    url.setHost(QStringLiteral("join"));
+
+    QUrlQuery query;
+    query.addQueryItem(QStringLiteral("id"), calendarId);
+    query.addQueryItem(QStringLiteral("key"), QString::fromLatin1(base64Key));
+    query.addQueryItem(QStringLiteral("name"), cal.name);
+    url.setQuery(query);
+
+    return url.toString();
+}
+
+QString LogosCalendar::parseShareLink(const QString &link) {
+    QUrl url(link);
+    if (!url.isValid() || url.scheme() != QStringLiteral("scala")
+        || url.host() != QStringLiteral("join"))
+        return {};
+
+    QUrlQuery query(url);
+    QString id = query.queryItemValue(QStringLiteral("id"));
+    QString base64Key = query.queryItemValue(QStringLiteral("key"));
+    QString name = query.queryItemValue(QStringLiteral("name"));
+
+    if (id.isEmpty() || base64Key.isEmpty())
+        return {};
+
+    QByteArray key = QByteArray::fromBase64(base64Key.toLatin1(),
+                                            QByteArray::Base64UrlEncoding
+                                            | QByteArray::OmitTrailingEquals);
+
+    QJsonObject result;
+    result[QStringLiteral("id")] = id;
+    result[QStringLiteral("key")] = QString::fromUtf8(key);
+    result[QStringLiteral("name")] = name;
+
+    return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
+}
+
+bool LogosCalendar::handleShareLink(const QString &link) {
+    QString parsed = parseShareLink(link);
+    if (parsed.isEmpty())
+        return false;
+
+    QJsonDocument doc = QJsonDocument::fromJson(parsed.toUtf8());
+    QJsonObject obj = doc.object();
+
+    QString id = obj[QStringLiteral("id")].toString();
+    QString key = obj[QStringLiteral("key")].toString();
+    QString name = obj[QStringLiteral("name")].toString();
+
+    if (id.isEmpty() || key.isEmpty())
+        return false;
+
+    // If calendar doesn't exist yet, create with the shared name
+    auto cal = m_store.getCalendar(id);
+    if (cal.id.isEmpty() && !name.isEmpty()) {
+        cal.id = id;
+        cal.name = name;
+        cal.color = QStringLiteral("#9C27B0");
+        cal.isShared = true;
+        cal.encryptionKey = key;
+        qint64 now = QDateTime::currentMSecsSinceEpoch();
+        cal.createdAt = now;
+        cal.updatedAt = now;
+        m_store.saveCalendar(cal);
+    }
+
+    return joinSharedCalendar(id, key);
 }
 
 // ── Incoming sync messages ───────────────────────────────────────────────────

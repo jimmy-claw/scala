@@ -47,3 +47,25 @@ target_link_libraries(test_sync PRIVATE
 )
 
 add_test(NAME test_sync COMMAND test_sync)
+
+# ── Sharing tests ────────────────────────────────────────────────────────────
+
+add_executable(test_sharing
+    test_sharing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/qr_generator.cpp
+)
+
+target_include_directories(test_sharing PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(test_sharing PRIVATE
+    Qt6::Core
+    Qt6::Test
+)
+
+add_test(NAME test_sharing COMMAND test_sharing)
