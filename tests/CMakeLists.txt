@@ -26,3 +26,24 @@ target_link_libraries(test_calendar PRIVATE
 )
 
 add_test(NAME test_calendar COMMAND test_calendar)
+
+# ── Sync tests ───────────────────────────────────────────────────────────────
+
+add_executable(test_sync
+    test_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
+)
+
+target_include_directories(test_sync PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(test_sync PRIVATE
+    Qt6::Core
+    Qt6::Test
+)
+
+add_test(NAME test_sync COMMAND test_sync)

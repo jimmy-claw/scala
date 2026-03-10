@@ -1,6 +1,7 @@
 #pragma once
 
 #include "calendar_store.h"
+#include "calendar_sync.h"
 #include "types.h"
 
 #include <QObject>
@@ -26,6 +27,12 @@ public:
     virtual bool deleteEvent(const QString &id) = 0;
     virtual QString listEvents(const QString &calendarId) = 0;
     virtual QString getEvent(const QString &id) = 0;
+
+    // ── Sync API ───────────────────────────────────────────────────────────
+    virtual QString shareCalendar(const QString &calendarId) = 0;
+    virtual bool joinSharedCalendar(const QString &calendarId,
+                                    const QString &encryptionKey) = 0;
+    virtual QString getSyncStatus(const QString &calendarId) = 0;
 };
 
 #define ILogosCalendar_iid "com.logos.module.ILogosCalendar"
@@ -70,14 +77,25 @@ public:
     Q_INVOKABLE QString listEvents(const QString &calendarId) override;
     Q_INVOKABLE QString getEvent(const QString &id) override;
 
+    // ── Sync API ────────────────────────────────────────────────────────────
+    Q_INVOKABLE QString shareCalendar(const QString &calendarId) override;
+    Q_INVOKABLE bool joinSharedCalendar(const QString &calendarId,
+                                        const QString &encryptionKey) override;
+    Q_INVOKABLE QString getSyncStatus(const QString &calendarId) override;
+
 signals:
     void eventResponse(const QString &eventName, const QVariantList &args);
+    void syncStatusChanged(const QString &calendarId, const QString &status);
 
 private:
+    void onSyncMessageReceived(const QString &calendarId, const SyncMessage &msg);
+
     CalendarStore m_store;
+    CalendarSync *m_sync = nullptr;
 
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPI *m_logosAPI = nullptr;
     LogosAPIClient *m_kvClient = nullptr;
+    LogosAPIClient *m_messagingClient = nullptr;
 #endif
 };
