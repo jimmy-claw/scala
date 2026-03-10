@@ -90,3 +90,43 @@ target_link_libraries(test_identity PRIVATE
 )
 
 add_test(NAME test_identity COMMAND test_identity)
+
+# ── Module wiring tests ──────────────────────────────────────────────────────
+
+add_executable(test_module
+    test_module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
+)
+
+target_include_directories(test_module PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(test_module PRIVATE
+    Qt6::Core
+    Qt6::Test
+)
+
+add_test(NAME test_module COMMAND test_module)
+
+# ── Namespace isolation tests ─────────────────────────────────────────────────
+
+add_executable(test_namespace
+    test_namespace.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
+)
+
+target_include_directories(test_namespace PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(test_namespace PRIVATE
+    Qt6::Core
+    Qt6::Test
+)
+
+add_test(NAME test_namespace COMMAND test_namespace)
