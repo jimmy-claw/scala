@@ -164,13 +164,9 @@ if(BUILD_MODULE)
     # Logos libraries
     find_library(MODULE_LOGOS_CORE_LIB logos_core
         HINTS "${LOGOS_LIBLOGOS_ROOT}/lib" NO_DEFAULT_PATH)
-    find_library(MODULE_LOGOS_SDK_LIB logos_sdk
-        HINTS "${LOGOS_CPP_SDK_ROOT}/lib" NO_DEFAULT_PATH)
-
     target_link_libraries(scala_module_plugin PRIVATE
         Qt6::Core Qt6::Qml Qt6::RemoteObjects
         ${MODULE_LOGOS_CORE_LIB}
-        ${MODULE_LOGOS_SDK_LIB}
     )
 
     target_compile_definitions(scala_module_plugin PRIVATE
