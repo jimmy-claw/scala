@@ -126,6 +126,17 @@ if(BUILD_STANDALONE)
     target_link_libraries(scala_standalone PRIVATE
         Qt6::Quick Qt6::Qml Qt6::Gui Qt6::Widgets
     )
+
+    if(LOGOS_CORE_AVAILABLE)
+        target_sources(scala_standalone PRIVATE src/scala_bridge.cpp)
+        target_link_libraries(scala_standalone PRIVATE
+            Qt6::RemoteObjects
+            logos_cpp_sdk
+            logos_core
+            ${LOGOS_SDK_LIB}
+        )
+        target_compile_definitions(scala_standalone PRIVATE LOGOS_CORE_AVAILABLE)
+    endif()
 endif()
 
 # ── Headless logoscore module plugin ─────────────────────────────────────────
