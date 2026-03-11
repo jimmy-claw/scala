@@ -4,6 +4,10 @@ CMAKE_FLAGS      ?= -DCMAKE_BUILD_TYPE=Debug
 TOOLS_DIR        ?= ./tools
 MODULES_DIR      ?= ./modules
 
+# Explicit SDK paths (override nix auto-detection when passed on command line)
+LOGOS_CPP_SDK_ROOT  ?=
+LOGOS_LIBLOGOS_ROOT ?=
+
 # ── Nix store auto-detection ─────────────────────────────────────────────────
 # Split packages: headers, lib, and bin are separate nix outputs
 LOGOS_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-liblogos-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
@@ -24,7 +28,7 @@ NIX_QTDECL     ?= $(shell ls -d /nix/store/*-qtdeclarative-6.9.* 2>/dev/null | g
 NIX_QTREMOBJ   ?= $(shell ls -d /nix/store/*-qtremoteobjects-6.9.* 2>/dev/null | grep -v '\.drv$$' | grep -v dev | head -1)
 NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
-.PHONY: all build test test-cli clean standalone screenshot \
+.PHONY: all build test test-cli clean standalone build-standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli \
         build-module run-module
@@ -37,11 +41,11 @@ build:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. $(CMAKE_FLAGS) && make -j$$(nproc)
 
-standalone:
+standalone build-standalone:
 	mkdir -p $(BUILD_STANDALONE)
 	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) \
 		-DBUILD_STANDALONE=ON \
-		$(if $(LOGOS_HEADERS_NIX),-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged -DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged,) \
+		$(if $(LOGOS_CPP_SDK_ROOT),-DLOGOS_CPP_SDK_ROOT=$(LOGOS_CPP_SDK_ROOT) -DLOGOS_LIBLOGOS_ROOT=$(LOGOS_LIBLOGOS_ROOT),$(if $(LOGOS_HEADERS_NIX),-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged -DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged,)) \
 		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
 		&& cmake --build . -j$$(nproc) --target scala_standalone
 
