@@ -30,30 +30,40 @@ jobs:
           cmake --build build-standalone -j4 --target scala_standalone
 
   e2e:
+    name: "E2E (requires Logos Core runtime)"
     runs-on: ubuntu-latest
     needs: build
-    continue-on-error: true
+    continue-on-error: true   # logoscore not available in public CI — informational only
     steps:
       - uses: actions/checkout@v4
-      - name: Install Nix
-        uses: cachix/install-nix-action@v27
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - name: Install Qt6
-        run: sudo apt-get install -y qt6-base-dev qt6-remoteobjects-dev
-      - name: Build logoscore + modules via Nix
+
+      - name: Check for logoscore
+        id: check
         run: |
-          nix --extra-experimental-features 'nix-command flakes' build github:logos-co/logos-liblogos -o tools/logoscore || true
-          # If nix build worked, set up merged dirs and build module
-          if [ -f tools/logoscore/bin/logoscore ]; then
-            export LOGOSCORE=tools/logoscore/bin/logoscore
-            make setup-kv-module
-            make build-module
+          # logoscore is a private Logos Core binary — not available in public CI.
+          # To run e2e locally: bash tools/e2e-test.sh
+          # To run e2e in private CI: set LOGOSCORE env var or provide via artifact.
+          if command -v logoscore &>/dev/null; then
+            echo "found=true" >> $GITHUB_OUTPUT
           else
-            echo "::warning::logoscore not available — skipping e2e"
-            exit 0
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "::notice::logoscore not available — e2e tests skipped."
+            echo "::notice::Run locally with: bash tools/e2e-test.sh"
           fi
+
+      - name: Install Qt6 (for module build)
+        if: steps.check.outputs.found == 'true'
+        run: sudo apt-get install -y qt6-base-dev qt6-remoteobjects-dev
+
+      - name: Build scala_module
+        if: steps.check.outputs.found == 'true'
+        run: make build-module
+
       - name: Run e2e tests
-        if: success()
-        run: bash tools/e2e-test.sh
+        if: steps.check.outputs.found == 'true'
+        run: |
+          echo "Running scala_module end-to-end tests..."
+          bash tools/e2e-test.sh
         timeout-minutes: 5
+        env:
+          SCALA_E2E_TIMEOUT: "90"
