@@ -157,6 +157,34 @@ run-module: build-module
 	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
 
 ## Full dev stack: build everything and run
+
+## ── CLI (--call) targets ─────────────────────────────────────────────────────
+CALL_BASE = $(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
+
+## List all calendars
+list-calendars:
+	$(CALL_BASE) --call 'scala_module.listCalendars()'
+
+## Create a calendar: make create-calendar NAME=MyCal COLOR='#3b82f6'
+create-calendar:
+	$(CALL_BASE) --call 'scala_module.createCalendar($(NAME),$(COLOR))'
+
+## List events: make list-events CAL=<calendar-id>
+list-events:
+	$(CALL_BASE) --call 'scala_module.listEvents($(CAL))'
+
+## Get identity (public key)
+get-identity:
+	$(CALL_BASE) --call 'scala_module.getIdentity()'
+
+## Generate share link: make share-calendar CAL=<id>
+share-calendar:
+	$(CALL_BASE) --call 'scala_module.generateShareLink($(CAL))'
+
+## Join via share link: make join-calendar LINK=<link>
+join-calendar:
+	$(CALL_BASE) --call 'scala_module.handleShareLink($(LINK))'
+
 ## Run 'make run-core' in a separate terminal first
 dev: standalone
 	@echo "Starting Scala..."
