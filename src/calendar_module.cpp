@@ -93,27 +93,32 @@ void LogosCalendar::initLogos(LogosAPI *logosAPIInstance) {
         m_store.setClient(m_kvClient);
     }
 
-    // Get messaging module client for sync
-    m_messagingClient = m_logosAPI->getClient("messaging_module");
-    if (!m_messagingClient) {
-        qWarning() << "LogosCalendar: failed to get messaging_module client"
-                    << "(sync will use stub)";
-    } else {
-        m_sync->setMessagingClient(m_messagingClient);
-    }
+    // Skip optional module lookups in e2e/CI mode (they timeout ~20s each)
+    if (qgetenv("SCALA_E2E_MINIMAL").isEmpty()) {
+        // Get messaging module client for sync
+        m_messagingClient = m_logosAPI->getClient("messaging_module");
+        if (!m_messagingClient) {
+            qWarning() << "LogosCalendar: failed to get messaging_module client"
+                        << "(sync will use stub)";
+        } else {
+            m_sync->setMessagingClient(m_messagingClient);
+        }
 
-    // Get identity from accounts module (optional — may not be loaded)
-    auto accountsClient = m_logosAPI->getClient("accounts_module");
-    if (accountsClient) {
-        QTimer::singleShot(500, this, [this, accountsClient]() {
-            QVariant result = accountsClient->invokeRemoteMethod(
-                "accounts_module", "getActiveAccountPubkey");
-            QString pubkey = result.toString();
-            if (!pubkey.isEmpty()) {
-                m_identity = pubkey;
-                m_store.kvSet(QStringLiteral("identity"), m_identity);
-            }
-        });
+        // Get identity from accounts module (optional — may not be loaded)
+        auto accountsClient = m_logosAPI->getClient("accounts_module");
+        if (accountsClient) {
+            QTimer::singleShot(500, this, [this, accountsClient]() {
+                QVariant result = accountsClient->invokeRemoteMethod(
+                    "accounts_module", "getActiveAccountPubkey");
+                QString pubkey = result.toString();
+                if (!pubkey.isEmpty()) {
+                    m_identity = pubkey;
+                    m_store.kvSet(QStringLiteral("identity"), m_identity);
+                }
+            });
+        }
+    } else {
+        qInfo() << "LogosCalendar: SCALA_E2E_MINIMAL set — skipping messaging/accounts lookups";
     }
 
     qInfo() << "LogosCalendar: initialized. version:" << version()
