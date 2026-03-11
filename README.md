@@ -67,6 +67,14 @@ make standalone     # build standalone runner
 make screenshot     # take a headless screenshot (requires xvfb + scrot)
 make install-cli    # install scala-cli.sh to ~/.local/bin/scala-cli
 make clean          # remove build dirs
+
+# CLI via logoscore --call (no running logoscore needed):
+make list-calendars
+make create-calendar NAME=MyCal COLOR='#3b82f6'
+make list-events CAL=<calendar-id>
+make get-identity
+make share-calendar CAL=<calendar-id>
+make join-calendar LINK='scala://...'
 ```
 
 ### Multi-instance testing (sharing/sync)
@@ -114,6 +122,31 @@ scala-cli create-calendar Work '#3b82f6'
 scala-cli share <calendar-id>
 scala-cli join 'scala://...'
 scala-cli identity
+```
+
+### scala-cli (direct wrapper)
+
+`tools/scala-cli` is a standalone bash wrapper that invokes logoscore `--call` directly
+(no running logoscore session needed):
+
+```bash
+# Auto-detects logoscore from nix store
+tools/scala-cli listCalendars
+tools/scala-cli createCalendar MyCalendar "#3b82f6"
+tools/scala-cli getPendingReminders
+
+# Override logoscore path
+LOGOSCORE=/path/to/logoscore tools/scala-cli listCalendars
+```
+
+### E2E tests
+
+```bash
+# Run all e2e tests (sets SCALA_E2E_MINIMAL=1 to skip optional module timeouts)
+bash tools/e2e-test.sh
+
+# Tests: listCalendars, createCalendar, listCalendars (verify), getPendingReminders
+# Runs all calls in a single logoscore session for speed
 ```
 
 ### Prerequisites

@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# scala-cli — thin wrapper around logoscore --call for scala_module
+#
+# Usage: scala-cli <method> [args...]
+# Example: scala-cli listCalendars
+#          scala-cli createCalendar MyName "#3b82f6"
+set -euo pipefail
+
+MODULES_DIR="${SCALA_MODULES_DIR:-$(dirname "$0")/../modules}"
+LOGOSCORE="${LOGOSCORE:-$(for d in $(ls -d /nix/store/*logos-liblogos-bin-* 2>/dev/null | grep -v '.drv'); do
+  test -f "$d/bin/logoscore" && echo "$d/bin/logoscore" && break
+done)}"
+TIMEOUT="${SCALA_CLI_TIMEOUT:-60}"
+
+TMPLOG=""
+LSPID=""
+
+cleanup() {
+  [[ -n "$LSPID" ]] && kill "$LSPID" 2>/dev/null; wait "$LSPID" 2>/dev/null || true
+  [[ -n "$TMPLOG" ]] && rm -f "$TMPLOG"
+}
+trap cleanup EXIT INT TERM
+
+if [[ -z "$LOGOSCORE" ]]; then
+  echo "ERROR: logoscore not found. Set LOGOSCORE env var." >&2
+  exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  cat >&2 <<'USAGE'
+Usage: scala-cli <method> [args...]
+
+Methods:
+  listCalendars
+  createCalendar <name> <color>
+  deleteCalendar <id>
+  listEvents <calendarId>
+  createEvent <calendarId> <eventJson>
+  getIdentity
+  generateShareLink <calendarId>
+  handleShareLink <link>
+  searchEvents <query>
+  getPendingReminders
+USAGE
+  exit 1
+fi
+
+METHOD="$1"
+shift
+
+# Join remaining args with comma
+ARGS=""
+for arg in "$@"; do
+  ARGS="${ARGS:+${ARGS},}${arg}"
+done
+CALL="scala_module.${METHOD}(${ARGS})"
+
+# Run logoscore in background, kill once result arrives
+TMPLOG="$(mktemp /tmp/scala-cli-XXXXXX.log)"
+"$LOGOSCORE" \
+  --modules-dir "$MODULES_DIR" \
+  --load-modules kv_module,scala_module \
+  --call "$CALL" > "$TMPLOG" 2>&1 &
+LSPID=$!
+
+# Poll for result (max TIMEOUT seconds)
+RESULT=""
+for i in $(seq 1 "$TIMEOUT"); do
+  if grep -q 'Method call successful' "$TMPLOG" 2>/dev/null; then
+    RESULT=$(grep 'Method call successful. Result:' "$TMPLOG" | tail -1 | sed 's/.*Result: //')
+    break
+  fi
+  if grep -q 'Method call failed\|Segfault' "$TMPLOG" 2>/dev/null; then
+    echo "ERROR: method call failed" >&2
+    grep 'Method call failed' "$TMPLOG" >&2 || true
+    exit 1
+  fi
+  sleep 1
+done
+
+if [[ -n "$RESULT" ]]; then
+  echo "$RESULT"
+else
+  echo "ERROR: timed out after ${TIMEOUT}s waiting for result" >&2
+  exit 1
+fi
