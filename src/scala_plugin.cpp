@@ -18,7 +18,6 @@ ScalaPlugin::ScalaPlugin(QObject *parent)
 
 void ScalaPlugin::initLogos(LogosAPI *api) {
     m_logosAPI = api;
-    logosAPI = api;  // required by PluginInterface — ModuleProxy reads this field
 
     if (!m_logosAPI) {
         qWarning() << "ScalaPlugin: initLogos called with null LogosAPI";
