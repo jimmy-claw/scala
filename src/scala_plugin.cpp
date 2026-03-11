@@ -1,3 +1,6 @@
+#include <QThread>
+#include <QElapsedTimer>
+#include <QCoreApplication>
 #include "scala_plugin.h"
 
 #include <QDebug>
@@ -18,6 +21,7 @@ ScalaPlugin::ScalaPlugin(QObject *parent)
 
 void ScalaPlugin::initLogos(LogosAPI *api) {
     m_logosAPI = api;
+    logosAPI = api;  // PluginInterface base-class field — ModuleProxy reads this
 
     if (!m_logosAPI) {
         qWarning() << "ScalaPlugin: initLogos called with null LogosAPI";
@@ -25,16 +29,20 @@ void ScalaPlugin::initLogos(LogosAPI *api) {
         return;
     }
 
-    // Defer getClient calls to avoid race with other modules registering
-    QTimer::singleShot(200, this, [this]() {
-        m_calendar->initLogos(m_logosAPI);
-        qInfo() << "ScalaPlugin: initialized. version:" << version();
-    });
+    m_calendar->initLogos(m_logosAPI);  // safe: no blocking calls inside (lazy KV client)
+    m_calendarInitialized = true;
+    qInfo() << "ScalaPlugin: initLogos done. version:" << version();
+}
+
+
+void ScalaPlugin::ensureCalendarInit() {
+    // no-op: calendar is initialized in initLogos via QTimer + processEvents
 }
 
 // ── Forwarded methods ────────────────────────────────────────────────────────
 
 void ScalaPlugin::setNamespace(const QString &ns) {
+    ensureCalendarInit();
     m_calendar->setNamespace(ns);
 }
 
@@ -47,10 +55,12 @@ void ScalaPlugin::setIdentity(const QString &pubkeyHex) {
 }
 
 QString ScalaPlugin::createCalendar(const QString &name, const QString &color) {
+    ensureCalendarInit();
     return m_calendar->createCalendar(name, color);
 }
 
 QString ScalaPlugin::listCalendars() {
+    ensureCalendarInit();
     return m_calendar->listCalendars();
 }
 
@@ -108,6 +118,7 @@ QString ScalaPlugin::searchEvents(const QString &query) {
 }
 
 QString ScalaPlugin::getPendingReminders() {
+    ensureCalendarInit();
     return m_calendar->getPendingReminders();
 }
 

@@ -69,4 +69,6 @@ signals:
 private:
     LogosCalendar *m_calendar = nullptr;
     LogosAPI *m_logosAPI = nullptr;
+    bool m_calendarInitialized = false;
+    void ensureCalendarInit();
 };
