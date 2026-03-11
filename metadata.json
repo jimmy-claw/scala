@@ -1,19 +1,19 @@
 {
-  "name": "scala",
+  "name": "scala_module",
   "version": "0.1.0",
   "description": "Secure Calendar App — privacy-first shared calendar module for Logos Core",
   "author": "Jimmy Claw",
   "type": "core",
   "category": "general",
   "main": {
-    "linux-x86_64": "scala_plugin.so",
-    "linux-amd64": "scala_plugin.so",
-    "linux-arm64": "scala_plugin.so",
-    "linux-aarch64": "scala_plugin.so",
-    "darwin-x86_64": "scala_plugin.dylib",
-    "darwin-arm64": "scala_plugin.dylib",
-    "windows-x86_64": "scala_plugin.dll"
+    "linux-x86_64": "scala_module_plugin.so",
+    "linux-amd64": "scala_module_plugin.so",
+    "linux-arm64": "scala_module_plugin.so",
+    "linux-aarch64": "scala_module_plugin.so",
+    "darwin-x86_64": "scala_module_plugin.dylib",
+    "darwin-arm64": "scala_module_plugin.dylib",
+    "windows-x86_64": "scala_module_plugin.dll"
   },
-  "dependencies": ["kv_module", "messaging_module", "accounts_module"],
+  "dependencies": ["kv_module"],
   "capabilities": []
 }
