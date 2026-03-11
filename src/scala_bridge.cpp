@@ -4,6 +4,7 @@
 #include <token_manager.h>
 
 #include <QFile>
+#include <QFileInfo>
 #include <QDebug>
 
 static const QString MODULE_NAME   = QStringLiteral("scala_module");
@@ -31,6 +32,14 @@ ScalaBridge::~ScalaBridge() = default;
 
 void ScalaBridge::loadToken()
 {
+    QFileInfo fi(TOKEN_FILE);
+    if (!fi.exists() || !fi.isFile()) {
+        // /tmp/logos_scala_module is typically a QtRO socket, not a text file.
+        // LogosAPIClient connects to the registry directly; no token needed.
+        qDebug() << "ScalaBridge: token path is socket/absent, skipping token load";
+        return;
+    }
+
     QFile f(TOKEN_FILE);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "ScalaBridge: no token file at" << TOKEN_FILE;
