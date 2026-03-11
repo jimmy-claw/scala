@@ -1,32 +1,22 @@
 #!/bin/bash
-# Scala CLI — wrapper around logoscore --call for headless use
+# Scala CLI — connects to a running logoscore instance via the C++ client
 
-LOGOSCORE="${SCALA_LOGOSCORE:-$(which logoscore 2>/dev/null)}"
-MODULES_DIR="${SCALA_MODULES_DIR:-$HOME/.local/share/logos/modules}"
-NAMESPACE="${SCALA_NAMESPACE:-default}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCALA_CLI_BIN="${SCALA_CLI_BIN:-$SCRIPT_DIR/../build-module/scala_cli}"
 
-if [ -z "$LOGOSCORE" ]; then
-    # Try nix store
-    LOGOSCORE=$(ls -d /nix/store/*logos-liblogos-bin-*/bin/logoscore 2>/dev/null | head -1)
-fi
-
-if [ -z "$LOGOSCORE" ]; then
-    echo "Error: logoscore not found. Set SCALA_LOGOSCORE or install logos-liblogos."
+if [ ! -x "$SCALA_CLI_BIN" ]; then
+    echo "Error: scala_cli binary not found at $SCALA_CLI_BIN"
+    echo "Build it with: make build-cli"
     exit 1
 fi
 
-call() {
-    "$LOGOSCORE" --modules-dir "$MODULES_DIR" --load-modules kv_module,scala_module \
-        --call "scala_module.$1" 2>/dev/null | grep -v '^Debug'
-}
-
 case "$1" in
-    list-calendars)   call "listCalendars()" ;;
-    list-events)      call "listEvents($2)" ;;
-    create-calendar)  call "createCalendar($2,$3)" ;;
-    share)            call "generateShareLink($2)" ;;
-    join)             call "handleShareLink($2)" ;;
-    identity)         call "getIdentity()" ;;
+    list-calendars)   exec "$SCALA_CLI_BIN" listCalendars ;;
+    list-events)      exec "$SCALA_CLI_BIN" listEvents "$2" ;;
+    create-calendar)  exec "$SCALA_CLI_BIN" createCalendar "$2" "$3" ;;
+    share)            exec "$SCALA_CLI_BIN" generateShareLink "$2" ;;
+    join)             exec "$SCALA_CLI_BIN" handleShareLink "$2" ;;
+    identity)         exec "$SCALA_CLI_BIN" getIdentity ;;
     help|--help|-h|"")
         echo "Usage: scala-cli <command> [args]"
         echo ""
@@ -37,9 +27,12 @@ case "$1" in
         echo "  share <calId>            Generate share link"
         echo "  join <link>              Join a shared calendar"
         echo "  identity                 Show current identity"
+        echo ""
+        echo "Requires logoscore running with scala_module (make run-module)."
+        echo "You can also call the binary directly: $SCALA_CLI_BIN <method> [args...]"
         ;;
     *)
-        echo "Unknown command: $1. Run 'scala-cli help' for usage."
-        exit 1
+        # Pass through unknown commands directly to the binary
+        exec "$SCALA_CLI_BIN" "$@"
         ;;
 esac
