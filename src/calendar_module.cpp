@@ -1,3 +1,4 @@
+#include <QTimer>
 #include "calendar_module.h"
 
 #ifdef LOGOS_CORE_AVAILABLE
@@ -101,16 +102,18 @@ void LogosCalendar::initLogos(LogosAPI *logosAPIInstance) {
         m_sync->setMessagingClient(m_messagingClient);
     }
 
-    // Get identity from accounts module
+    // Get identity from accounts module (optional — may not be loaded)
     auto accountsClient = m_logosAPI->getClient("accounts_module");
     if (accountsClient) {
-        QVariant result = accountsClient->invokeRemoteMethod(
-            "accounts_module", "getActiveAccountPubkey");
-        QString pubkey = result.toString();
-        if (!pubkey.isEmpty()) {
-            m_identity = pubkey;
-            m_store.kvSet(QStringLiteral("identity"), m_identity);
-        }
+        QTimer::singleShot(500, this, [this, accountsClient]() {
+            QVariant result = accountsClient->invokeRemoteMethod(
+                "accounts_module", "getActiveAccountPubkey");
+            QString pubkey = result.toString();
+            if (!pubkey.isEmpty()) {
+                m_identity = pubkey;
+                m_store.kvSet(QStringLiteral("identity"), m_identity);
+            }
+        });
     }
 
     qInfo() << "LogosCalendar: initialized. version:" << version()

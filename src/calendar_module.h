@@ -50,10 +50,14 @@ Q_DECLARE_INTERFACE(ILogosCalendar, ILogosCalendar_iid)
 /**
  * LogosCalendar — Qt plugin implementing the Scala calendar module.
  */
-#ifdef LOGOS_CORE_AVAILABLE
+#if defined(LOGOS_CORE_AVAILABLE) && !defined(SCALA_MODULE_WRAPPER)
 class LogosCalendar final : public QObject, public PluginInterface, public ILogosCalendar {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID ILogosCalendar_iid FILE "metadata.json")
+    Q_INTERFACES(PluginInterface ILogosCalendar)
+#elif defined(LOGOS_CORE_AVAILABLE) && defined(SCALA_MODULE_WRAPPER)
+class LogosCalendar final : public QObject, public PluginInterface, public ILogosCalendar {
+    Q_OBJECT
     Q_INTERFACES(PluginInterface ILogosCalendar)
 #else
 class LogosCalendar final : public QObject, public ILogosCalendar {

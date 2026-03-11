@@ -25,9 +25,9 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ CLI wrapper (`scala-cli.sh`) for headless use
 - ✅ 59 tests across 6 test suites
 - ✅ CLI integration tests (`make test-cli`)
+- ✅ Headless logoscore plugin (`scala_module`) — loads in logoscore without Qt Quick/GUI
 
 **Planned:**
-- Logos Core IComponent packaging (lgpm)
 - Real message signing (full crypto)
 - At-rest KV encryption (#34)
 - Logos Storage attachments
@@ -57,6 +57,8 @@ make dev
 Other targets:
 ```bash
 make build          # build plugin only (no standalone)
+make build-module   # build headless logoscore plugin (scala_module)
+make run-module     # run logoscore with kv_module + scala_module
 make test           # run all tests (59 tests, 6 suites)
 make test-cli       # CLI integration tests (requires make run-core)
 make standalone     # build standalone runner
@@ -130,14 +132,22 @@ make screenshot
 ## Architecture
 
 ```
-QML UI (Logos Core IComponent)
-  ↓
+logos_host (logoscore)
+  └── scala_module_plugin.so  ← headless, Qt Core/Qml/RemoteObjects only
+        └── ScalaPlugin → LogosCalendar (CalendarModule API via QtRO)
+
+QML UI (separate process)
+  └── connects to logoscore QtRO registry → uses scala_module API remotely
+
 C++ Module (LogosCalendar)
   ├── Local KV storage    — via logos-kv-module inter-module calls (namespace-isolated)
   ├── Logos Messaging     — P2P sync, per-calendar topic + encryption
   ├── Logos Core Identity — stable sender pubkey, event ownership, signing
   └── Logos Storage       — attachments (planned)
 ```
+
+The plugin `.so` loaded by `logos_host` is **headless** — no Qt Quick, no QML engine, no GUI.
+The QML UI runs as a separate process that connects to the running logoscore QtRO registry.
 
 ## Related
 

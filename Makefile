@@ -26,7 +26,8 @@ NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
 .PHONY: all build test test-cli clean standalone screenshot \
         setup setup-logoscore setup-kv-module \
-        run-core run dev install-cli
+        run-core run dev install-cli \
+        build-module run-module
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ test-cli:
 	bash tests/cli/test_cli.sh ./cli/scala-cli.sh
 
 clean:
-	rm -rf $(BUILD_DIR) $(BUILD_STANDALONE)
+	rm -rf $(BUILD_DIR) $(BUILD_STANDALONE) $(BUILD_MODULE)
 
 # ── Screenshot ───────────────────────────────────────────────────────────────
 
@@ -122,6 +123,28 @@ run: standalone
 	QML_IMPORT_PATH=$(NIX_QTDECL)/lib/qt-6/qml \
 	LOGOS_CORE_AVAILABLE=1 \
 	./$(BUILD_STANDALONE)/scala_standalone
+
+# ── Headless module plugin (for logoscore) ──────────────────────────────────
+
+BUILD_MODULE ?= build-module
+
+## Build headless logoscore plugin (no Qt Quick/GUI)
+build-module: setup-nix-merged
+	mkdir -p $(BUILD_MODULE)
+	cd $(BUILD_MODULE) && cmake .. $(CMAKE_FLAGS) \
+		-DBUILD_MODULE=ON \
+		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
+		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
+		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
+		&& cmake --build . --target scala_module_plugin -j$$(nproc)
+	mkdir -p $(MODULES_DIR)/scala_module
+	cp $(BUILD_MODULE)/scala_module_plugin.so $(MODULES_DIR)/scala_module/
+	cp metadata.json $(MODULES_DIR)/scala_module/manifest.json
+	@echo "scala_module ready at: $(MODULES_DIR)/scala_module/"
+
+## Run logoscore with kv_module + scala_module
+run-module: build-module
+	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
 
 ## Full dev stack: build everything and run
 ## Run 'make run-core' in a separate terminal first

@@ -128,6 +128,71 @@ if(BUILD_STANDALONE)
     )
 endif()
 
+# ── Headless logoscore module plugin ─────────────────────────────────────────
+option(BUILD_MODULE "Build headless logoscore plugin (no Qt Quick/GUI)" OFF)
+if(BUILD_MODULE)
+    if(NOT LOGOS_CPP_SDK_ROOT OR NOT LOGOS_LIBLOGOS_ROOT)
+        message(FATAL_ERROR "BUILD_MODULE requires -DLOGOS_CPP_SDK_ROOT=<path> -DLOGOS_LIBLOGOS_ROOT=<path>")
+    endif()
+
+    find_package(Qt6 REQUIRED COMPONENTS Core Qml RemoteObjects)
+
+    qt_add_plugin(scala_module_plugin CLASS_NAME ScalaPlugin)
+    set_target_properties(scala_module_plugin PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "scala_module_plugin"
+    )
+
+    target_sources(scala_module_plugin PRIVATE
+        src/scala_plugin.cpp
+        src/scala_plugin.h
+        src/calendar_module.cpp
+        src/calendar_store.cpp
+        src/calendar_sync.cpp
+        src/qr_generator.cpp
+    )
+
+    target_include_directories(scala_module_plugin PRIVATE
+        src
+        ${CMAKE_SOURCE_DIR}
+        "${LOGOS_LIBLOGOS_ROOT}/include"
+        "${LOGOS_CPP_SDK_ROOT}/include"
+        "${LOGOS_CPP_SDK_ROOT}/include/cpp"
+        "${LOGOS_CPP_SDK_ROOT}/include/core"
+    )
+
+    # Logos libraries
+    find_library(MODULE_LOGOS_CORE_LIB logos_core
+        HINTS "${LOGOS_LIBLOGOS_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(MODULE_LOGOS_SDK_LIB logos_sdk
+        HINTS "${LOGOS_CPP_SDK_ROOT}/lib" NO_DEFAULT_PATH)
+
+    target_link_libraries(scala_module_plugin PRIVATE
+        Qt6::Core Qt6::Qml Qt6::RemoteObjects
+        ${MODULE_LOGOS_CORE_LIB}
+        ${MODULE_LOGOS_SDK_LIB}
+    )
+
+    target_compile_definitions(scala_module_plugin PRIVATE
+        QT_PLUGIN
+        LOGOS_CORE_AVAILABLE
+        SCALA_MODULE_WRAPPER
+    )
+
+    # RPATH: $ORIGIN so it finds logos libs next to the .so
+    if(APPLE)
+        set_target_properties(scala_module_plugin PROPERTIES
+            BUILD_RPATH   "@loader_path"
+            INSTALL_RPATH "@loader_path"
+        )
+    elseif(UNIX)
+        set_target_properties(scala_module_plugin PROPERTIES
+            BUILD_RPATH   "$ORIGIN"
+            INSTALL_RPATH "$ORIGIN"
+        )
+    endif()
+endif()
+
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)
