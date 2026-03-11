@@ -193,6 +193,48 @@ if(BUILD_MODULE)
     endif()
 endif()
 
+# ── CLI binary (connects to running logoscore via QtRO) ──────────────────────
+option(BUILD_CLI "Build scala-cli binary" OFF)
+if(BUILD_CLI)
+    if(NOT LOGOS_CPP_SDK_ROOT OR NOT LOGOS_LIBLOGOS_ROOT)
+        message(FATAL_ERROR "BUILD_CLI requires -DLOGOS_CPP_SDK_ROOT=<path> -DLOGOS_LIBLOGOS_ROOT=<path>")
+    endif()
+
+    find_package(Qt6 REQUIRED COMPONENTS Core RemoteObjects)
+
+    add_executable(scala_cli cli/scala_cli.cpp)
+
+    target_include_directories(scala_cli PRIVATE
+        "${LOGOS_LIBLOGOS_ROOT}/include"
+        "${LOGOS_CPP_SDK_ROOT}/include"
+        "${LOGOS_CPP_SDK_ROOT}/include/cpp"
+        "${LOGOS_CPP_SDK_ROOT}/include/core"
+    )
+
+    find_library(CLI_LOGOS_CORE_LIB logos_core
+        HINTS "${LOGOS_LIBLOGOS_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(CLI_LOGOS_SDK_LIB logos_sdk
+        HINTS "${LOGOS_CPP_SDK_ROOT}/lib" NO_DEFAULT_PATH)
+
+    target_link_libraries(scala_cli PRIVATE
+        Qt6::Core Qt6::RemoteObjects
+        ${CLI_LOGOS_CORE_LIB}
+        ${CLI_LOGOS_SDK_LIB}
+    )
+
+    if(APPLE)
+        set_target_properties(scala_cli PROPERTIES
+            BUILD_RPATH   "@loader_path"
+            INSTALL_RPATH "@loader_path"
+        )
+    elseif(UNIX)
+        set_target_properties(scala_cli PROPERTIES
+            BUILD_RPATH   "$ORIGIN"
+            INSTALL_RPATH "$ORIGIN"
+        )
+    endif()
+endif()
+
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)

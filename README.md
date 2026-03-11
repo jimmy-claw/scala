@@ -22,6 +22,7 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ Event reminders — QSystemTrayIcon notifications, configurable (15m/30m/1h before)
 - ✅ Multi-instance dev testing — `SCALA_NAMESPACE` env var for isolated KV namespaces
 - ✅ Standalone runner for local development and screenshots
+- ✅ C++ CLI client (`scala_cli`) — connects to running logoscore via QtRO
 - ✅ CLI wrapper (`scala-cli.sh`) for headless use
 - ✅ 59 tests across 6 test suites
 - ✅ CLI integration tests (`make test-cli`)
@@ -58,6 +59,7 @@ Other targets:
 ```bash
 make build          # build plugin only (no standalone)
 make build-module   # build headless logoscore plugin (scala_module)
+make build-cli      # build C++ CLI binary (scala_cli)
 make run-module     # run logoscore with kv_module + scala_module
 make test           # run all tests (59 tests, 6 suites)
 make test-cli       # CLI integration tests (requires make run-core)
@@ -86,15 +88,32 @@ Each instance uses an isolated KV namespace (`scala:alice:*` vs `scala:bob:*`).
 
 ### CLI (headless use)
 
+The C++ CLI binary connects directly to a running logoscore instance via QtRemoteObjects:
+
+```bash
+# Build the CLI binary
+make build-cli
+
+# Terminal 1 — start logoscore with scala_module
+make run-module
+
+# Terminal 2 — use the CLI
+./build-module/scala_cli listCalendars
+./build-module/scala_cli createCalendar Work '#3b82f6'
+./build-module/scala_cli listEvents <calendarId>
+./build-module/scala_cli generateShareLink <calendarId>
+./build-module/scala_cli getIdentity
+```
+
+The `scala-cli.sh` wrapper provides friendly command aliases:
+
 ```bash
 make install-cli
-
-# With logoscore running (make run-core in another terminal):
 scala-cli list-calendars
 scala-cli create-calendar Work '#3b82f6'
-scala-cli share <calendar-id>      # prints scala:// invite link
-scala-cli join 'scala://...'       # join a shared calendar
-scala-cli identity                 # show current identity
+scala-cli share <calendar-id>
+scala-cli join 'scala://...'
+scala-cli identity
 ```
 
 ### Prerequisites
@@ -138,6 +157,9 @@ logos_host (logoscore)
 
 QML UI (separate process)
   └── connects to logoscore QtRO registry → uses scala_module API remotely
+
+scala_cli (C++ binary)
+  └── connects to logoscore QtRO registry → invokes methods, prints results
 
 C++ Module (LogosCalendar)
   ├── Local KV storage    — via logos-kv-module inter-module calls (namespace-isolated)
