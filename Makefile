@@ -12,7 +12,7 @@ LOGOS_LIBLOGOS_ROOT ?=
 # Split packages: headers, lib, and bin are separate nix outputs
 LOGOS_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-liblogos-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 LOGOS_LIB_NIX     ?= $(shell ls -d /nix/store/*logos-liblogos-lib-* 2>/dev/null | grep -v '\.drv$$' | head -1)
-LOGOS_BIN_NIX     ?= $(shell for d in $(shell ls -d /nix/store/*logos-liblogos-bin-* 2>/dev/null | grep -v '\.drv$$'); do test -f "$$d/bin/logoscore" && echo "$$d" && break; done)
+LOGOS_BIN_NIX     ?= $(shell ls -d /nix/store/*logos-liblogos-bin-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 LOGOS_SDK_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-cpp-sdk-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 LOGOS_SDK_LIB_NIX     ?= $(shell ls -d /nix/store/*logos-cpp-sdk-lib-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 
@@ -31,7 +31,7 @@ NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 .PHONY: all build test test-cli clean standalone build-standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli \
-        build-module run-module build-cli
+        build-module run-module build-ui-plugin
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -146,15 +146,18 @@ build-module: setup-nix-merged
 	cp metadata.json $(MODULES_DIR)/scala_module/manifest.json
 	@echo "scala_module ready at: $(MODULES_DIR)/scala_module/"
 
-## Build CLI binary (connects to running logoscore via QtRO)
-build-cli: setup-nix-merged build-module
-	cd $(BUILD_MODULE) && cmake .. $(CMAKE_FLAGS) \
-		-DBUILD_MODULE=ON -DBUILD_CLI=ON \
+## Build IComponent UI plugin for logos-app-poc (Basecamp)
+BUILD_UI_PLUGIN ?= build-ui-plugin
+
+build-ui-plugin: setup-nix-merged
+	mkdir -p $(BUILD_UI_PLUGIN)
+	cd $(BUILD_UI_PLUGIN) && cmake .. $(CMAKE_FLAGS) \
+		-DBUILD_UI_PLUGIN=ON \
 		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
 		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
 		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
-		&& cmake --build . --target scala_cli -j$$(nproc)
-	@echo "scala_cli ready at: $(BUILD_MODULE)/scala_cli"
+		&& cmake --build . --target scala_ui -j$$(nproc)
+	@echo "scala_ui plugin ready at: $(BUILD_UI_PLUGIN)/libscala_ui.so"
 
 ## Run logoscore with kv_module + scala_module
 run-module: build-module

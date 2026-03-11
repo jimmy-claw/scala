@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/scala">
+        <file>CalendarView.qml</file>
+        <file>CalendarGrid.qml</file>
+        <file>CalendarSidebar.qml</file>
+        <file>EventModal.qml</file>
+        <file>EventDetails.qml</file>
+        <file>ShareDialog.qml</file>
+        <file>SettingsPanel.qml</file>
+    </qresource>
+</RCC>
