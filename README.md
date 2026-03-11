@@ -27,6 +27,7 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ CLI integration tests (`make test-cli`)
 - ✅ Headless logoscore plugin (`scala_module`) — loads in logoscore without Qt Quick/GUI
 - ✅ QML UI wired to scala_module via `LogosAPIClient` (`ScalaBridge`) — standalone talks to running logoscore over QtRO
+- ✅ IComponent UI plugin (`scala_ui`) — loads in logos-app-poc (Basecamp) alongside scala_module
 
 **Planned:**
 - Real message signing (full crypto)
@@ -59,6 +60,7 @@ Other targets:
 ```bash
 make build          # build plugin only (no standalone)
 make build-module   # build headless logoscore plugin (scala_module)
+make build-ui-plugin # build IComponent UI plugin for logos-app-poc
 make run-module     # run logoscore with kv_module + scala_module
 make test           # run all tests (59 tests, 6 suites)
 make test-cli       # CLI integration tests (requires make run-core)
@@ -180,12 +182,32 @@ make standalone LOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged LOGOS_CPP_SDK_ROO
 The standalone reads the scala_module auth token from `/tmp/logos_scala_module` on startup.
 If logoscore is not running, the build still works — it falls back to in-memory `LogosCalendar`.
 
+### Load in logos-app-poc (Basecamp)
+
+```bash
+# Install the scala_ui plugin
+lgpm install scala_ui
+
+# Or build from source:
+make build-ui-plugin
+# → build-ui-plugin/libscala_ui.so
+```
+
+The `scala_ui` plugin implements `IComponent` from component-interfaces. logos-app-poc
+loads it as a QQuickWidget alongside the headless `scala_module` — the UI gets a real
+`LogosAPI*` via `initLogos()`, so inter-module calls (KV, Messaging) work natively.
+
 ## Architecture
 
 ```
 logos_host (logoscore)
   └── scala_module_plugin.so  ← headless, Qt Core/Qml/RemoteObjects only
         └── ScalaPlugin → LogosCalendar (CalendarModule API via QtRO)
+
+logos-app-poc (Basecamp)
+  └── scala_ui.so  ← IComponent UI plugin (QQuickWidget)
+        └── ScalaUIComponent::createWidget(LogosAPI*)
+              └── ScalaPlugin + CalendarView.qml (embedded via qrc)
 
 QML UI (standalone process)
   └── ScalaBridge (QObject, C++)

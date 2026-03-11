@@ -31,7 +31,7 @@ NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 .PHONY: all build test test-cli clean standalone build-standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli \
-        build-module run-module
+        build-module run-module build-ui-plugin
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -145,6 +145,19 @@ build-module: setup-nix-merged
 	cp $(BUILD_MODULE)/scala_module_plugin.so $(MODULES_DIR)/scala_module/
 	cp metadata.json $(MODULES_DIR)/scala_module/manifest.json
 	@echo "scala_module ready at: $(MODULES_DIR)/scala_module/"
+
+## Build IComponent UI plugin for logos-app-poc (Basecamp)
+BUILD_UI_PLUGIN ?= build-ui-plugin
+
+build-ui-plugin: setup-nix-merged
+	mkdir -p $(BUILD_UI_PLUGIN)
+	cd $(BUILD_UI_PLUGIN) && cmake .. $(CMAKE_FLAGS) \
+		-DBUILD_UI_PLUGIN=ON \
+		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
+		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
+		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
+		&& cmake --build . --target scala_ui -j$$(nproc)
+	@echo "scala_ui plugin ready at: $(BUILD_UI_PLUGIN)/libscala_ui.so"
 
 ## Run logoscore with kv_module + scala_module
 run-module: build-module

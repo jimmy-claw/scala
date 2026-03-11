@@ -200,6 +200,80 @@ if(BUILD_MODULE)
     endif()
 endif()
 
+# ── UI Plugin (IComponent for logos-app-poc) ─────────────────────────────────
+option(BUILD_UI_PLUGIN "Build the IComponent UI plugin for logos-app-poc" OFF)
+
+if(BUILD_UI_PLUGIN)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets Quick QuickWidgets)
+
+    # component-interfaces (IComponent.h)
+    find_package(component-interfaces QUIET)
+    if(NOT component-interfaces_FOUND)
+        add_library(component-interfaces INTERFACE)
+        target_include_directories(component-interfaces INTERFACE
+            "${CMAKE_CURRENT_SOURCE_DIR}/interfaces"
+        )
+    endif()
+
+    set(UI_TARGET scala_ui)
+
+    add_library(${UI_TARGET} SHARED
+        src/scala_ui_component.cpp
+        src/scala_plugin.cpp
+        src/calendar_module.cpp
+        src/calendar_store.cpp
+        src/calendar_sync.cpp
+        src/qr_generator.cpp
+        qml/scala_ui.qrc
+    )
+
+    target_include_directories(${UI_TARGET} PRIVATE
+        src
+        ${CMAKE_SOURCE_DIR}
+    )
+
+    target_compile_definitions(${UI_TARGET} PRIVATE
+        SCALA_UI_BUILD
+        SCALA_UI_METADATA_FILE="${CMAKE_CURRENT_SOURCE_DIR}/ui_metadata.json"
+    )
+
+    target_link_libraries(${UI_TARGET} PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Quick
+        Qt6::Qml
+        Qt6::QuickWidgets
+        component-interfaces
+    )
+
+    if(LOGOS_CORE_AVAILABLE)
+        find_package(Qt6 REQUIRED COMPONENTS RemoteObjects)
+        target_link_libraries(${UI_TARGET} PRIVATE
+            Qt6::RemoteObjects
+            logos_cpp_sdk
+            logos_core
+            ${LOGOS_SDK_LIB}
+        )
+        target_compile_definitions(${UI_TARGET} PRIVATE LOGOS_CORE_AVAILABLE)
+    endif()
+
+    if(APPLE)
+        set_target_properties(${UI_TARGET} PROPERTIES
+            BUILD_RPATH   "@loader_path"
+            INSTALL_RPATH "@loader_path"
+        )
+    elseif(UNIX)
+        set_target_properties(${UI_TARGET} PROPERTIES
+            BUILD_RPATH   "$ORIGIN"
+            INSTALL_RPATH "$ORIGIN"
+        )
+    endif()
+
+    install(TARGETS ${UI_TARGET}
+        LIBRARY DESTINATION lib
+    )
+endif()
+
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)
