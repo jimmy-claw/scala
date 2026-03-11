@@ -29,7 +29,9 @@ void ScalaPlugin::initLogos(LogosAPI *api) {
         return;
     }
 
-    m_calendar->initLogos(m_logosAPI);  // safe: no blocking calls inside (lazy KV client)
+    // NOTE: m_calendar->initLogos() NOT called here — getClient() inside it
+    // deadlocks logos_host. Tracked: logos-co/logos-liblogos#66
+    // Calendar methods work but KV persistence is disabled until fixed.
     m_calendarInitialized = true;
     qInfo() << "ScalaPlugin: initLogos done. version:" << version();
 }
