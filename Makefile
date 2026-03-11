@@ -1,5 +1,6 @@
 BUILD_DIR        ?= build
 BUILD_STANDALONE ?= build-standalone
+BUILD_MODULE_DIR ?= build-module
 CMAKE_FLAGS      ?= -DCMAKE_BUILD_TYPE=Debug
 TOOLS_DIR        ?= ./tools
 MODULES_DIR      ?= ./modules
@@ -25,8 +26,8 @@ NIX_QTREMOBJ   ?= $(shell ls -d /nix/store/*-qtremoteobjects-6.9.* 2>/dev/null |
 NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
 .PHONY: all build test test-cli clean standalone screenshot \
-        setup setup-logoscore setup-kv-module \
-        run-core run dev install-cli
+        setup setup-logoscore setup-kv-module setup-nix-merged \
+        build-module run-module run-core run dev install-cli
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,25 @@ test-cli:
 	bash tests/cli/test_cli.sh ./cli/scala-cli.sh
 
 clean:
-	rm -rf $(BUILD_DIR) $(BUILD_STANDALONE)
+	rm -rf $(BUILD_DIR) $(BUILD_STANDALONE) $(BUILD_MODULE_DIR)
+
+# ── Logoscore module plugin ───────────────────────────────────────────────────
+
+## Build scala as logoscore plugin (.so for modules/scala_module/)
+build-module: setup-nix-merged
+	cmake -B $(BUILD_MODULE_DIR) $(CMAKE_FLAGS) \
+		-DBUILD_MODULE=ON \
+		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
+		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
+		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",)
+	cmake --build $(BUILD_MODULE_DIR) -j$$(nproc) --target scala_module_plugin
+	mkdir -p $(MODULES_DIR)/scala_module
+	cp $(BUILD_MODULE_DIR)/scala_module_plugin.so $(MODULES_DIR)/scala_module/
+	@echo "scala_module ready at: $(MODULES_DIR)/scala_module/"
+
+## Run as proper logoscore module (kv_module + scala_module)
+run-module:
+	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
 
 # ── Screenshot ───────────────────────────────────────────────────────────────
 

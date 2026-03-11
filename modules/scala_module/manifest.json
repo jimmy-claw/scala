@@ -1,0 +1,10 @@
+{
+  "name": "scala_module",
+  "version": "0.1.0",
+  "main": {
+    "linux-x86_64": "scala_module_plugin.so",
+    "linux-aarch64": "scala_module_plugin.so",
+    "darwin-arm64": "scala_module_plugin.so",
+    "darwin-x86_64": "scala_module_plugin.so"
+  }
+}

@@ -53,7 +53,9 @@ Q_DECLARE_INTERFACE(ILogosCalendar, ILogosCalendar_iid)
 #ifdef LOGOS_CORE_AVAILABLE
 class LogosCalendar final : public QObject, public PluginInterface, public ILogosCalendar {
     Q_OBJECT
+#ifndef SCALA_MODULE_PLUGIN
     Q_PLUGIN_METADATA(IID ILogosCalendar_iid FILE "metadata.json")
+#endif
     Q_INTERFACES(PluginInterface ILogosCalendar)
 #else
 class LogosCalendar final : public QObject, public ILogosCalendar {

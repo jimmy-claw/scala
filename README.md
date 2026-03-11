@@ -25,9 +25,9 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ CLI wrapper (`scala-cli.sh`) for headless use
 - ✅ 59 tests across 6 test suites
 - ✅ CLI integration tests (`make test-cli`)
+- ✅ Logos Core module packaging (`ScalaPlugin` wrapper, `make build-module`)
 
 **Planned:**
-- Logos Core IComponent packaging (lgpm)
 - Real message signing (full crypto)
 - At-rest KV encryption (#34)
 - Logos Storage attachments
@@ -57,12 +57,33 @@ make dev
 Other targets:
 ```bash
 make build          # build plugin only (no standalone)
+make build-module   # build logoscore module plugin (scala_module_plugin.so)
 make test           # run all tests (59 tests, 6 suites)
 make test-cli       # CLI integration tests (requires make run-core)
 make standalone     # build standalone runner
 make screenshot     # take a headless screenshot (requires xvfb + scrot)
 make install-cli    # install scala-cli.sh to ~/.local/bin/scala-cli
 make clean          # remove build dirs
+```
+
+### Run as logoscore module (recommended)
+
+This is the correct architecture for a Logos Core showcase app:
+
+```bash
+# One-time setup
+make setup
+
+# Build the logoscore module plugin
+make build-module
+
+# Run logoscore with kv_module + scala_module
+make run-module
+```
+
+This loads Scala as a proper logoscore plugin via:
+```bash
+logoscore --modules-dir ./modules --load-modules kv_module,scala_module
 ```
 
 ### Multi-instance testing (sharing/sync)
@@ -130,14 +151,18 @@ make screenshot
 ## Architecture
 
 ```
-QML UI (Logos Core IComponent)
+logoscore --load-modules kv_module,scala_module
   ↓
-C++ Module (LogosCalendar)
-  ├── Local KV storage    — via logos-kv-module inter-module calls (namespace-isolated)
-  ├── Logos Messaging     — P2P sync, per-calendar topic + encryption
-  ├── Logos Core Identity — stable sender pubkey, event ownership, signing
-  └── Logos Storage       — attachments (planned)
+ScalaPlugin (PluginInterface)       ← logoscore entry point
+  ├── LogosCalendar                 ← business logic + Q_INVOKABLE API
+  │     ├── CalendarStore           ← KV storage via kv_module inter-module calls
+  │     ├── CalendarSync            ← P2P sync via messaging_module
+  │     └── Identity                ← stable sender pubkey, ownership checks
+  └── QML UI (deferred launch)     ← CalendarView.qml if display available
 ```
+
+The standalone runner (`make dev`) uses `LogosCalendar` directly without the
+`ScalaPlugin` wrapper — intended for UI development only.
 
 ## Related
 
