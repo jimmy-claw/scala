@@ -26,6 +26,7 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ 59 tests across 6 test suites
 - ✅ CLI integration tests (`make test-cli`)
 - ✅ Headless logoscore plugin (`scala_module`) — loads in logoscore without Qt Quick/GUI
+- ✅ QML UI wired to scala_module via `LogosAPIClient` (`ScalaBridge`) — standalone talks to running logoscore over QtRO
 
 **Planned:**
 - Real message signing (full crypto)
@@ -162,6 +163,23 @@ make screenshot
 # saves screenshot.png in repo root
 ```
 
+### Running standalone UI with logoscore
+
+When built with Logos SDK, the standalone runner connects to the running `scala_module`
+via `LogosAPIClient` (QtRemoteObjects). This is the recommended way to run the UI:
+
+```bash
+# Terminal 1 — start logoscore with kv_module + scala_module
+make run-module
+
+# Terminal 2 — build and run the standalone UI (connects to scala_module via QtRO)
+make standalone LOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged LOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged
+./build-standalone/scala_standalone
+```
+
+The standalone reads the scala_module auth token from `/tmp/logos_scala_module` on startup.
+If logoscore is not running, the build still works — it falls back to in-memory `LogosCalendar`.
+
 ## Architecture
 
 ```
@@ -169,8 +187,10 @@ logos_host (logoscore)
   └── scala_module_plugin.so  ← headless, Qt Core/Qml/RemoteObjects only
         └── ScalaPlugin → LogosCalendar (CalendarModule API via QtRO)
 
-QML UI (separate process)
-  └── connects to logoscore QtRO registry → uses scala_module API remotely
+QML UI (standalone process)
+  └── ScalaBridge (QObject, C++)
+        └── LogosAPIClient("scala_module", "scala_ui", tokenManager)
+              └── QtRO → logos_host (scala_module) → ScalaPlugin
 
 C++ Module (LogosCalendar)
   ├── Local KV storage    — via logos-kv-module inter-module calls (namespace-isolated)
@@ -180,7 +200,9 @@ C++ Module (LogosCalendar)
 ```
 
 The plugin `.so` loaded by `logos_host` is **headless** — no Qt Quick, no QML engine, no GUI.
-The QML UI runs as a separate process that connects to the running logoscore QtRO registry.
+The QML UI runs as a separate process. When built with `LOGOS_CORE_AVAILABLE`, the standalone
+uses `ScalaBridge` → `LogosAPIClient` to dispatch all calls to the running `scala_module` over
+QtRemoteObjects. Without it, it falls back to an in-memory `LogosCalendar` instance.
 
 ## Related
 
