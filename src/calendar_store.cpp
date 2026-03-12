@@ -9,13 +9,22 @@
 
 // ── Construction ─────────────────────────────────────────────────────────────
 
-CalendarStore::CalendarStore() = default;
+CalendarStore::CalendarStore() {
+    // Default to in-memory mode if no kv module is set
+    m_kvClient = nullptr;
+    m_kvModule = nullptr;
+    m_mem.clear();
+}
 
 #ifdef LOGOS_CORE_AVAILABLE
 void CalendarStore::setClient(LogosAPIClient *client) {
     m_kvClient = client;
 }
 #endif
+
+void CalendarStore::setKvModule(IKvModule *kv) {
+    m_kvModule = kv;
+}
 
 // ── Namespace ────────────────────────────────────────────────────────────────
 
@@ -28,43 +37,73 @@ QString CalendarStore::namespacedKey(const QString &key) const {
 }
 
 // ── KV helpers ───────────────────────────────────────────────────────────────
+// Priority order: logos_host (QtRO) > direct kv_module (plugin) > in-memory
 
 void CalendarStore::kvSet(const QString &key, const QString &value) const {
     const QString nsKey = namespacedKey(key);
+    
+    // Priority 1: through logos_host (QtRO, requires logos_host running)
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "set",
                                        QString(KV_NS), nsKey, value);
+        return;
     }
-#else
-    m_mem[nsKey] = value;
 #endif
+    
+    // Priority 2: direct kv_module plugin (no logos_host needed!)
+    if (m_kvModule) {
+        m_kvModule->set(KV_NS, nsKey, value);
+        return;
+    }
+    
+    // Priority 3: in-memory fallback
+    m_mem[nsKey] = value;
 }
 
 QString CalendarStore::kvGet(const QString &key) const {
     const QString nsKey = namespacedKey(key);
+    
+    // Priority 1: through logos_host (QtRO, requires logos_host running)
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         QVariant result = m_kvClient->invokeRemoteMethod("kv_module", "get",
                                                          QString(KV_NS), nsKey);
-        return result.toString();
+        if (result.isValid()) {
+            return result.toString();
+        }
     }
-    return {};
-#else
-    return m_mem.value(nsKey);
 #endif
+    
+    // Priority 2: direct kv_module plugin (no logos_host needed!)
+    if (m_kvModule) {
+        return m_kvModule->get(KV_NS, nsKey);
+    }
+    
+    // Priority 3: in-memory fallback
+    return m_mem.value(nsKey);
 }
 
 void CalendarStore::kvRemove(const QString &key) const {
     const QString nsKey = namespacedKey(key);
+    
+    // Priority 1: through logos_host (QtRO, requires logos_host running)
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "remove",
                                        QString(KV_NS), nsKey);
+        return;
     }
-#else
-    m_mem.remove(nsKey);
 #endif
+    
+    // Priority 2: direct kv_module plugin (no logos_host needed!)
+    if (m_kvModule) {
+        m_kvModule->remove(KV_NS, nsKey);
+        return;
+    }
+    
+    // Priority 3: in-memory fallback
+    m_mem.remove(nsKey);
 }
 
 // ── Index helpers ────────────────────────────────────────────────────────────

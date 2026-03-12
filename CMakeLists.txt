@@ -9,6 +9,21 @@ find_package(Qt6 REQUIRED COMPONENTS Core Qml)
 
 set(CMAKE_AUTOMOC ON)
 
+# ── Logos KV Module (direct plugin support) ───────────────────────────────────
+# Find kv_module header and library
+find_path(KV_MODULE_INCLUDE_DIR i_kv_module.h
+    PATHS ${LOGOS_CPP_SDK_ROOT}/include
+          ${LOGOS_CPP_SDK_ROOT}/include/core
+    PATH_SUFFIXES kv_module
+    OPTIONAL
+)
+
+# If kv_module headers found, mark it as available
+if(KV_MODULE_INCLUDE_DIR)
+    set(KV_MODULE_AVAILABLE ON)
+    message(STATUS "KV module headers found: ${KV_MODULE_INCLUDE_DIR}")
+endif()
+
 # ── Logos SDK + liblogos ──────────────────────────────────────────────────────
 set(LOGOS_CPP_SDK_ROOT "" CACHE PATH "Path to logos-cpp-sdk install")
 set(LOGOS_LIBLOGOS_ROOT "" CACHE PATH "Path to logos-liblogos install")
@@ -47,12 +62,22 @@ target_sources(scala_module_plugin PRIVATE
     src/plugin.cpp
 )
 
-target_include_directories(scala_module_plugin PRIVATE src ${CMAKE_SOURCE_DIR})
+target_include_directories(scala_module_plugin PRIVATE
+    src
+    ${CMAKE_SOURCE_DIR}
+    ${KV_MODULE_INCLUDE_DIR}
+)
 
 target_link_libraries(scala_module_plugin PRIVATE
     Qt6::Core
     Qt6::Qml
 )
+
+# Link kv_module if available (direct plugin support)
+if(KV_MODULE_AVAILABLE)
+    target_link_libraries(scala_module_plugin PRIVATE kv_module_plugin)
+    message(STATUS "KV module linked: scala can use kv_module directly without logos_host")
+endif()
 
 if(LOGOS_CORE_AVAILABLE)
     find_package(Qt6 REQUIRED COMPONENTS RemoteObjects)
@@ -170,6 +195,7 @@ if(BUILD_MODULE)
         "${LOGOS_CPP_SDK_ROOT}/include"
         "${LOGOS_CPP_SDK_ROOT}/include/cpp"
         "${LOGOS_CPP_SDK_ROOT}/include/core"
+        ${KV_MODULE_INCLUDE_DIR}
     )
 
     # Logos libraries
@@ -179,6 +205,12 @@ if(BUILD_MODULE)
         Qt6::Core Qt6::Qml Qt6::RemoteObjects
         ${MODULE_LOGOS_CORE_LIB}
     )
+
+    # Link kv_module if available
+    if(KV_MODULE_AVAILABLE)
+        target_link_libraries(scala_module_plugin PRIVATE kv_module_plugin)
+        message(STATUS "KV module linked in BUILD_MODULE mode")
+    endif()
 
     target_compile_definitions(scala_module_plugin PRIVATE
         QT_PLUGIN
