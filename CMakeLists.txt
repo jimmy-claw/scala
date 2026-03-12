@@ -84,7 +84,7 @@ elseif(UNIX)
 endif()
 
 # ── Install ───────────────────────────────────────────────────────────────────
-install(TARGETS scala_plugin
+install(TARGETS scala_module_plugin
     LIBRARY DESTINATION lib/scala
 )
 
