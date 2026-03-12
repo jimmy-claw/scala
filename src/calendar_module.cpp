@@ -48,6 +48,14 @@ void LogosCalendar::setNamespace(const QString &ns) {
     m_store.setNamespace(ns);
 }
 
+// ── Direct KV Module API (no logos_host needed) ─────────────────────────────
+
+#ifdef KV_MODULE_AVAILABLE
+void LogosCalendar::setKvModule(IKvModule *kv) {
+    m_store.setKvModule(kv);
+}
+#endif
+
 // ── Identity ─────────────────────────────────────────────────────────────────
 
 QString LogosCalendar::getIdentity() const {

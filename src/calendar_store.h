@@ -2,6 +2,12 @@
 
 #include "types.h"
 
+#ifdef KV_MODULE_AVAILABLE
+#include "i_kv_module.h"
+#else
+class IKvModule;
+#endif
+
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -17,8 +23,12 @@ class LogosAPIClient;
 /**
  * CalendarStore — wraps KV operations for calendar/event persistence.
  *
- * Under Logos Core, delegates to kv_module via inter-module QtRO calls.
- * In standalone/test mode, uses an in-memory map fallback.
+ * Supports THREE modes:
+ * 1. Logos Core via logos_host: uses LogosAPIClient to call kv_module via QtRO (requires logos_host running)
+ * 2. Direct kv_module plugin: loads kv_module_plugin.so directly (no logos_host needed)
+ * 3. In-memory fallback: for standalone/test mode (no persistence)
+ *
+ * Priority: mode 1 > mode 2 > mode 3
  *
  * Key patterns (namespace "scala"):
  *   calendar:{id}          → Calendar JSON
@@ -31,7 +41,13 @@ public:
     CalendarStore();
 
 #ifdef LOGOS_CORE_AVAILABLE
+    // Mode 1: through logos_host (current behavior, requires logos_host running)
     void setClient(LogosAPIClient *client);
+#endif
+
+#ifdef KV_MODULE_AVAILABLE
+    // Mode 2: direct kv_module plugin (NEW — no logos_host needed!)
+    void setKvModule(IKvModule *kv);
 #endif
 
     // ── Calendar CRUD ────────────────────────────────────────────────────────
@@ -69,10 +85,12 @@ private:
     // Find which calendar owns an event (scans index keys)
     QString findCalendarIdForEvent(const QString &eventId) const;
 
+    // KV clients (priority order: logos_host > direct kv_module > memory)
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPIClient *m_kvClient = nullptr;
-#else
-    // In-memory fallback for standalone builds
-    mutable QMap<QString, QString> m_mem;
 #endif
+#ifdef KV_MODULE_AVAILABLE
+    IKvModule *m_kvModule = nullptr;
+#endif
+    mutable QMap<QString, QString> m_mem;
 };

@@ -85,6 +85,11 @@ public:
     // ── Namespace API ─────────────────────────────────────────────────────
     Q_INVOKABLE void setNamespace(const QString &ns);
 
+#ifdef KV_MODULE_AVAILABLE
+    // ── Direct KV Module API (no logos_host needed) ───────────────────────
+    void setKvModule(IKvModule *kv);
+#endif
+
     // ── Identity API ────────────────────────────────────────────────────────
     Q_INVOKABLE QString getIdentity() const;
     Q_INVOKABLE void setIdentity(const QString &pubkeyHex);
