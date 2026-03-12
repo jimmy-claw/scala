@@ -53,6 +53,7 @@ jobs:
 
       - name: Set up Cachix
         uses: cachix/cachix-action@v15
+        continue-on-error: true
         with:
           name: jimmy-claw
           # If CACHIX_AUTH_TOKEN is not set, this step is a no-op (read-only public cache)
