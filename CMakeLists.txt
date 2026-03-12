@@ -124,7 +124,7 @@ if(BUILD_STANDALONE)
     )
 
     target_link_libraries(scala_standalone PRIVATE
-        Qt6::Quick Qt6::Qml Qt6::Gui Qt6::Widgets
+        Qt6::Quick Qt6::Qml Qt6::Gui Qt6::Widgets Qt6::RemoteObjects
     )
 
     if(LOGOS_CORE_AVAILABLE)
