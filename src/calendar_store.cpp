@@ -15,10 +15,6 @@ CalendarStore::CalendarStore() : m_kvModule(nullptr) {
     m_kvClient = nullptr;
 #endif
     m_mem.clear();
-    qInfo() << "CalendarStore initialized:"
-            << "(kvModule=" << (m_kvModule ? "set" : "nullptr")
-            << ", kvClient=" << (m_kvClient ? "set" : "nullptr")
-            << ")";
 }
 
 #ifdef LOGOS_CORE_AVAILABLE
@@ -42,22 +38,18 @@ QString CalendarStore::namespacedKey(const QString &key) const {
 }
 
 // ── KV helpers ───────────────────────────────────────────────────────────────
-// Priority order: logos_host (QtRO) > direct kv_module (plugin) > in-memory
+// Priority order: direct kv_module (plugin) > logos_host (QtRO) > in-memory
 
 void CalendarStore::kvSet(const QString &key, const QString &value) const {
     const QString nsKey = namespacedKey(key);
-    qInfo() << "CalendarStore::kvSet" << key << "->" << nsKey
-            << "(kvModule=" << (m_kvModule ? "set" : "nullptr")
-            << ", kvClient=" << (m_kvClient ? "set" : "nullptr") << ")";
     
-    // Priority 2: direct kv_module plugin (no logos_host needed!)
+    // Priority 1: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         m_kvModule->set(KV_NS, nsKey, value);
-        qInfo() << "  -> using kv_module (direct)";
         return;
     }
     
-    // Fallback: logos_host (QtRO) - for backwards compatibility
+    // Priority 2: logos_host (QtRO) - for backwards compatibility
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "set",
@@ -65,36 +57,25 @@ void CalendarStore::kvSet(const QString &key, const QString &value) const {
         return;
     }
 #endif
-        m_kvModule->set(KV_NS, nsKey, value);
-        return;
-    }
     
     // Priority 3: in-memory fallback
-    qInfo() << "  -> using in-memory fallback";
     m_mem[nsKey] = value;
 }
 
 QString CalendarStore::kvGet(const QString &key) const {
     const QString nsKey = namespacedKey(key);
-    qInfo() << "CalendarStore::kvGet" << key << "->" << nsKey
-            << "(kvModule=" << (m_kvModule ? "get" : "nullptr")
-            << ", kvClient=" << (m_kvClient ? "get" : "nullptr") << ")";
     
-    // Priority 2: direct kv_module plugin (no logos_host needed!)
+    // Priority 1: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
-        QString result = m_kvModule->get(KV_NS, nsKey);
-        qInfo() << "  -> using kv_module (direct), result=" << (result.isEmpty() ? "EMPTY" : "OK");
-        return result;
+        return m_kvModule->get(KV_NS, nsKey);
     }
     
-    // Fallback: logos_host (QtRO) - for backwards compatibility
+    // Priority 2: logos_host (QtRO) - for backwards compatibility
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         QVariant result = m_kvClient->invokeRemoteMethod("kv_module", "get",
                                                          QString(KV_NS), nsKey);
-        if (result.isValid()) {
-            return result.toString();
-        }
+        return result.toString();
     }
 #endif
     
@@ -104,18 +85,14 @@ QString CalendarStore::kvGet(const QString &key) const {
 
 void CalendarStore::kvRemove(const QString &key) const {
     const QString nsKey = namespacedKey(key);
-    qInfo() << "CalendarStore::kvRemove" << key << "->" << nsKey
-            << "(kvModule=" << (m_kvModule ? "remove" : "nullptr")
-            << ", kvClient=" << (m_kvClient ? "remove" : "nullptr") << ")";
     
-    // Priority 2: direct kv_module plugin (no logos_host needed!)
+    // Priority 1: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         m_kvModule->remove(KV_NS, nsKey);
-        qInfo() << "  -> using kv_module (direct)";
         return;
     }
     
-    // Fallback: logos_host (QtRO) - for backwards compatibility
+    // Priority 2: logos_host (QtRO) - for backwards compatibility
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "remove",
