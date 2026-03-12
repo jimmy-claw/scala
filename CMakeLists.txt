@@ -65,8 +65,12 @@ target_sources(scala_module_plugin PRIVATE
 target_include_directories(scala_module_plugin PRIVATE
     src
     ${CMAKE_SOURCE_DIR}
-    ${KV_MODULE_INCLUDE_DIR}
 )
+
+# Add kv_module include only if available
+if(KV_MODULE_AVAILABLE)
+    target_include_directories(scala_module_plugin PRIVATE ${KV_MODULE_INCLUDE_DIR})
+endif()
 
 target_link_libraries(scala_module_plugin PRIVATE
     Qt6::Core
@@ -75,8 +79,17 @@ target_link_libraries(scala_module_plugin PRIVATE
 
 # Link kv_module if available (direct plugin support)
 if(KV_MODULE_AVAILABLE)
-    target_link_libraries(scala_module_plugin PRIVATE kv_module_plugin)
-    message(STATUS "KV module linked: scala can use kv_module directly without logos_host")
+    # Only try to link if kv_module_plugin is actually found
+    find_library(KV_MODULE_LIB kv_module_plugin
+        PATHS /usr/local/lib /usr/lib ${LOGOS_CPP_SDK_ROOT}/lib
+        NO_DEFAULT_PATH
+    )
+    if(KV_MODULE_LIB)
+        target_link_libraries(scala_module_plugin PRIVATE ${KV_MODULE_LIB})
+        message(STATUS "KV module linked: scala can use kv_module directly without logos_host")
+    else()
+        message(STATUS "KV module headers found but library not found - skipping link")
+    endif()
 endif()
 
 if(LOGOS_CORE_AVAILABLE)
@@ -195,8 +208,12 @@ if(BUILD_MODULE)
         "${LOGOS_CPP_SDK_ROOT}/include"
         "${LOGOS_CPP_SDK_ROOT}/include/cpp"
         "${LOGOS_CPP_SDK_ROOT}/include/core"
-        ${KV_MODULE_INCLUDE_DIR}
     )
+
+    # Add kv_module include only if available
+    if(KV_MODULE_AVAILABLE)
+        target_include_directories(scala_module_plugin PRIVATE ${KV_MODULE_INCLUDE_DIR})
+    endif()
 
     # Logos libraries
     find_library(MODULE_LOGOS_CORE_LIB logos_core
@@ -206,10 +223,18 @@ if(BUILD_MODULE)
         ${MODULE_LOGOS_CORE_LIB}
     )
 
-    # Link kv_module if available
+    # Link kv_module if available (with fallback)
     if(KV_MODULE_AVAILABLE)
-        target_link_libraries(scala_module_plugin PRIVATE kv_module_plugin)
-        message(STATUS "KV module linked in BUILD_MODULE mode")
+        find_library(KV_MODULE_LIB kv_module_plugin
+            PATHS "${LOGOS_LIBLOGOS_ROOT}/lib" "${LOGOS_CPP_SDK_ROOT}/lib" /usr/local/lib /usr/lib
+            NO_DEFAULT_PATH
+        )
+        if(KV_MODULE_LIB)
+            target_link_libraries(scala_module_plugin PRIVATE ${KV_MODULE_LIB})
+            message(STATUS "KV module linked in BUILD_MODULE mode")
+        else()
+            message(STATUS "KV module headers found but library not found in BUILD_MODULE mode - skipping link")
+        endif()
     endif()
 
     target_compile_definitions(scala_module_plugin PRIVATE
