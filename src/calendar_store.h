@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
+#include <QByteArray>
 
 #include <functional>
 
@@ -25,6 +26,13 @@ class LogosAPIClient;
  *   event:{calendarId}:{id} → CalendarEvent JSON
  *   calendars              → JSON array of calendar IDs
  *   events:{calendarId}    → JSON array of event IDs
+ *
+ * Encryption:
+ *   When enableEncryption(32-byte key) is called, the store:
+ *     - Under Logos Core: calls kv_module::setEncryptionKey(ns, hexKey)
+ *       so the module handles AES-256-GCM transparently.
+ *     - Standalone/test: encrypts values in-process using XOR+SHA256-derived
+ *       stream cipher (deterministic, test-only — NOT for production).
  */
 class CalendarStore {
 public:
@@ -47,10 +55,30 @@ public:
     bool updateEvent(const scala::CalendarEvent &ev);
     bool deleteEvent(const QString &id);
 
-    // KV helpers (public for identity storage)
+    // KV helpers (public for identity storage and encryption salt)
     void kvSet(const QString &key, const QString &value) const;
     QString kvGet(const QString &key) const;
     void kvRemove(const QString &key) const;
+
+    // ── Encryption ───────────────────────────────────────────────────────────
+    /**
+     * enableEncryption — activate AES-256 at-rest encryption for KV data.
+     *
+     * @param keyBytes  32-byte raw key (caller derives via PBKDF2 or similar).
+     *
+     * Under Logos Core, delegates to kv_module::setEncryptionKey().
+     * In standalone mode, applies an in-process XOR stream cipher (tests only).
+     */
+    void enableEncryption(const QByteArray &keyBytes);
+
+    /**
+     * disableEncryption — remove the active key; future writes are plaintext.
+     * Existing encrypted data becomes unreadable until key is re-set.
+     */
+    void disableEncryption();
+
+    /** Returns true if an encryption key is currently active. */
+    bool isEncryptionEnabled() const;
 
     // Namespace support for multi-instance testing
     void setNamespace(const QString &ns);
@@ -74,5 +102,10 @@ private:
 #else
     // In-memory fallback for standalone builds
     mutable QMap<QString, QString> m_mem;
+
+    // Standalone encryption (XOR stream cipher for testing)
+    QByteArray m_encKey;
+    QByteArray standaloneEncrypt(const QByteArray &key, const QString &plaintext) const;
+    QString standaloneDecrypt(const QByteArray &key, const QByteArray &ciphertext) const;
 #endif
 };

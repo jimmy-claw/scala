@@ -4,6 +4,7 @@
 #include <logos_api_client.h>
 #endif
 
+#include <QCryptographicHash>
 #include <QDebug>
 #include <QJsonDocument>
 
@@ -37,7 +38,11 @@ void CalendarStore::kvSet(const QString &key, const QString &value) const {
                                        QString(KV_NS), nsKey, value);
     }
 #else
-    m_mem[nsKey] = value;
+    if (!m_encKey.isEmpty()) {
+        m_mem[nsKey] = QString::fromLatin1(standaloneEncrypt(m_encKey, value));
+    } else {
+        m_mem[nsKey] = value;
+    }
 #endif
 }
 
@@ -51,7 +56,11 @@ QString CalendarStore::kvGet(const QString &key) const {
     }
     return {};
 #else
-    return m_mem.value(nsKey);
+    QString stored = m_mem.value(nsKey);
+    if (!m_encKey.isEmpty() && !stored.isEmpty()) {
+        return standaloneDecrypt(m_encKey, stored.toLatin1());
+    }
+    return stored;
 #endif
 }
 
@@ -66,6 +75,96 @@ void CalendarStore::kvRemove(const QString &key) const {
     m_mem.remove(nsKey);
 #endif
 }
+
+// ── Encryption ───────────────────────────────────────────────────────────────
+
+void CalendarStore::enableEncryption(const QByteArray &keyBytes) {
+    if (keyBytes.size() != 32) {
+        qWarning() << "CalendarStore::enableEncryption: key must be 32 bytes, got"
+                   << keyBytes.size();
+        return;
+    }
+
+#ifdef LOGOS_CORE_AVAILABLE
+    if (m_kvClient) {
+        // Delegate to kv_module — it handles AES-256-GCM transparently
+        QString hexKey = QString::fromLatin1(keyBytes.toHex());
+        m_kvClient->invokeRemoteMethod("kv_module", "setEncryptionKey",
+                                       QString(KV_NS), hexKey);
+        qInfo() << "CalendarStore: encryption enabled via kv_module (AES-256-GCM)";
+    } else {
+        qWarning() << "CalendarStore::enableEncryption: no kv_module client available";
+    }
+#else
+    m_encKey = keyBytes;
+    qInfo() << "CalendarStore: encryption enabled (standalone XOR mode)";
+#endif
+}
+
+void CalendarStore::disableEncryption() {
+#ifdef LOGOS_CORE_AVAILABLE
+    qWarning() << "CalendarStore::disableEncryption: not supported in kv_module mode";
+#else
+    m_encKey.clear();
+    qInfo() << "CalendarStore: encryption disabled (standalone mode)";
+#endif
+}
+
+bool CalendarStore::isEncryptionEnabled() const {
+#ifdef LOGOS_CORE_AVAILABLE
+    return false; // state lives in kv_module; use LogosCalendar::isEncryptionEnabled()
+#else
+    return !m_encKey.isEmpty();
+#endif
+}
+
+#ifndef LOGOS_CORE_AVAILABLE
+// ── Standalone encryption (XOR stream cipher, test/dev only) ─────────────────
+//
+// NOT suitable for production — deterministic stream cipher for test mode only.
+// Production encryption uses kv_module AES-256-GCM (Logos Core builds).
+
+QByteArray CalendarStore::standaloneEncrypt(const QByteArray &key,
+                                             const QString &plaintext) const {
+    QByteArray data = plaintext.toUtf8();
+    QByteArray result(data.size(), '\0');
+
+    // Keystream: SHA-256(key || block_counter), repeated as needed
+    int offset = 0;
+    int block  = 0;
+    while (offset < data.size()) {
+        QByteArray seed = key;
+        seed.append(reinterpret_cast<const char *>(&block), sizeof(block));
+        QByteArray ks = QCryptographicHash::hash(seed, QCryptographicHash::Sha256);
+        for (int i = 0; i < ks.size() && offset < data.size(); ++i, ++offset)
+            result[offset] = static_cast<char>(
+                static_cast<unsigned char>(data[offset]) ^
+                static_cast<unsigned char>(ks[i]));
+        ++block;
+    }
+    return result.toBase64();
+}
+
+QString CalendarStore::standaloneDecrypt(const QByteArray &key,
+                                          const QByteArray &ciphertext) const {
+    QByteArray data = QByteArray::fromBase64(ciphertext);
+    QByteArray result(data.size(), '\0');
+
+    int offset = 0;
+    int block  = 0;
+    while (offset < data.size()) {
+        QByteArray seed = key;
+        seed.append(reinterpret_cast<const char *>(&block), sizeof(block));
+        QByteArray ks = QCryptographicHash::hash(seed, QCryptographicHash::Sha256);
+        for (int i = 0; i < ks.size() && offset < data.size(); ++i, ++offset)
+            result[offset] = static_cast<char>(
+                static_cast<unsigned char>(data[offset]) ^
+                static_cast<unsigned char>(ks[i]));
+        ++block;
+    }
+    return QString::fromUtf8(result);
+}
+#endif
 
 // ── Index helpers ────────────────────────────────────────────────────────────
 

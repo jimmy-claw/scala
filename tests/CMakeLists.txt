@@ -151,3 +151,24 @@ if(Qt6QuickTest_FOUND)
 else()
     message(STATUS "Qt6::QuickTest not found — skipping QML tests (install qt6-declarative-dev)")
 endif()
+
+# ── Encryption tests ──────────────────────────────────────────────────────────
+
+add_executable(test_encryption
+    test_encryption.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
+)
+
+target_include_directories(test_encryption PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(test_encryption PRIVATE
+    Qt6::Core
+    Qt6::Test
+)
+
+add_test(NAME test_encryption COMMAND test_encryption)
