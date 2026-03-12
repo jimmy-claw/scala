@@ -120,18 +120,49 @@ public:
     Q_INVOKABLE void setSetting(const QString &key, const QString &value);
     Q_INVOKABLE QString getSetting(const QString &key, const QString &defaultValue = QString());
 
+    // ── Encryption API ──────────────────────────────────────────────────
+    /**
+     * enableEncryption — derive an AES-256 key from @p password using PBKDF2
+     * and activate at-rest encryption for all KV data.
+     *
+     * On first call a random salt is generated and stored (plaintext) under
+     * the key "encryption:salt".  Subsequent calls with the same password
+     * reproduce the same derived key so existing data stays readable.
+     *
+     * Returns true on success, false if password is empty or key derivation fails.
+     */
+    Q_INVOKABLE bool enableEncryption(const QString &password);
+
+    /**
+     * disableEncryption — deactivate encryption for the current session.
+     * Existing data written while encrypted remains encrypted on disk;
+     * new writes will be plaintext.
+     */
+    Q_INVOKABLE void disableEncryption();
+
+    /** Returns true if encryption is currently active. */
+    Q_INVOKABLE bool isEncryptionEnabled() const;
+
 signals:
     void eventResponse(const QString &eventName, const QVariantList &args);
     void syncStatusChanged(const QString &calendarId, const QString &status);
     void identityChanged();
+    void encryptionChanged(bool enabled);
 
 private:
     void onSyncMessageReceived(const QString &calendarId, const SyncMessage &msg);
     static QString generateStableIdentity();
 
+    /**
+     * Derive a 32-byte key from @p password and @p salt using PBKDF2-SHA256.
+     * iterations = 100 000 (NIST recommended minimum for PBKDF2-SHA256).
+     */
+    static QByteArray deriveKey(const QString &password, const QByteArray &salt);
+
     CalendarStore m_store;
     CalendarSync *m_sync = nullptr;
     QString m_identity;
+    bool m_encryptionEnabled = false;
 
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPI *m_logosAPI = nullptr;

@@ -580,3 +580,86 @@ void LogosCalendar::onSyncMessageReceived(const QString &calendarId,
     }
     }
 }
+
+// ── Encryption API ──────────────────────────────────────────────────────────
+
+QByteArray LogosCalendar::deriveKey(const QString &password, const QByteArray &salt) {
+    // PBKDF2-SHA256 with 100 000 iterations → 32-byte key
+    // Qt provides QMessageAuthenticationCode for HMAC, but not PBKDF2 directly.
+    // We implement PBKDF2 using QMessageAuthenticationCode (HMAC-SHA256) per RFC 2898.
+    constexpr int iterations = 100000;
+    constexpr int keyLen = 32; // 256 bits
+
+    QByteArray password_bytes = password.toUtf8();
+    QByteArray derived(keyLen, '\0');
+
+    // PBKDF2 block 1 (dkLen ≤ hLen → single block)
+    QByteArray u = salt;
+    u.append('\x00'); u.append('\x00'); u.append('\x00'); u.append('\x01'); // INT(1) big-endian
+
+    QByteArray T = QMessageAuthenticationCode::hash(u, password_bytes, QCryptographicHash::Sha256);
+    QByteArray prev = T;
+
+    for (int i = 1; i < iterations; ++i) {
+        QByteArray next = QMessageAuthenticationCode::hash(prev, password_bytes,
+                                                           QCryptographicHash::Sha256);
+        for (int j = 0; j < T.size(); ++j)
+            T[j] = static_cast<char>(
+                static_cast<unsigned char>(T[j]) ^
+                static_cast<unsigned char>(next[j]));
+        prev = next;
+    }
+
+    return T.left(keyLen);
+}
+
+bool LogosCalendar::enableEncryption(const QString &password) {
+    if (password.isEmpty()) {
+        qWarning() << "LogosCalendar::enableEncryption: password must not be empty";
+        return false;
+    }
+
+    // Load or generate salt (stored plaintext — salt is not secret)
+    const QString saltKey = QStringLiteral("encryption:salt");
+    QString saltHex = m_store.kvGet(saltKey);
+    QByteArray salt;
+    if (saltHex.isEmpty()) {
+        // First-time setup — generate a random 16-byte salt
+        salt.resize(16);
+        for (int i = 0; i < salt.size(); ++i)
+            salt[i] = static_cast<char>(
+                QCryptographicHash::hash(
+                    QByteArray::number(QDateTime::currentMSecsSinceEpoch() + i),
+                    QCryptographicHash::Sha256)[i % 32]);
+        saltHex = QString::fromLatin1(salt.toHex());
+        m_store.kvSet(saltKey, saltHex);
+        qInfo() << "LogosCalendar: generated new encryption salt";
+    } else {
+        salt = QByteArray::fromHex(saltHex.toLatin1());
+        qInfo() << "LogosCalendar: loaded existing encryption salt";
+    }
+
+    QByteArray key = deriveKey(password, salt);
+    if (key.size() != 32) {
+        qWarning() << "LogosCalendar::enableEncryption: key derivation failed";
+        return false;
+    }
+
+    m_store.enableEncryption(key);
+    m_encryptionEnabled = true;
+
+    emit encryptionChanged(true);
+    qInfo() << "LogosCalendar: at-rest encryption enabled";
+    return true;
+}
+
+void LogosCalendar::disableEncryption() {
+    m_store.disableEncryption();
+    m_encryptionEnabled = false;
+    emit encryptionChanged(false);
+    qInfo() << "LogosCalendar: at-rest encryption disabled";
+}
+
+bool LogosCalendar::isEncryptionEnabled() const {
+    return m_encryptionEnabled;
+}

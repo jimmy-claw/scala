@@ -24,14 +24,14 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ Standalone runner for local development and screenshots
 - ✅ C++ CLI client (`scala_cli`) — connects to running logoscore via QtRO
 - ✅ CLI wrapper (`scala-cli.sh`) for headless use
-- ✅ 59 tests across 6 test suites
+- ✅ 73 tests across 7 test suites
 - ✅ CLI integration tests (`make test-cli`)
 - ✅ Headless logoscore plugin (`scala_module`) — loads in logoscore without Qt Quick/GUI
 - ✅ QML UI wired to scala_module via `LogosAPIClient` (`ScalaBridge`) — standalone talks to running logoscore over QtRO
 
 **Planned:**
 - Real message signing (full crypto)
-- At-rest KV encryption (#34)
+- ✅ At-rest KV encryption — PBKDF2-SHA256 key derivation, AES-256-GCM via kv_module (#34)
 - Logos Storage attachments
 - QML UI tests with QQuickTest (#41)
 
@@ -62,7 +62,7 @@ make build          # build plugin only (no standalone)
 make build-module   # build headless logoscore plugin (scala_module)
 make build-cli      # build C++ CLI binary (scala_cli)
 make run-module     # run logoscore with kv_module + scala_module
-make test           # run all tests (59 tests, 6 suites)
+make test           # run all tests (73 tests, 7 suites)
 make test-cli       # CLI integration tests (requires make run-core)
 make standalone     # build standalone runner
 make screenshot     # take a headless screenshot (requires xvfb + scrot)
@@ -167,6 +167,36 @@ make dev        # terminal 2: builds + runs Scala
 ```
 
 See [Makefile](./Makefile) for details on nix store path auto-detection.
+
+
+### At-rest encryption
+
+Scala supports AES-256-GCM at-rest encryption for all KV data. Encryption uses a
+PBKDF2-SHA256–derived key so the raw password is never stored.
+
+**Under Logos Core** (recommended): encryption is handled transparently by
+`kv_module::setEncryptionKey(ns, hexKey)` — AES-256-GCM with random per-record nonces.
+
+**Standalone / test mode**: a XOR stream cipher (SHA-256 keystream) is used — for
+development/testing only.
+
+#### API
+
+```cpp
+// Enable encryption — derives key from password using PBKDF2-SHA256 (100k iterations).
+// Generates + stores a random salt on first call; subsequent calls with the same
+// password reproduce the same key so existing data stays readable.
+bool enableEncryption(const QString &password);
+
+// Disable encryption for the current session.
+void disableEncryption();
+
+// Query encryption state.
+bool isEncryptionEnabled() const;
+```
+
+The PBKDF2 salt (16 bytes, hex-encoded) is stored plaintext at KV key
+`encryption:salt` within the module's namespace. The salt is not secret.
 
 ### Run tests
 
