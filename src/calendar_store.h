@@ -1,7 +1,12 @@
 #pragma once
 
 #include "types.h"
+
+#ifdef KV_MODULE_AVAILABLE
 #include "i_kv_module.h"
+#else
+class IKvModule;
+#endif
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -40,8 +45,10 @@ public:
     void setClient(LogosAPIClient *client);
 #endif
 
+#ifdef KV_MODULE_AVAILABLE
     // Mode 2: direct kv_module plugin (NEW — no logos_host needed!)
     void setKvModule(IKvModule *kv);
+#endif
 
     // ── Calendar CRUD ────────────────────────────────────────────────────────
     QString saveCalendar(const scala::Calendar &cal);
@@ -82,6 +89,8 @@ private:
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPIClient *m_kvClient = nullptr;
 #endif
+#ifdef KV_MODULE_AVAILABLE
     IKvModule *m_kvModule = nullptr;
+#endif
     mutable QMap<QString, QString> m_mem;
 };

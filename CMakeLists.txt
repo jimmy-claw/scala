@@ -10,26 +10,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core Qml)
 set(CMAKE_AUTOMOC ON)
 
 # ── Logos KV Module (direct plugin support) ───────────────────────────────────
-# Support KV_MODULE_INCLUDE_DIR from Makefile or auto-detect
-if(NOT KV_MODULE_INCLUDE_DIR)
-    # Not set - try auto-detect in common locations
-    find_path(KV_MODULE_INCLUDE_DIR i_kv_module.h
-        PATHS /tmp/logos-kv-module/src
-              ${LOGOS_CPP_SDK_ROOT}/include/kv_module
-              ${LOGOS_CPP_SDK_ROOT}/include/core
-              ${LOGOS_CPP_SDK_ROOT}/include
-        NO_DEFAULT_PATH
-        OPTIONAL
-    )
-    if(KV_MODULE_INCLUDE_DIR)
-        set(KV_MODULE_AVAILABLE ON)
-        message(STATUS "KV module headers auto-detected: ${KV_MODULE_INCLUDE_DIR}")
-    endif()
-else()
-    # Set via command line (-DKV_MODULE_INCLUDE_DIR=...)
-    set(KV_MODULE_AVAILABLE ON)
-    message(STATUS "KV module headers set: ${KV_MODULE_INCLUDE_DIR}")
-endif()
+# i_kv_module.h lives in src/; kv_module_api.h comes from the nix store or SDK.
+# The interface header is always available (it's in our src/), so KV_MODULE_AVAILABLE
+# is always ON.  The *library* link is still optional (runtime plugin loading).
+set(KV_MODULE_AVAILABLE ON)
+message(STATUS "KV module interface: src/i_kv_module.h (always available)")
 
 # ── Logos SDK + liblogos ──────────────────────────────────────────────────────
 set(LOGOS_CPP_SDK_ROOT "" CACHE PATH "Path to logos-cpp-sdk install")
@@ -74,9 +59,9 @@ target_include_directories(scala_module_plugin PRIVATE
     ${CMAKE_SOURCE_DIR}
 )
 
-# Add kv_module include only if available
+# KV module support (interface header is in src/)
 if(KV_MODULE_AVAILABLE)
-    target_include_directories(scala_module_plugin PRIVATE ${KV_MODULE_INCLUDE_DIR})
+    target_compile_definitions(scala_module_plugin PRIVATE KV_MODULE_AVAILABLE)
 endif()
 
 target_link_libraries(scala_module_plugin PRIVATE
@@ -84,19 +69,16 @@ target_link_libraries(scala_module_plugin PRIVATE
     Qt6::Qml
 )
 
-# Link kv_module if available (direct plugin support)
-if(KV_MODULE_AVAILABLE)
-    # Only try to link if kv_module_plugin is actually found
-    find_library(KV_MODULE_LIB kv_module_plugin
-        PATHS /usr/local/lib /usr/lib ${LOGOS_CPP_SDK_ROOT}/lib
-        NO_DEFAULT_PATH
-    )
-    if(KV_MODULE_LIB)
-        target_link_libraries(scala_module_plugin PRIVATE ${KV_MODULE_LIB})
-        message(STATUS "KV module linked: scala can use kv_module directly without logos_host")
-    else()
-        message(STATUS "KV module headers found but library not found - skipping link")
-    endif()
+# Link kv_module library if found (optional — plugin loading at runtime is the primary path)
+find_library(KV_MODULE_LIB kv_module_plugin
+    PATHS /usr/local/lib /usr/lib ${LOGOS_CPP_SDK_ROOT}/lib
+    NO_DEFAULT_PATH
+)
+if(KV_MODULE_LIB)
+    target_link_libraries(scala_module_plugin PRIVATE ${KV_MODULE_LIB})
+    message(STATUS "KV module linked: scala can use kv_module directly without logos_host")
+else()
+    message(STATUS "KV module library not found at link time — will load at runtime via QPluginLoader")
 endif()
 
 if(LOGOS_CORE_AVAILABLE)
@@ -154,20 +136,9 @@ if(BUILD_STANDALONE)
 
     target_include_directories(scala_standalone PRIVATE src)
 
-    # Add kv_module include and link library if available
-    if(KV_MODULE_AVAILABLE AND KV_MODULE_INCLUDE_DIR)
-        target_include_directories(scala_standalone PRIVATE ${KV_MODULE_INCLUDE_DIR})
+    # KV module support (interface header is in src/, library loaded at runtime)
+    if(KV_MODULE_AVAILABLE)
         target_compile_definitions(scala_standalone PRIVATE KV_MODULE_AVAILABLE)
-        
-        # Link kv_module library (full path to .so file)
-        set(KV_MODULE_LIB "/tmp/logos-kv-module/build-logos/kv_module_plugin.so")
-        if(EXISTS ${KV_MODULE_LIB})
-            # Use absolute path to avoid -l flag
-            target_link_libraries(scala_standalone PRIVATE "${KV_MODULE_LIB}")
-            message(STATUS "KV module linked: ${KV_MODULE_LIB}")
-        else()
-            message(WARNING "KV module library not found at ${KV_MODULE_LIB} - running in memory mode")
-        endif()
     endif()
 
     qt_add_qml_module(scala_standalone
@@ -233,9 +204,9 @@ if(BUILD_MODULE)
         "${LOGOS_CPP_SDK_ROOT}/include/core"
     )
 
-    # Add kv_module include only if available
+    # KV module support
     if(KV_MODULE_AVAILABLE)
-        target_include_directories(scala_module_plugin PRIVATE ${KV_MODULE_INCLUDE_DIR})
+        target_compile_definitions(scala_module_plugin PRIVATE KV_MODULE_AVAILABLE)
     endif()
 
     # Logos libraries
@@ -245,20 +216,6 @@ if(BUILD_MODULE)
         Qt6::Core Qt6::Qml Qt6::RemoteObjects
         ${MODULE_LOGOS_CORE_LIB}
     )
-
-    # Link kv_module if available (with fallback)
-    if(KV_MODULE_AVAILABLE)
-        find_library(KV_MODULE_LIB kv_module_plugin
-            PATHS "${LOGOS_LIBLOGOS_ROOT}/lib" "${LOGOS_CPP_SDK_ROOT}/lib" /usr/local/lib /usr/lib
-            NO_DEFAULT_PATH
-        )
-        if(KV_MODULE_LIB)
-            target_link_libraries(scala_module_plugin PRIVATE ${KV_MODULE_LIB})
-            message(STATUS "KV module linked in BUILD_MODULE mode")
-        else()
-            message(STATUS "KV module headers found but library not found in BUILD_MODULE mode - skipping link")
-        endif()
-    endif()
 
     target_compile_definitions(scala_module_plugin PRIVATE
         QT_PLUGIN
@@ -315,6 +272,7 @@ if(BUILD_UI_PLUGIN)
     target_compile_definitions(${UI_TARGET} PRIVATE
         SCALA_UI_BUILD
         SCALA_UI_METADATA_FILE="${CMAKE_CURRENT_SOURCE_DIR}/ui_metadata.json"
+        $<$<BOOL:${KV_MODULE_AVAILABLE}>:KV_MODULE_AVAILABLE>
     )
 
     target_link_libraries(${UI_TARGET} PRIVATE

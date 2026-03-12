@@ -14,7 +14,10 @@
 #include <QPluginLoader>
 
 #include "calendar_module.h"
+
+#ifdef KV_MODULE_AVAILABLE
 #include "i_kv_module.h"
+#endif
 
 #ifdef LOGOS_CORE_AVAILABLE
 #include "scala_bridge.h"
@@ -181,6 +184,7 @@ static int runGui(int argc, char *argv[])
     LogosCalendar module;
     module.setNamespace(qEnvironmentVariable("SCALA_NAMESPACE", "default"));
 
+#ifdef KV_MODULE_AVAILABLE
     // Try to load kv_module plugin for persistence (no logos_host needed)
     QPluginLoader kvLoader(QStringLiteral("kv_module_plugin"));
     if (kvLoader.load()) {
@@ -199,6 +203,7 @@ static int runGui(int argc, char *argv[])
     } else {
         qDebug() << "scala_standalone: kv_module plugin not found, using in-memory fallback";
     }
+#endif
 
 #ifdef LOGOS_CORE_AVAILABLE
     ScalaBridge bridge;

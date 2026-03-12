@@ -9,8 +9,10 @@
 
 // ── Construction ─────────────────────────────────────────────────────────────
 
-CalendarStore::CalendarStore() : m_kvModule(nullptr) {
-    // Default to in-memory mode if no kv module is set
+CalendarStore::CalendarStore() {
+#ifdef KV_MODULE_AVAILABLE
+    m_kvModule = nullptr;
+#endif
 #ifdef LOGOS_CORE_AVAILABLE
     m_kvClient = nullptr;
 #endif
@@ -23,9 +25,11 @@ void CalendarStore::setClient(LogosAPIClient *client) {
 }
 #endif
 
+#ifdef KV_MODULE_AVAILABLE
 void CalendarStore::setKvModule(IKvModule *kv) {
     m_kvModule = kv;
 }
+#endif
 
 // ── Namespace ────────────────────────────────────────────────────────────────
 
@@ -42,13 +46,15 @@ QString CalendarStore::namespacedKey(const QString &key) const {
 
 void CalendarStore::kvSet(const QString &key, const QString &value) const {
     const QString nsKey = namespacedKey(key);
-    
+
+#ifdef KV_MODULE_AVAILABLE
     // Priority 1: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         m_kvModule->set(KV_NS, nsKey, value);
         return;
     }
-    
+#endif
+
     // Priority 2: logos_host (QtRO) - for backwards compatibility
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
@@ -64,12 +70,14 @@ void CalendarStore::kvSet(const QString &key, const QString &value) const {
 
 QString CalendarStore::kvGet(const QString &key) const {
     const QString nsKey = namespacedKey(key);
-    
+
+#ifdef KV_MODULE_AVAILABLE
     // Priority 1: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         return m_kvModule->get(KV_NS, nsKey);
     }
-    
+#endif
+
     // Priority 2: logos_host (QtRO) - for backwards compatibility
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
@@ -85,13 +93,15 @@ QString CalendarStore::kvGet(const QString &key) const {
 
 void CalendarStore::kvRemove(const QString &key) const {
     const QString nsKey = namespacedKey(key);
-    
+
+#ifdef KV_MODULE_AVAILABLE
     // Priority 1: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         m_kvModule->remove(KV_NS, nsKey);
         return;
     }
-    
+#endif
+
     // Priority 2: logos_host (QtRO) - for backwards compatibility
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
