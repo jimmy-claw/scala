@@ -154,6 +154,12 @@ if(BUILD_STANDALONE)
 
     target_include_directories(scala_standalone PRIVATE src)
 
+    # Add kv_module include if available
+    if(KV_MODULE_AVAILABLE AND KV_MODULE_INCLUDE_DIR)
+        target_include_directories(scala_standalone PRIVATE ${KV_MODULE_INCLUDE_DIR})
+        message(STATUS "KV module include added to standalone: ${KV_MODULE_INCLUDE_DIR}")
+    endif()
+
     qt_add_qml_module(scala_standalone
         URI "ScalaApp"
         VERSION 1.0
