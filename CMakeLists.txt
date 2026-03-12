@@ -148,13 +148,13 @@ if(BUILD_MODULE)
 
     find_package(Qt6 REQUIRED COMPONENTS Core Qml RemoteObjects)
 
-    qt_add_plugin(scala_module_plugin CLASS_NAME ScalaPlugin)
-    set_target_properties(scala_module_plugin PROPERTIES
+    qt_add_plugin(scala_headless_plugin CLASS_NAME ScalaPlugin)
+    set_target_properties(scala_headless_plugin PROPERTIES
         PREFIX ""
         OUTPUT_NAME "scala_module_plugin"
     )
 
-    target_sources(scala_module_plugin PRIVATE
+    target_sources(scala_headless_plugin PRIVATE
         src/scala_plugin.cpp
         src/scala_plugin.h
         src/calendar_module.cpp
@@ -163,7 +163,7 @@ if(BUILD_MODULE)
         src/qr_generator.cpp
     )
 
-    target_include_directories(scala_module_plugin PRIVATE
+    target_include_directories(scala_headless_plugin PRIVATE
         src
         ${CMAKE_SOURCE_DIR}
         "${LOGOS_LIBLOGOS_ROOT}/include"
@@ -175,12 +175,12 @@ if(BUILD_MODULE)
     # Logos libraries
     find_library(MODULE_LOGOS_CORE_LIB logos_core
         HINTS "${LOGOS_LIBLOGOS_ROOT}/lib" NO_DEFAULT_PATH)
-    target_link_libraries(scala_module_plugin PRIVATE
+    target_link_libraries(scala_headless_plugin PRIVATE
         Qt6::Core Qt6::Qml Qt6::RemoteObjects
         ${MODULE_LOGOS_CORE_LIB}
     )
 
-    target_compile_definitions(scala_module_plugin PRIVATE
+    target_compile_definitions(scala_headless_plugin PRIVATE
         QT_PLUGIN
         LOGOS_CORE_AVAILABLE
         SCALA_MODULE_WRAPPER
@@ -188,12 +188,12 @@ if(BUILD_MODULE)
 
     # RPATH: $ORIGIN so it finds logos libs next to the .so
     if(APPLE)
-        set_target_properties(scala_module_plugin PROPERTIES
+        set_target_properties(scala_headless_plugin PROPERTIES
             BUILD_RPATH   "@loader_path"
             INSTALL_RPATH "@loader_path"
         )
     elseif(UNIX)
-        set_target_properties(scala_module_plugin PROPERTIES
+        set_target_properties(scala_headless_plugin PROPERTIES
             BUILD_RPATH   "$ORIGIN"
             INSTALL_RPATH "$ORIGIN"
         )

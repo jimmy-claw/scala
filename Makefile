@@ -140,7 +140,7 @@ build-module: setup-nix-merged
 		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
 		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
 		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
-		&& cmake --build . --target scala_module_plugin -j$$(nproc)
+		&& cmake --build . --target scala_headless_plugin -j$$(nproc)
 	mkdir -p $(MODULES_DIR)/scala_module
 	cp $(BUILD_MODULE)/scala_module_plugin.so $(MODULES_DIR)/scala_module/
 	cp metadata.json $(MODULES_DIR)/scala_module/manifest.json
