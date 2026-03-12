@@ -9,10 +9,11 @@
 
 // ── Construction ─────────────────────────────────────────────────────────────
 
-CalendarStore::CalendarStore() {
+CalendarStore::CalendarStore() : m_kvModule(nullptr) {
     // Default to in-memory mode if no kv module is set
+#ifdef LOGOS_CORE_AVAILABLE
     m_kvClient = nullptr;
-    m_kvModule = nullptr;
+#endif
     m_mem.clear();
 }
 
