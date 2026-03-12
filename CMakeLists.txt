@@ -159,17 +159,24 @@ if(BUILD_STANDALONE)
         target_include_directories(scala_standalone PRIVATE ${KV_MODULE_INCLUDE_DIR})
         target_compile_definitions(scala_standalone PRIVATE KV_MODULE_AVAILABLE)
         
-        # Find the kv_module library
-        find_library(KV_MODULE_LIB kv_module_plugin
-            PATHS /tmp/logos-kv-module/build-logos
-                  ${KV_MODULE_INCLUDE_DIR}/../build-logos
-                  /tmp/logos-kv-module/build
-        )
-        if(KV_MODULE_LIB)
+        # Link kv_module library (direct path since we know where it is)
+        set(KV_MODULE_LIB "/tmp/logos-kv-module/build-logos/kv_module_plugin.so")
+        if(EXISTS ${KV_MODULE_LIB})
             target_link_libraries(scala_standalone PRIVATE ${KV_MODULE_LIB})
             message(STATUS "KV module linked: ${KV_MODULE_LIB}")
         else()
-            message(WARNING "KV module headers found but library not found - running in memory mode")
+            # Try find_library as fallback
+            find_library(KV_MODULE_LIB_FALLBACK kv_module_plugin
+                PATHS /tmp/logos-kv-module/build-logos
+                      ${KV_MODULE_INCLUDE_DIR}/../build-logos
+                      /tmp/logos-kv-module/build
+            )
+            if(KV_MODULE_LIB_FALLBACK)
+                target_link_libraries(scala_standalone PRIVATE ${KV_MODULE_LIB_FALLBACK})
+                message(STATUS "KV module linked: ${KV_MODULE_LIB_FALLBACK}")
+            else()
+                message(WARNING "KV module headers found but library not found - running in memory mode")
+            endif()
         endif()
     endif()
 
