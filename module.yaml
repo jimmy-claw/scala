@@ -1,4 +1,4 @@
-name: scala
+name: scala_module
 display_name: Scala Calendar
 version: 0.1.0
 description: Privacy-first shared calendar app built on Logos Core
