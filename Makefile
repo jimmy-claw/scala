@@ -31,7 +31,8 @@ NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 .PHONY: all build test test-cli clean standalone build-standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli \
-        build-module run-module build-ui-plugin
+        build-module run-module build-ui-plugin \
+        standalone-kv standalone-direct
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -200,3 +201,34 @@ dev: standalone
 	QML_IMPORT_PATH=$(NIX_QTDECL)/lib/qt-6/qml \
 	LOGOS_CORE_AVAILABLE=1 \
 	./$(BUILD_STANDALONE)/scala_standalone
+
+# ── Standalone with direct kv_module (NO logos_host needed!) ───────────────────
+
+## Find kv_module plugin
+KV_MODULE_LIB ?= $(shell find /tmp/logos-kv-module/build-logos -name 'kv_module_plugin.so' 2>/dev/null | head -1)
+KV_MODULE_INC ?= $(shell dirname $(KV_MODULE_LIB))
+
+## Build and run Scala with direct kv_module support (NO logos_host needed!)
+## This targets the standalone binary which links kv_module directly
+standalone-kv standalone-direct:
+	@echo "Building Scala with direct kv_module support (no logos_host required)..."
+	@if [ -z "$(KV_MODULE_LIB)" ]; then \
+		echo "ERROR: kv_module not found! Run 'make setup-kv-module' first."; \
+		exit 1; \
+	fi
+	@echo "Using kv_module at: $(KV_MODULE_LIB)"
+	mkdir -p $(BUILD_STANDALONE)
+	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) \
+		-DBUILD_STANDALONE=ON \
+		-DKV_MODULE_AVAILABLE=ON \
+		-DKV_MODULE_INCLUDE_DIR=$(KV_MODULE_INC)/../src \
+		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
+		&& cmake --build . -j$$(nproc) --target scala_standalone
+	@echo ""
+	@echo "✅ Scala ready! Run: ./$(BUILD_STANDALONE)/scala_standalone"
+	@echo "   (No logos_host needed - persistence via direct kv_module link)"
+	@echo ""
+	./$(BUILD_STANDALONE)/scala_standalone
+
+# One-command build and run
+kv: standalone-kv
