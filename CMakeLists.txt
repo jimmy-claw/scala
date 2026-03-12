@@ -33,13 +33,13 @@ if(NOT "${LOGOS_CPP_SDK_ROOT}" STREQUAL "" AND NOT "${LOGOS_LIBLOGOS_ROOT}" STRE
 endif()
 
 # ── Plugin target ─────────────────────────────────────────────────────────────
-qt_add_plugin(scala_plugin CLASS_NAME LogosCalendar)
-set_target_properties(scala_plugin PROPERTIES
+qt_add_plugin(scala_module_plugin CLASS_NAME LogosCalendar)
+set_target_properties(scala_module_plugin PROPERTIES
     PREFIX ""
-    OUTPUT_NAME "scala_plugin"
+    OUTPUT_NAME "scala_module_plugin"
 )
 
-target_sources(scala_plugin PRIVATE
+target_sources(scala_module_plugin PRIVATE
     src/calendar_module.cpp
     src/calendar_store.cpp
     src/calendar_sync.cpp
@@ -47,37 +47,37 @@ target_sources(scala_plugin PRIVATE
     src/plugin.cpp
 )
 
-target_include_directories(scala_plugin PRIVATE src ${CMAKE_SOURCE_DIR})
+target_include_directories(scala_module_plugin PRIVATE src ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(scala_plugin PRIVATE
+target_link_libraries(scala_module_plugin PRIVATE
     Qt6::Core
     Qt6::Qml
 )
 
 if(LOGOS_CORE_AVAILABLE)
     find_package(Qt6 REQUIRED COMPONENTS RemoteObjects)
-    target_link_libraries(scala_plugin PRIVATE
+    target_link_libraries(scala_module_plugin PRIVATE
         Qt6::RemoteObjects
         logos_cpp_sdk
         logos_core
         ${LOGOS_SDK_LIB}
     )
-    target_compile_definitions(scala_plugin PRIVATE LOGOS_CORE_AVAILABLE)
+    target_compile_definitions(scala_module_plugin PRIVATE LOGOS_CORE_AVAILABLE)
 endif()
 
 # ── Compile definitions ──────────────────────────────────────────────────────
-target_compile_definitions(scala_plugin PRIVATE
+target_compile_definitions(scala_module_plugin PRIVATE
     QT_PLUGIN
 )
 
 # ── RPATH ─────────────────────────────────────────────────────────────────────
 if(APPLE)
-    set_target_properties(scala_plugin PROPERTIES
+    set_target_properties(scala_module_plugin PROPERTIES
         BUILD_RPATH   "@loader_path"
         INSTALL_RPATH "@loader_path"
     )
 elseif(UNIX)
-    set_target_properties(scala_plugin PROPERTIES
+    set_target_properties(scala_module_plugin PROPERTIES
         BUILD_RPATH   "$ORIGIN"
         INSTALL_RPATH "$ORIGIN"
     )
