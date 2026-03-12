@@ -157,6 +157,7 @@ if(BUILD_STANDALONE)
     # Add kv_module include and link library if available
     if(KV_MODULE_AVAILABLE AND KV_MODULE_INCLUDE_DIR)
         target_include_directories(scala_standalone PRIVATE ${KV_MODULE_INCLUDE_DIR})
+        target_compile_definitions(scala_standalone PRIVATE KV_MODULE_AVAILABLE)
         
         # Find the kv_module library
         find_library(KV_MODULE_LIB kv_module_plugin
