@@ -10,18 +10,25 @@ find_package(Qt6 REQUIRED COMPONENTS Core Qml)
 set(CMAKE_AUTOMOC ON)
 
 # ── Logos KV Module (direct plugin support) ───────────────────────────────────
-# Find kv_module header and library
-find_path(KV_MODULE_INCLUDE_DIR i_kv_module.h
-    PATHS ${LOGOS_CPP_SDK_ROOT}/include
-          ${LOGOS_CPP_SDK_ROOT}/include/core
-    PATH_SUFFIXES kv_module
-    OPTIONAL
-)
-
-# If kv_module headers found, mark it as available
-if(KV_MODULE_INCLUDE_DIR)
+# Support KV_MODULE_INCLUDE_DIR from Makefile or auto-detect
+if(NOT KV_MODULE_INCLUDE_DIR)
+    # Not set - try auto-detect in common locations
+    find_path(KV_MODULE_INCLUDE_DIR i_kv_module.h
+        PATHS /tmp/logos-kv-module/src
+              ${LOGOS_CPP_SDK_ROOT}/include/kv_module
+              ${LOGOS_CPP_SDK_ROOT}/include/core
+              ${LOGOS_CPP_SDK_ROOT}/include
+        NO_DEFAULT_PATH
+        OPTIONAL
+    )
+    if(KV_MODULE_INCLUDE_DIR)
+        set(KV_MODULE_AVAILABLE ON)
+        message(STATUS "KV module headers auto-detected: ${KV_MODULE_INCLUDE_DIR}")
+    endif()
+else()
+    # Set via command line (-DKV_MODULE_INCLUDE_DIR=...)
     set(KV_MODULE_AVAILABLE ON)
-    message(STATUS "KV module headers found: ${KV_MODULE_INCLUDE_DIR}")
+    message(STATUS "KV module headers set: ${KV_MODULE_INCLUDE_DIR}")
 endif()
 
 # ── Logos SDK + liblogos ──────────────────────────────────────────────────────
