@@ -154,10 +154,22 @@ if(BUILD_STANDALONE)
 
     target_include_directories(scala_standalone PRIVATE src)
 
-    # Add kv_module include if available
+    # Add kv_module include and link library if available
     if(KV_MODULE_AVAILABLE AND KV_MODULE_INCLUDE_DIR)
         target_include_directories(scala_standalone PRIVATE ${KV_MODULE_INCLUDE_DIR})
-        message(STATUS "KV module include added to standalone: ${KV_MODULE_INCLUDE_DIR}")
+        
+        # Find the kv_module library
+        find_library(KV_MODULE_LIB kv_module_plugin
+            PATHS /tmp/logos-kv-module/build-logos
+                  ${KV_MODULE_INCLUDE_DIR}/../build-logos
+                  /tmp/logos-kv-module/build
+        )
+        if(KV_MODULE_LIB)
+            target_link_libraries(scala_standalone PRIVATE ${KV_MODULE_LIB})
+            message(STATUS "KV module linked: ${KV_MODULE_LIB}")
+        else()
+            message(WARNING "KV module headers found but library not found - running in memory mode")
+        endif()
     endif()
 
     qt_add_qml_module(scala_standalone
