@@ -15,6 +15,10 @@ CalendarStore::CalendarStore() : m_kvModule(nullptr) {
     m_kvClient = nullptr;
 #endif
     m_mem.clear();
+    qInfo() << "CalendarStore initialized:"
+            << "(kvModule=" << (m_kvModule ? "set" : "nullptr")
+            << ", kvClient=" << (m_kvClient ? "set" : "nullptr")
+            << ")";
 }
 
 #ifdef LOGOS_CORE_AVAILABLE
@@ -42,10 +46,14 @@ QString CalendarStore::namespacedKey(const QString &key) const {
 
 void CalendarStore::kvSet(const QString &key, const QString &value) const {
     const QString nsKey = namespacedKey(key);
+    qInfo() << "CalendarStore::kvSet" << key << "->" << nsKey
+            << "(kvModule=" << (m_kvModule ? "set" : "nullptr")
+            << ", kvClient=" << (m_kvClient ? "set" : "nullptr") << ")";
     
     // Priority 2: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         m_kvModule->set(KV_NS, nsKey, value);
+        qInfo() << "  -> using kv_module (direct)";
         return;
     }
     
@@ -62,15 +70,21 @@ void CalendarStore::kvSet(const QString &key, const QString &value) const {
     }
     
     // Priority 3: in-memory fallback
+    qInfo() << "  -> using in-memory fallback";
     m_mem[nsKey] = value;
 }
 
 QString CalendarStore::kvGet(const QString &key) const {
     const QString nsKey = namespacedKey(key);
+    qInfo() << "CalendarStore::kvGet" << key << "->" << nsKey
+            << "(kvModule=" << (m_kvModule ? "get" : "nullptr")
+            << ", kvClient=" << (m_kvClient ? "get" : "nullptr") << ")";
     
     // Priority 2: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
-        return m_kvModule->get(KV_NS, nsKey);
+        QString result = m_kvModule->get(KV_NS, nsKey);
+        qInfo() << "  -> using kv_module (direct), result=" << (result.isEmpty() ? "EMPTY" : "OK");
+        return result;
     }
     
     // Fallback: logos_host (QtRO) - for backwards compatibility
@@ -90,10 +104,14 @@ QString CalendarStore::kvGet(const QString &key) const {
 
 void CalendarStore::kvRemove(const QString &key) const {
     const QString nsKey = namespacedKey(key);
+    qInfo() << "CalendarStore::kvRemove" << key << "->" << nsKey
+            << "(kvModule=" << (m_kvModule ? "remove" : "nullptr")
+            << ", kvClient=" << (m_kvClient ? "remove" : "nullptr") << ")";
     
     // Priority 2: direct kv_module plugin (no logos_host needed!)
     if (m_kvModule) {
         m_kvModule->remove(KV_NS, nsKey);
+        qInfo() << "  -> using kv_module (direct)";
         return;
     }
     
