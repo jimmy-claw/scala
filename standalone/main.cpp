@@ -11,8 +11,10 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QFile>
+#include <QPluginLoader>
 
 #include "calendar_module.h"
+#include "i_kv_module.h"
 
 #ifdef LOGOS_CORE_AVAILABLE
 #include "scala_bridge.h"
@@ -178,6 +180,25 @@ static int runGui(int argc, char *argv[])
     // the running scala_module via QtRO when LOGOS_CORE_AVAILABLE.
     LogosCalendar module;
     module.setNamespace(qEnvironmentVariable("SCALA_NAMESPACE", "default"));
+
+    // Try to load kv_module plugin for persistence (no logos_host needed)
+    QPluginLoader kvLoader(QStringLiteral("kv_module_plugin"));
+    if (kvLoader.load()) {
+        QObject *plugin = kvLoader.instance();
+        if (plugin) {
+            IKvModule *kvModule = qobject_cast<IKvModule *>(plugin);
+            if (kvModule) {
+                module.setKvModule(kvModule);
+                qDebug() << "scala_standalone: loaded kv_module plugin for persistence";
+            } else {
+                qWarning() << "scala_standalone: kv_module plugin loaded but not IKvModule interface";
+            }
+        } else {
+            qWarning() << "scala_standalone: failed to get kv_module plugin instance:" << kvLoader.errorString();
+        }
+    } else {
+        qDebug() << "scala_standalone: kv_module plugin not found, using in-memory fallback";
+    }
 
 #ifdef LOGOS_CORE_AVAILABLE
     ScalaBridge bridge;
