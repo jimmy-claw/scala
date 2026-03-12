@@ -130,10 +130,10 @@ if(BUILD_STANDALONE)
     if(LOGOS_CORE_AVAILABLE)
         target_sources(scala_standalone PRIVATE src/scala_bridge.cpp)
         target_link_libraries(scala_standalone PRIVATE
-            Qt6::RemoteObjects
             logos_cpp_sdk
             logos_core
             ${LOGOS_SDK_LIB}
+            Qt6::RemoteObjects
         )
         target_compile_definitions(scala_standalone PRIVATE LOGOS_CORE_AVAILABLE)
     endif()
@@ -249,10 +249,10 @@ if(BUILD_UI_PLUGIN)
     if(LOGOS_CORE_AVAILABLE)
         find_package(Qt6 REQUIRED COMPONENTS RemoteObjects)
         target_link_libraries(${UI_TARGET} PRIVATE
-            Qt6::RemoteObjects
             logos_cpp_sdk
             logos_core
             ${LOGOS_SDK_LIB}
+            Qt6::RemoteObjects
         )
         target_compile_definitions(${UI_TARGET} PRIVATE LOGOS_CORE_AVAILABLE)
     endif()
