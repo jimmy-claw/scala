@@ -1,10 +1,10 @@
-name: scala
+name: scala_module
 display_name: Scala Calendar
 version: 0.1.0
 description: Privacy-first shared calendar app built on Logos Core
 author: jimmy-claw
 license: MIT
-entry_point: scala_plugin.so
+entry_point: scala_module_plugin.so
 qt_version: "6"
 
 dependencies:

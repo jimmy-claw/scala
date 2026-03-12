@@ -4,11 +4,15 @@ CMAKE_FLAGS      ?= -DCMAKE_BUILD_TYPE=Debug
 TOOLS_DIR        ?= ./tools
 MODULES_DIR      ?= ./modules
 
+# Explicit SDK paths (override nix auto-detection when passed on command line)
+LOGOS_CPP_SDK_ROOT  ?=
+LOGOS_LIBLOGOS_ROOT ?=
+
 # ── Nix store auto-detection ─────────────────────────────────────────────────
 # Split packages: headers, lib, and bin are separate nix outputs
 LOGOS_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-liblogos-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 LOGOS_LIB_NIX     ?= $(shell ls -d /nix/store/*logos-liblogos-lib-* 2>/dev/null | grep -v '\.drv$$' | head -1)
-LOGOS_BIN_NIX     ?= $(shell for d in $(shell ls -d /nix/store/*logos-liblogos-bin-* 2>/dev/null | grep -v '\.drv$$'); do test -f "$$d/bin/logoscore" && echo "$$d" && break; done)
+LOGOS_BIN_NIX     ?= $(shell ls -d /nix/store/*logos-liblogos-bin-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 LOGOS_SDK_HEADERS_NIX ?= $(shell ls -d /nix/store/*logos-cpp-sdk-headers-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 LOGOS_SDK_LIB_NIX     ?= $(shell ls -d /nix/store/*logos-cpp-sdk-lib-* 2>/dev/null | grep -v '\.drv$$' | head -1)
 
@@ -24,10 +28,10 @@ NIX_QTDECL     ?= $(shell ls -d /nix/store/*-qtdeclarative-6.9.* 2>/dev/null | g
 NIX_QTREMOBJ   ?= $(shell ls -d /nix/store/*-qtremoteobjects-6.9.* 2>/dev/null | grep -v '\.drv$$' | grep -v dev | head -1)
 NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 
-.PHONY: all build test test-cli clean standalone screenshot \
+.PHONY: all build test test-cli clean standalone build-standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli \
-        build-module run-module build-cli
+        build-module run-module build-ui-plugin
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -37,11 +41,11 @@ build:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. $(CMAKE_FLAGS) && make -j$$(nproc)
 
-standalone:
+standalone build-standalone:
 	mkdir -p $(BUILD_STANDALONE)
 	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) \
 		-DBUILD_STANDALONE=ON \
-		$(if $(LOGOS_HEADERS_NIX),-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged -DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged,) \
+		$(if $(LOGOS_CPP_SDK_ROOT),-DLOGOS_CPP_SDK_ROOT=$(LOGOS_CPP_SDK_ROOT) -DLOGOS_LIBLOGOS_ROOT=$(LOGOS_LIBLOGOS_ROOT),$(if $(LOGOS_HEADERS_NIX),-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged -DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged,)) \
 		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
 		&& cmake --build . -j$$(nproc) --target scala_standalone
 
@@ -142,21 +146,52 @@ build-module: setup-nix-merged
 	cp metadata.json $(MODULES_DIR)/scala_module/manifest.json
 	@echo "scala_module ready at: $(MODULES_DIR)/scala_module/"
 
-## Build CLI binary (connects to running logoscore via QtRO)
-build-cli: setup-nix-merged build-module
-	cd $(BUILD_MODULE) && cmake .. $(CMAKE_FLAGS) \
-		-DBUILD_MODULE=ON -DBUILD_CLI=ON \
+## Build IComponent UI plugin for logos-app-poc (Basecamp)
+BUILD_UI_PLUGIN ?= build-ui-plugin
+
+build-ui-plugin: setup-nix-merged
+	mkdir -p $(BUILD_UI_PLUGIN)
+	cd $(BUILD_UI_PLUGIN) && cmake .. $(CMAKE_FLAGS) \
+		-DBUILD_UI_PLUGIN=ON \
 		-DLOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged \
 		-DLOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged \
 		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
-		&& cmake --build . --target scala_cli -j$$(nproc)
-	@echo "scala_cli ready at: $(BUILD_MODULE)/scala_cli"
+		&& cmake --build . --target scala_ui -j$$(nproc)
+	@echo "scala_ui plugin ready at: $(BUILD_UI_PLUGIN)/libscala_ui.so"
 
 ## Run logoscore with kv_module + scala_module
 run-module: build-module
 	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
 
 ## Full dev stack: build everything and run
+
+## ── CLI (--call) targets ─────────────────────────────────────────────────────
+CALL_BASE = $(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
+
+## List all calendars
+list-calendars:
+	$(CALL_BASE) --call 'scala_module.listCalendars()'
+
+## Create a calendar: make create-calendar NAME=MyCal COLOR='#3b82f6'
+create-calendar:
+	$(CALL_BASE) --call 'scala_module.createCalendar($(NAME),$(COLOR))'
+
+## List events: make list-events CAL=<calendar-id>
+list-events:
+	$(CALL_BASE) --call 'scala_module.listEvents($(CAL))'
+
+## Get identity (public key)
+get-identity:
+	$(CALL_BASE) --call 'scala_module.getIdentity()'
+
+## Generate share link: make share-calendar CAL=<id>
+share-calendar:
+	$(CALL_BASE) --call 'scala_module.generateShareLink($(CAL))'
+
+## Join via share link: make join-calendar LINK=<link>
+join-calendar:
+	$(CALL_BASE) --call 'scala_module.handleShareLink($(LINK))'
+
 ## Run 'make run-core' in a separate terminal first
 dev: standalone
 	@echo "Starting Scala..."
