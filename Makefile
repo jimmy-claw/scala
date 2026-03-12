@@ -206,7 +206,7 @@ dev: standalone
 
 ## Find kv_module plugin
 KV_MODULE_LIB ?= $(shell find /tmp/logos-kv-module/build-logos -name 'kv_module_plugin.so' 2>/dev/null | head -1)
-KV_MODULE_INC ?= $(shell dirname $(KV_MODULE_LIB))
+KV_MODULE_INC ?= /tmp/logos-kv-module/src  # Headers in src/, not build-logos/
 
 ## Build and run Scala with direct kv_module support (NO logos_host needed!)
 ## This targets the standalone binary which links kv_module directly
@@ -221,7 +221,7 @@ standalone-kv standalone-direct:
 	cd $(BUILD_STANDALONE) && cmake .. $(CMAKE_FLAGS) \
 		-DBUILD_STANDALONE=ON \
 		-DKV_MODULE_AVAILABLE=ON \
-		-DKV_MODULE_INCLUDE_DIR=$(KV_MODULE_INC)/../src \
+		-DKV_MODULE_INCLUDE_DIR=$(KV_MODULE_INC) \
 		$(if $(NIX_QTBASE),-DCMAKE_PREFIX_PATH="$(NIX_QT_PREFIX)" -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$(NIX_QTDECL)$$(echo ';')$(NIX_QTREMOBJ)",) \
 		&& cmake --build . -j$$(nproc) --target scala_standalone
 	@echo ""
