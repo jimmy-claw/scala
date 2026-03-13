@@ -83,10 +83,13 @@ signals:
 private:
     // calendarId -> encryption key
     QMap<QString, QString> m_activeTopics;
+    QMap<QString, QString> m_subscribedTopics;
 
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPIClient *m_deliveryClient = nullptr;
     bool m_deliveryNodeStarted = false;
+    bool m_deliveryNodeStarting = false;
+    QStringList m_pendingSubscriptions;
 
     void ensureDeliveryNode();
     void onDeliveryMessageReceived(const QString &hash, const QString &topic,
