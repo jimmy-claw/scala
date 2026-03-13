@@ -6,6 +6,7 @@
 
 #include <QDebug>
 #include <QJsonDocument>
+#include <QStandardPaths>
 
 // ── Construction ─────────────────────────────────────────────────────────────
 
@@ -14,6 +15,10 @@ CalendarStore::CalendarStore() = default;
 #ifdef LOGOS_CORE_AVAILABLE
 void CalendarStore::setClient(LogosAPIClient *client) {
     m_kvClient = client;
+    // Switch kv_module to file backend for persistence
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/kv-data";
+    m_kvClient->invokeRemoteMethod("kv_module", "setDataDir", dataDir);
+    qDebug() << "CalendarStore: set kv_module data dir:" << dataDir;
 }
 #endif
 
