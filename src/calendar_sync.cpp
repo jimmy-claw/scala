@@ -119,17 +119,40 @@ void CalendarSync::setDeliveryClient(LogosAPIClient *client) {
 }
 
 void CalendarSync::ensureDeliveryNode() {
-    if (m_deliveryNodeStarted || !m_deliveryClient)
+    if (m_deliveryNodeStarted || m_deliveryNodeStarting || !m_deliveryClient)
         return;
 
-    // Create and start the delivery node with logos.dev preset
+    m_deliveryNodeStarting = true;
+
+    // Register connectionStateChanged — subscribe pending calendars only when connected
+    QObject *replica = m_deliveryClient->requestObject("delivery_module");
+    if (replica) {
+        m_deliveryClient->onEvent(
+            replica, this, QStringLiteral("connectionStateChanged"),
+            [this](const QString &, const QVariantList &args) {
+                QString status = args.value(0).toString();
+                qInfo() << "CalendarSync: delivery connection state:" << status;
+                if (!m_deliveryNodeStarted &&
+                    (status.toLower() == "connected")) {
+                    m_deliveryNodeStarted = true;
+                    for (const QString &calendarId : m_pendingSubscriptions) {
+                        QString topic = QStringLiteral("/scala/1/%1/json").arg(calendarId);
+                        m_deliveryClient->invokeRemoteMethod(
+                            "delivery_module", "subscribe", topic);
+                        m_subscribedTopics.insert(calendarId, topic);
+                        qInfo() << "CalendarSync: subscribed to topic" << topic;
+                    }
+                    m_pendingSubscriptions.clear();
+                }
+            });
+    }
+
+    // Create and start the delivery node
     m_deliveryClient->invokeRemoteMethod(
         "delivery_module", "createNode",
-        QStringLiteral("{\"logLevel\":\"INFO\",\"mode\":\"Core\",\"preset\":\"logos.dev\"}"));
+        QStringLiteral(R"({"logLevel":"INFO","mode":"Core","preset":"logos.dev"})"));
     m_deliveryClient->invokeRemoteMethod("delivery_module", "start");
-    m_deliveryNodeStarted = true;
-
-    qInfo() << "CalendarSync: delivery node created and started (logos.dev)";
+    qInfo() << "CalendarSync: delivery node starting...";
 }
 
 void CalendarSync::onDeliveryMessageReceived(const QString &hash, const QString &topic,
@@ -162,11 +185,17 @@ void CalendarSync::startSync(const QString &calendarId, const QString &encryptio
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_deliveryClient) {
         ensureDeliveryNode();
-        // Subscribe to the content topic via delivery_module
-        m_deliveryClient->invokeRemoteMethod(
-            "delivery_module", "subscribe", topic);
-
-        qInfo() << "CalendarSync: subscribed to topic" << topic;
+        if (m_deliveryNodeStarted) {
+            // Node already connected — subscribe immediately
+            m_deliveryClient->invokeRemoteMethod(
+                "delivery_module", "subscribe", topic);
+            m_subscribedTopics.insert(calendarId, topic);
+            qInfo() << "CalendarSync: subscribed to topic" << topic;
+        } else {
+            // Node starting — queue for when connection is established
+            m_pendingSubscriptions.append(calendarId);
+            qInfo() << "CalendarSync: queued subscription for" << calendarId;
+        }
         emit syncStarted(calendarId);
         return;
     }
