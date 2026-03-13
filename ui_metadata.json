@@ -4,5 +4,10 @@
     "description": "Scala — Secure Calendar App UI for Logos",
     "author": "jimmy-claw",
     "type": "ui",
-    "category": "productivity"
+    "category": "productivity",
+    "dependencies": ["scala_module"],
+    "main": {
+        "linux-amd64": "scala_ui.so"
+    },
+    "manifestVersion": "0.1.0"
 }
