@@ -24,10 +24,10 @@ jobs:
         with:
           name: test-results
           path: build/test-results.xml
-      - name: Build standalone
+      - name: Build UI plugin
         run: |
-          cmake -B build-standalone -DBUILD_STANDALONE=ON
-          cmake --build build-standalone -j4 --target scala_standalone
+          cmake -B build-ui-plugin -DBUILD_UI_PLUGIN=ON
+          cmake --build build-ui-plugin -j4 --target scala_ui
 
   e2e:
     continue-on-error: true
