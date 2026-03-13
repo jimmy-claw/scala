@@ -22,7 +22,8 @@ MODULES_DIR    ?= ./modules
 
 .PHONY: all build test clean setup-nix-merged \
         build-module build-ui-plugin install install-module \
-        build-kv-module install-kv-module install-all
+        build-kv-module install-kv-module \
+        install-delivery-module install-all
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -124,8 +125,20 @@ install-kv-module: build-kv-module
 	echo '{"name":"kv_module","version":"0.1.0","type":"core","category":"storage","dependencies":[],"main":{"linux-x86_64":"kv_module_plugin.so","linux-aarch64":"kv_module_plugin.so","darwin-arm64":"kv_module_plugin.so"}}' > ~/.local/share/Logos/LogosAppNix/modules/kv_module/manifest.json
 	@echo "kv_module installed to ~/.local/share/Logos/LogosAppNix/modules/kv_module/"
 
-## Install everything: scala_ui + scala_module + kv_module
-install-all: install install-module install-kv-module
+# ── delivery_module (P2P messaging backend) ───────────────────────────────────
+
+LGPM ?= /tmp/package-manager/bin/lgpm
+DELIVERY_RELEASE ?= build-20260307-a751c91-69
+
+## Install delivery_module via lgpm
+install-delivery-module:
+	$(LGPM) --release $(DELIVERY_RELEASE) \
+		--modules-dir ~/.local/share/Logos/LogosAppNix/modules \
+		install logos-delivery-module
+	@echo "delivery_module installed to ~/.local/share/Logos/LogosAppNix/modules/delivery_module/"
+
+## Install everything: scala_ui + scala_module + kv_module + delivery_module
+install-all: install install-module install-kv-module install-delivery-module
 	@echo ""
 	@echo "All installed! Run logos-app:"
 	@echo "  cd ~/logos-workspace && nix run .#logos-app-poc"

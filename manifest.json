@@ -8,5 +8,5 @@
     "darwin-arm64": "scala_plugin.so",
     "darwin-x86_64": "scala_plugin.so"
   },
-  "dependencies": ["kv_module", "messaging_module", "accounts_module"]
+  "dependencies": ["kv_module", "delivery_module", "accounts_module"]
 }

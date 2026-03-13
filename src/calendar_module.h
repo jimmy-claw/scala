@@ -140,6 +140,6 @@ private:
 #ifdef LOGOS_CORE_AVAILABLE
     LogosAPI *m_logosAPI = nullptr;
     LogosAPIClient *m_kvClient = nullptr;
-    LogosAPIClient *m_messagingClient = nullptr;
+    LogosAPIClient *m_deliveryClient = nullptr;
 #endif
 };

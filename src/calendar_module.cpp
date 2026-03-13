@@ -95,13 +95,13 @@ void LogosCalendar::initLogos(LogosAPI *logosAPIInstance) {
 
     // Skip optional module lookups in e2e/CI mode (they timeout ~20s each)
     if (qgetenv("SCALA_E2E_MINIMAL").isEmpty()) {
-        // Get messaging module client for sync
-        m_messagingClient = m_logosAPI->getClient("messaging_module");
-        if (!m_messagingClient) {
-            qWarning() << "LogosCalendar: failed to get messaging_module client"
+        // Get delivery module client for P2P sync
+        m_deliveryClient = m_logosAPI->getClient("delivery_module");
+        if (!m_deliveryClient) {
+            qWarning() << "LogosCalendar: failed to get delivery_module client"
                         << "(sync will use stub)";
         } else {
-            m_sync->setMessagingClient(m_messagingClient);
+            m_sync->setDeliveryClient(m_deliveryClient);
         }
 
         // Get identity from accounts module (optional — may not be loaded)
