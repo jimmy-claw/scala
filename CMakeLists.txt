@@ -219,7 +219,6 @@ if(BUILD_UI_PLUGIN)
 
     add_library(${UI_TARGET} SHARED
         src/scala_ui_component.cpp
-        src/scala_plugin.cpp
         src/calendar_module.cpp
         src/calendar_store.cpp
         src/calendar_sync.cpp
