@@ -31,7 +31,7 @@ NIX_QT_PREFIX  ?= $(NIX_QTBASE);$(NIX_QTDECL);$(NIX_QTREMOBJ)
 .PHONY: all build test test-cli clean standalone build-standalone screenshot \
         setup setup-logoscore setup-kv-module \
         run-core run dev install-cli \
-        build-module run-module build-ui-plugin
+        build-module run-module build-ui-plugin run-app
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
@@ -162,6 +162,28 @@ build-ui-plugin: setup-nix-merged
 ## Run logoscore with kv_module + scala_module
 run-module: build-module
 	$(LOGOSCORE) --modules-dir $(MODULES_DIR) --load-modules kv_module,scala_module
+
+## Run logos-app-poc with scala_ui as the main UI plugin
+LOGOS_APP_NIX ?= $(shell ls -d /nix/store/*logos-app-1.0.0 2>/dev/null | grep -v '\.drv$$' | head -1)
+STAGING_DIR   ?= /tmp/scala-app-staging
+
+run-app: build-ui-plugin
+	@if [ -z "$(LOGOS_APP_NIX)" ]; then echo "ERROR: logos-app-1.0.0 not found in nix store. Run: nix build github:logos-co/logos-core-poc#logos-app"; exit 1; fi
+	@echo "Staging logos-app with scala_ui plugin..."
+	rm -rf $(STAGING_DIR)
+	mkdir -p $(STAGING_DIR)/bin/plugins $(STAGING_DIR)/bin/modules $(STAGING_DIR)/lib
+	cp $(LOGOS_APP_NIX)/bin/LogosApp $(STAGING_DIR)/bin/
+	cp $(LOGOS_APP_NIX)/bin/logos_host $(STAGING_DIR)/bin/ 2>/dev/null || true
+	cp $(LOGOS_APP_NIX)/bin/logoscore $(STAGING_DIR)/bin/ 2>/dev/null || true
+	@for f in $(LOGOS_APP_NIX)/lib/*; do cp -a "$$f" $(STAGING_DIR)/lib/; done 2>/dev/null || true
+	cp $(BUILD_UI_PLUGIN)/libscala_ui.so $(STAGING_DIR)/bin/plugins/main_ui.so
+	@echo "Launching logos-app with scala calendar..."
+	LD_LIBRARY_PATH="$(STAGING_DIR)/lib:$(NIX_QTBASE)/lib:$(NIX_QTDECL)/lib:$(NIX_QTREMOBJ)/lib:/lib/x86_64-linux-gnu" \
+	QT_PLUGIN_PATH="$(NIX_QTBASE)/lib/qt-6/plugins" \
+	QML2_IMPORT_PATH="$(STAGING_DIR)/lib:$(NIX_QTDECL)/lib/qt-6/qml" \
+	LIBGL_ALWAYS_SOFTWARE=1 \
+	QT_QUICK_BACKEND=software \
+	$(STAGING_DIR)/bin/LogosApp
 
 ## Full dev stack: build everything and run
 

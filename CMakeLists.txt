@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Qml)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # ── Logos SDK + liblogos ──────────────────────────────────────────────────────
 set(LOGOS_CPP_SDK_ROOT "" CACHE PATH "Path to logos-cpp-sdk install")
@@ -219,7 +220,6 @@ if(BUILD_UI_PLUGIN)
 
     add_library(${UI_TARGET} SHARED
         src/scala_ui_component.cpp
-        src/scala_plugin.cpp
         src/calendar_module.cpp
         src/calendar_store.cpp
         src/calendar_sync.cpp

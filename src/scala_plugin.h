@@ -18,7 +18,9 @@
  */
 class ScalaPlugin : public QObject, public PluginInterface {
     Q_OBJECT
+#ifndef SCALA_UI_BUILD
     Q_PLUGIN_METADATA(IID PluginInterface_iid FILE "metadata.json")
+#endif
     Q_INTERFACES(PluginInterface)
 
 public:
