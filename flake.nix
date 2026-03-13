@@ -4,8 +4,15 @@
   inputs = {
     logos-module-builder.url = "github:logos-co/logos-module-builder";
     nixpkgs.follows = "logos-module-builder/nixpkgs";
-    logos-cpp-sdk.url = "github:logos-co/logos-cpp-sdk";
-    logos-liblogos.url = "github:logos-co/logos-liblogos";
+    logos-cpp-sdk = {
+      url = "github:logos-co/logos-cpp-sdk";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    logos-liblogos = {
+      url = "github:logos-co/logos-liblogos";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.logos-cpp-sdk.follows = "logos-cpp-sdk";
+    };
   };
 
   outputs = { self, logos-module-builder, nixpkgs, logos-cpp-sdk, logos-liblogos, ... }:
