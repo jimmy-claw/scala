@@ -33,7 +33,8 @@ if(NOT "${LOGOS_CPP_SDK_ROOT}" STREQUAL "" AND NOT "${LOGOS_LIBLOGOS_ROOT}" STRE
     find_library(LOGOS_SDK_LIB logos_sdk PATHS "${LOGOS_CPP_SDK_ROOT}/lib" NO_DEFAULT_PATH REQUIRED)
 endif()
 
-# ── Plugin target ─────────────────────────────────────────────────────────────
+# ── Plugin target (default build, skipped when BUILD_MODULE is ON) ────────────
+if(NOT BUILD_MODULE)
 qt_add_plugin(scala_module_plugin CLASS_NAME LogosCalendar)
 set_target_properties(scala_module_plugin PROPERTIES
     PREFIX ""
@@ -93,52 +94,7 @@ install(FILES ${CMAKE_SOURCE_DIR}/metadata.json
     DESTINATION lib/scala
     RENAME manifest.json
 )
-
-# ── Standalone runner ────────────────────────────────────────────────────────
-option(BUILD_STANDALONE "Build standalone runner" OFF)
-if(BUILD_STANDALONE)
-    find_package(Qt6 REQUIRED COMPONENTS Quick Gui Widgets)
-
-    qt_add_executable(scala_standalone standalone/main.cpp)
-
-    target_sources(scala_standalone PRIVATE
-        src/calendar_module.cpp
-        src/calendar_store.cpp
-        src/calendar_sync.cpp
-        src/qr_generator.cpp
-    )
-
-    target_include_directories(scala_standalone PRIVATE src)
-
-    qt_add_qml_module(scala_standalone
-        URI "ScalaApp"
-        VERSION 1.0
-        QML_FILES
-            qml/CalendarView.qml
-            qml/CalendarGrid.qml
-            qml/CalendarSidebar.qml
-            qml/EventModal.qml
-            qml/EventDetails.qml
-            qml/ShareDialog.qml
-            qml/SettingsPanel.qml
-        RESOURCE_PREFIX "/ScalaApp"
-    )
-
-    target_link_libraries(scala_standalone PRIVATE
-        Qt6::Quick Qt6::Qml Qt6::Gui Qt6::Widgets
-    )
-
-    if(LOGOS_CORE_AVAILABLE)
-        target_sources(scala_standalone PRIVATE src/scala_bridge.cpp)
-        target_link_libraries(scala_standalone PRIVATE
-            Qt6::RemoteObjects
-            logos_cpp_sdk
-            logos_core
-            ${LOGOS_SDK_LIB}
-        )
-        target_compile_definitions(scala_standalone PRIVATE LOGOS_CORE_AVAILABLE)
-    endif()
-endif()
+endif() # NOT BUILD_MODULE
 
 # ── Headless logoscore module plugin ─────────────────────────────────────────
 option(BUILD_MODULE "Build headless logoscore plugin (no Qt Quick/GUI)" OFF)
