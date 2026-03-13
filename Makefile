@@ -178,9 +178,11 @@ run-app: build-ui-plugin
 	@for f in $(LOGOS_APP_NIX)/lib/*; do cp -a "$$f" $(STAGING_DIR)/lib/; done 2>/dev/null || true
 	cp $(BUILD_UI_PLUGIN)/libscala_ui.so $(STAGING_DIR)/bin/plugins/main_ui.so
 	@echo "Launching logos-app with scala calendar..."
-	LD_LIBRARY_PATH="$(STAGING_DIR)/lib:$(NIX_QTBASE)/lib:$(NIX_QTDECL)/lib:$(NIX_QTREMOBJ)/lib:$$LD_LIBRARY_PATH" \
+	LD_LIBRARY_PATH="$(STAGING_DIR)/lib:$(NIX_QTBASE)/lib:$(NIX_QTDECL)/lib:$(NIX_QTREMOBJ)/lib:/lib/x86_64-linux-gnu" \
 	QT_PLUGIN_PATH="$(NIX_QTBASE)/lib/qt-6/plugins" \
 	QML2_IMPORT_PATH="$(STAGING_DIR)/lib:$(NIX_QTDECL)/lib/qt-6/qml" \
+	LIBGL_ALWAYS_SOFTWARE=1 \
+	QT_QUICK_BACKEND=software \
 	$(STAGING_DIR)/bin/LogosApp
 
 ## Full dev stack: build everything and run
