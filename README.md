@@ -1,16 +1,17 @@
 # Scala — Secure CALendar App
 
-A privacy-first shared calendar app built on [Logos Core](https://logos.co).
+A privacy-first shared calendar app built on [Logos Core](https://logos.co), running as an IComponent UI plugin inside [logos-app](https://github.com/logos-co/logos-app).
 
 **Scala** = **S**ecure **CAL**endar **A**pp
 
 ## Status
 
-🚧 Active development — v0.1 complete, Logos Core integration in progress.
+🚧 Active development — v0.1 complete, running as a logos-app UI plugin with file-backed persistence. Tested on crib with logos-app loaded from logos-workspace.
 
 **Implemented:**
+- ✅ logos-app IComponent UI plugin (`libscala_ui.so`) — primary usage path
 - ✅ C++ Qt plugin (`LogosCalendar`) with full calendar/event CRUD
-- ✅ Local storage via [logos-kv-module](https://github.com/jimmy-claw/logos-kv-module) inter-module calls
+- ✅ File-backed persistence via [logos-kv-module](https://github.com/jimmy-claw/logos-kv-module) `FileBackend` (`setDataDir` Q_INVOKABLE fix in [kv-module PR#28](https://github.com/jimmy-claw/logos-kv-module/pull/28))
 - ✅ QML UI — month view, week view, day view, sidebar, event modal, event details, share dialog
 - ✅ Calendar sidebar — My Calendars vs Imported sections
 - ✅ Date/time picker in EventModal
@@ -21,13 +22,13 @@ A privacy-first shared calendar app built on [Logos Core](https://logos.co).
 - ✅ Event search — search across all calendars by title/description/location (Ctrl+F)
 - ✅ Event reminders — QSystemTrayIcon notifications, configurable (15m/30m/1h before)
 - ✅ Multi-instance dev testing — `SCALA_NAMESPACE` env var for isolated KV namespaces
-- ✅ Standalone runner for local development and screenshots
+- ✅ Nix flake with `ui-plugin` package output
 - ✅ C++ CLI client (`scala_cli`) — connects to running logoscore via QtRO
 - ✅ CLI wrapper (`scala-cli.sh`) for headless use
 - ✅ 59 tests across 6 test suites
 - ✅ CLI integration tests (`make test-cli`)
 - ✅ Headless logoscore plugin (`scala_module`) — loads in logoscore without Qt Quick/GUI
-- ✅ QML UI wired to scala_module via `LogosAPIClient` (`ScalaBridge`) — standalone talks to running logoscore over QtRO
+- ✅ Standalone runner for local development and screenshots (legacy)
 
 **Planned:**
 - Real message signing (full crypto)
@@ -43,7 +44,51 @@ This repo is a rewrite on Logos Core — native C++/QML module with Logos Messag
 
 ## Building & Running
 
-### Quick start (Makefile)
+### Primary: logos-app UI plugin
+
+Scala's primary usage is as an IComponent plugin loaded by logos-app.
+
+**Build:**
+
+```bash
+make build-ui-plugin    # produces libscala_ui.so
+```
+
+**Install:**
+
+Copy the plugin into the logos-app plugin directory:
+
+```
+~/.local/share/Logos/LogosAppNix/plugins/scala_ui/
+├── libscala_ui.so
+└── ui_metadata.json
+```
+
+**Run:**
+
+logos-app discovers and loads `scala_ui` automatically from the plugins directory.
+
+**Nix:**
+
+The flake exposes a `ui-plugin` package output:
+
+```bash
+nix build .#ui-plugin
+```
+
+**Dependency chain:**
+
+```
+scala_ui → scala_module → kv_module
+```
+
+**Persistence:**
+
+Data is persisted via logos-kv-module `FileBackend`. The `scala_ui` component calls `setDataDir` (a `Q_INVOKABLE` on kv_module) to configure the storage path. This requires the fix from [kv-module PR#28](https://github.com/jimmy-claw/logos-kv-module/pull/28).
+
+### Legacy: standalone development
+
+The standalone runner still works for local dev but is no longer the primary path.
 
 ```bash
 # One-time setup — builds logoscore + kv_module via Nix (~10-30 min first time)
@@ -52,7 +97,7 @@ make setup
 # Terminal 1 — start Logos Core with kv_module
 make run-core
 
-# Terminal 2 — build and run Scala
+# Terminal 2 — build and run Scala standalone
 make dev
 ```
 
@@ -158,16 +203,6 @@ sudo apt install cmake build-essential qt6-base-dev qt6-declarative-dev \
     libqt6qml6 qt6-remoteobjects-dev xvfb scrot
 ```
 
-### Run with Logos Core (recommended)
-
-```bash
-make setup      # one-time: builds logoscore + kv_module via Nix
-make run-core   # terminal 1: starts Logos Core
-make dev        # terminal 2: builds + runs Scala
-```
-
-See [Makefile](./Makefile) for details on nix store path auto-detection.
-
 ### Run tests
 
 ```bash
@@ -182,34 +217,29 @@ make screenshot
 # saves screenshot.png in repo root
 ```
 
-### Running standalone UI with logoscore
-
-When built with Logos SDK, the standalone runner connects to the running `scala_module`
-via `LogosAPIClient` (QtRemoteObjects). This is the recommended way to run the UI:
-
-```bash
-# Terminal 1 — start logoscore with kv_module + scala_module
-make run-module
-
-# Terminal 2 — build and run the standalone UI (connects to scala_module via QtRO)
-make standalone LOGOS_LIBLOGOS_ROOT=/tmp/logos-liblogos-merged LOGOS_CPP_SDK_ROOT=/tmp/logos-cpp-sdk-merged
-./build-standalone/scala_standalone
-```
-
-The standalone reads the scala_module auth token from `/tmp/logos_scala_module` on startup.
-If logoscore is not running, the build still works — it falls back to in-memory `LogosCalendar`.
-
 ## Architecture
 
 ```
-logos_host (logoscore)
-  └── scala_module_plugin.so  ← headless, Qt Core/Qml/RemoteObjects only
-        └── ScalaPlugin → LogosCalendar (CalendarModule API via QtRO)
+logos-app
+  └── loads scala_ui (IComponent plugin)
+        └── libscala_ui.so  ← QML UI + ScalaBridge
+              └── scala_module → LogosCalendar (CalendarModule API)
+                    └── kv_module (FileBackend persistence)
 
-QML UI (standalone process)
-  └── ScalaBridge (QObject, C++)
-        └── LogosAPIClient("scala_module", "scala_ui", tokenManager)
-              └── QtRO → logos_host (scala_module) → ScalaPlugin
+Dependency chain: scala_ui → scala_module → kv_module
+
+Plugin directory:
+  ~/.local/share/Logos/LogosAppNix/plugins/scala_ui/
+
+Legacy standalone (still works):
+  logos_host (logoscore)
+    └── scala_module_plugin.so  ← headless, Qt Core/Qml/RemoteObjects only
+          └── ScalaPlugin → LogosCalendar (CalendarModule API via QtRO)
+
+  QML UI (standalone process)
+    └── ScalaBridge (QObject, C++)
+          └── LogosAPIClient("scala_module", "scala_ui", tokenManager)
+                └── QtRO → logos_host (scala_module) → ScalaPlugin
 
 scala_cli (C++ binary)
   └── connects to logoscore QtRO registry → invokes methods, prints results
@@ -221,10 +251,9 @@ C++ Module (LogosCalendar)
   └── Logos Storage       — attachments (planned)
 ```
 
-The plugin `.so` loaded by `logos_host` is **headless** — no Qt Quick, no QML engine, no GUI.
-The QML UI runs as a separate process. When built with `LOGOS_CORE_AVAILABLE`, the standalone
-uses `ScalaBridge` → `LogosAPIClient` to dispatch all calls to the running `scala_module` over
-QtRemoteObjects. Without it, it falls back to an in-memory `LogosCalendar` instance.
+In the logos-app plugin mode, `scala_ui` is loaded as an IComponent `.so` — logos-app manages
+the QML engine and plugin lifecycle. In legacy standalone mode, the QML UI runs as a separate
+process connecting to `scala_module` over QtRemoteObjects.
 
 ## Related
 
