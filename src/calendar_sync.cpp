@@ -89,8 +89,64 @@ bool CalendarSync::isSyncing(const QString &calendarId) const {
 }
 
 #ifdef LOGOS_CORE_AVAILABLE
-void CalendarSync::setMessagingClient(LogosAPIClient *client) {
-    m_messagingClient = client;
+void CalendarSync::setDeliveryClient(LogosAPIClient *client) {
+    m_deliveryClient = client;
+
+    if (m_deliveryClient) {
+        ensureDeliveryNode();
+
+        // Listen for messageReceived events from delivery_module
+        QObject *replica = m_deliveryClient->requestObject("delivery_module");
+        if (replica) {
+            m_deliveryClient->onEvent(
+                replica, this, QStringLiteral("messageReceived"),
+                [this](const QString &eventName, const QVariantList &args) {
+                    Q_UNUSED(eventName)
+                    if (args.size() >= 4) {
+                        onDeliveryMessageReceived(
+                            args.at(0).toString(),   // hash
+                            args.at(1).toString(),   // topic
+                            args.at(2).toString(),   // payload_base64
+                            args.at(3).toLongLong()  // timestamp
+                        );
+                    }
+                });
+            qInfo() << "CalendarSync: registered messageReceived event handler";
+        } else {
+            qWarning() << "CalendarSync: failed to get delivery_module replica for events";
+        }
+    }
+}
+
+void CalendarSync::ensureDeliveryNode() {
+    if (m_deliveryNodeStarted || !m_deliveryClient)
+        return;
+
+    // Create and start the delivery node with logos.dev preset
+    m_deliveryClient->invokeRemoteMethod(
+        "delivery_module", "createNode",
+        QStringLiteral("{\"logLevel\":\"INFO\",\"mode\":\"Core\",\"preset\":\"logos.dev\"}"));
+    m_deliveryClient->invokeRemoteMethod("delivery_module", "start");
+    m_deliveryNodeStarted = true;
+
+    qInfo() << "CalendarSync: delivery node created and started (logos.dev)";
+}
+
+void CalendarSync::onDeliveryMessageReceived(const QString &hash, const QString &topic,
+                                              const QString &payloadBase64, qint64 timestamp) {
+    Q_UNUSED(hash)
+    Q_UNUSED(timestamp)
+
+    // Find which calendar this topic belongs to
+    for (auto it = m_activeTopics.constBegin(); it != m_activeTopics.constEnd(); ++it) {
+        if (topicForCalendar(it.key()) == topic) {
+            QByteArray payload = QByteArray::fromBase64(payloadBase64.toUtf8());
+            SyncMessage msg = SyncMessage::fromBytes(payload);
+            emit messageReceived(it.key(), msg);
+            return;
+        }
+    }
+    qDebug() << "CalendarSync: received message for unknown topic" << topic;
 }
 #endif
 
@@ -104,16 +160,17 @@ void CalendarSync::startSync(const QString &calendarId, const QString &encryptio
     m_activeTopics.insert(calendarId, encryptionKey);
 
 #ifdef LOGOS_CORE_AVAILABLE
-    if (m_messagingClient) {
-        // Subscribe to the topic via the messaging module
-        m_messagingClient->invokeRemoteMethod(
-            "messaging_module", "subscribe", topic, encryptionKey);
+    if (m_deliveryClient) {
+        ensureDeliveryNode();
+        // Subscribe to the content topic via delivery_module
+        m_deliveryClient->invokeRemoteMethod(
+            "delivery_module", "subscribe", topic);
 
         qInfo() << "CalendarSync: subscribed to topic" << topic;
         emit syncStarted(calendarId);
         return;
     }
-    qWarning() << "CalendarSync: no messaging client, falling back to stub";
+    qWarning() << "CalendarSync: no delivery client, falling back to stub";
 #endif
 
     // Stub: emit syncStarted immediately for testing without Logos Core
@@ -132,10 +189,9 @@ void CalendarSync::stopSync(const QString &calendarId) {
     m_activeTopics.remove(calendarId);
 
 #ifdef LOGOS_CORE_AVAILABLE
-    if (m_messagingClient) {
-        m_messagingClient->invokeRemoteMethod(
-            "messaging_module", "unsubscribe", topic);
-
+    if (m_deliveryClient) {
+        // delivery_module does not have an explicit unsubscribe;
+        // topic is simply no longer tracked locally
         qInfo() << "CalendarSync: unsubscribed from topic" << topic;
         emit syncStopped(calendarId);
         return;
@@ -157,12 +213,12 @@ void CalendarSync::sendMessage(const QString &calendarId, const SyncMessage &msg
     const QByteArray data = msg.toBytes();
 
 #ifdef LOGOS_CORE_AVAILABLE
-    if (m_messagingClient) {
-        const QString &encryptionKey = m_activeTopics.value(calendarId);
-        m_messagingClient->invokeRemoteMethod(
-            "messaging_module", "publish", topic, data, encryptionKey);
+    if (m_deliveryClient) {
+        ensureDeliveryNode();
+        m_deliveryClient->invokeRemoteMethod(
+            "delivery_module", "send", topic, data);
 
-        qDebug() << "CalendarSync: published" << SyncMessage::typeToString(msg.type)
+        qDebug() << "CalendarSync: sent" << SyncMessage::typeToString(msg.type)
                  << "to" << topic << "(" << data.size() << "bytes)";
         return;
     }

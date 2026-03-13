@@ -71,7 +71,7 @@ public:
     static QString topicForCalendar(const QString &calendarId);
 
 #ifdef LOGOS_CORE_AVAILABLE
-    void setMessagingClient(LogosAPIClient *client);
+    void setDeliveryClient(LogosAPIClient *client);
 #endif
 
 signals:
@@ -85,6 +85,11 @@ private:
     QMap<QString, QString> m_activeTopics;
 
 #ifdef LOGOS_CORE_AVAILABLE
-    LogosAPIClient *m_messagingClient = nullptr;
+    LogosAPIClient *m_deliveryClient = nullptr;
+    bool m_deliveryNodeStarted = false;
+
+    void ensureDeliveryNode();
+    void onDeliveryMessageReceived(const QString &hash, const QString &topic,
+                                   const QString &payloadBase64, qint64 timestamp);
 #endif
 };

@@ -9,7 +9,7 @@ qt_version: "6"
 
 dependencies:
   - kv_module
-  - messaging_module
+  - delivery_module
   - accounts_module
 
 qml_files:
