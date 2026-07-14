@@ -7,6 +7,25 @@ Item {
     width: 800
     height: 600
 
+    // ── Backend (typed replica, generated from scala_ui_backend.rep) ───────
+    readonly property var backend: logos.module("scala_ui")
+    property bool ready: false
+
+    Connections {
+        target: logos
+        function onViewModuleReadyChanged(moduleName, isReady) {
+            if (moduleName === "scala_ui")
+                root.ready = isReady && root.backend !== null
+        }
+    }
+    Component.onCompleted: {
+        root.ready = root.backend !== null && logos.isViewModuleReady("scala_ui")
+        if (root.ready) {
+            _loadSettings()
+            _refreshAll()
+        }
+    }
+
     // ── Theme colors ───────────────────────────────────────────────────────
     property color primaryColor: "#2196F3"
     property color bgColor: "#ffffff"
@@ -32,20 +51,50 @@ Item {
         "#F44336", "#00BCD4", "#795548", "#607D8B"
     ]
 
-    // ── Data helpers ───────────────────────────────────────────────────────
-    function refreshCalendars() {
-        var result = calendarModule.listCalendars()
-        calendarList = JSON.parse(result || "[]")
-        updateSidebarModel()
+    // ── Data helpers (async via logos.watch) ───────────────────────────────
+    function _refreshAll() {
+        _refreshCalendars()
     }
 
-    function refreshEvents() {
+    function _refreshCalendars() {
+        if (!root.ready) return
+        logos.watch(backend.listCalendars(),
+            function(value) {
+                calendarList = JSON.parse(value || "[]")
+                updateSidebarModel()
+                _refreshEvents()
+            },
+            function(error) { console.warn("[scala] listCalendars failed:", error) }
+        )
+    }
+
+    function _refreshEvents() {
+        if (!root.ready || calendarList.length === 0) return
         allEvents = []
+        var remaining = calendarList.length
         for (var i = 0; i < calendarList.length; i++) {
-            var evts = JSON.parse(calendarModule.listEvents(calendarList[i].id) || "[]")
-            allEvents = allEvents.concat(evts)
+            var calId = calendarList[i].id
+            logos.watch(backend.listEvents(calId),
+                function(value) {
+                    var evts = JSON.parse(value || "[]")
+                    allEvents = allEvents.concat(evts)
+                    remaining--
+                    if (remaining === 0) {
+                        // All events loaded — update grid
+                        calendarGrid.events = eventsForGrid()
+                    }
+                },
+                function(error) {
+                    console.warn("[scala] listEvents failed for", calId, error)
+                    remaining--
+                }
+            )
         }
     }
+
+    // Legacy wrappers (keep names for compatibility with existing code)
+    function refreshCalendars() { _refreshCalendars() }
+    function refreshEvents() { _refreshEvents() }
 
     function updateSidebarModel() {
         sidebarCalendarModel.clear()
@@ -203,16 +252,16 @@ Item {
     // ── Sidebar calendar model ─────────────────────────────────────────────
     ListModel { id: sidebarCalendarModel }
 
-    // ── Load data on startup ───────────────────────────────────────────────
-    Component.onCompleted: {
-        refreshCalendars()
-        refreshEvents()
-        // Load settings
-        if (typeof calendarModule !== "undefined") {
-            var dv = calendarModule.getSetting("defaultView", "month")
-            if (dv === "month" || dv === "week" || dv === "day")
-                viewMode = dv
-        }
+    // ── Settings helpers ───────────────────────────────────────────────────
+    function _loadSettings() {
+        if (!root.ready) return
+        logos.watch(backend.getSetting("defaultView", "month"),
+            function(value) {
+                if (value === "month" || value === "week" || value === "day")
+                    viewMode = value
+            },
+            function(error) { console.warn("[scala] getSetting failed:", error) }
+        )
     }
 
     // ── Ctrl+F shortcut ───────────────────────────────────────────────────
@@ -233,7 +282,7 @@ Item {
             Layout.preferredWidth: 220
             Layout.fillHeight: true
             calendarModel: sidebarCalendarModel
-            currentIdentity: typeof calendarModule !== "undefined" ? calendarModule.getIdentity() : ""
+            currentIdentity: (root.ready && root.backend) ? backend.currentIdentity : ""
 
             onCalendarToggled: function(calId, vis) {
                 console.log("Calendar toggled:", calId, vis);
@@ -246,8 +295,14 @@ Item {
                 console.log("Calendar selected:", calId);
             }
             onShareRequested: function(calId, calName) {
-                var link = calendarModule.generateShareLink(calId)
-                shareDialog.shareLink = link
+                if (!root.ready) return
+                logos.watch(backend.generateShareLink(calId),
+                    function(value) {
+                        shareDialog.shareLink = value
+                        shareDialog.open()
+                    },
+                    function(error) { console.warn("[scala] generateShareLink failed:", error) }
+                )
                 shareDialog.calendarName = calName
                 shareDialog.open()
             }
@@ -278,9 +333,8 @@ Item {
                     }
 
                     Text {
-                        text: typeof calendarModule !== "undefined" && calendarModule.identity
-                              ? "ID: " + calendarModule.identity.substring(0,8) + "..."
-                              : ""
+                        readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
+                        text: ident.length > 0 ? "ID: " + ident.substring(0,8) + "..." : ""
                         color: "#ccddee"
                         font.pixelSize: 11
                         visible: text !== ""
@@ -405,10 +459,14 @@ Item {
                         placeholderText: "Search events..."
                         implicitWidth: 180
                         onTextChanged: {
-                            if (text.length >= 2)
-                                searchResults = JSON.parse(calendarModule.searchEvents(text) || "[]")
-                            else
+                            if (text.length >= 2 && root.ready) {
+                                logos.watch(backend.searchEvents(text),
+                                    function(value) { searchResults = JSON.parse(value || "[]") },
+                                    function(error) { console.warn("[scala] search failed:", error) }
+                                )
+                            } else if (text.length < 2) {
                                 searchResults = []
+                            }
                         }
                         Keys.onEscapePressed: {
                             searchActive = false
@@ -1038,8 +1096,16 @@ Item {
                     }
 
                     onEditRequested: function(evId) {
-                        var evJson = calendarModule.getEvent(evId)
-                        var ev = JSON.parse(evJson || "{}")
+                        if (!root.ready) return
+                        logos.watch(backend.getEvent(evId),
+                            function(value) {
+                                _loadEventForEdit(JSON.parse(value || "{}"))
+                            },
+                            function(error) { console.warn("[scala] getEvent failed:", error) }
+                        )
+                    }
+
+                    function _loadEventForEdit(ev) {
                         var startDt = new Date(ev.startTime)
                         var endDt = new Date(ev.endTime)
                         var pad = function(n) { return n < 10 ? "0" + n : "" + n }
@@ -1061,12 +1127,16 @@ Item {
                     }
 
                     onDeleteConfirmed: function(evId) {
-                        calendarModule.deleteEvent(evId)
-                        refreshEvents()
-                        calendarGrid.events = eventsForGrid()
-                        showEventDetails = false;
-                        eventDetails.eventId = "";
-                    }
+                        if (!root.ready) return
+                        logos.watch(backend.deleteEvent(evId),
+                            function(value) {
+                                refreshEvents()
+                                calendarGrid.events = eventsForGrid()
+                                showEventDetails = false
+                                eventDetails.eventId = ""
+                            },
+                            function(error) { console.warn("[scala] deleteEvent failed:", error) }
+                        )
 
                     onCloseRequested: {
                         showEventDetails = false;
@@ -1095,13 +1165,25 @@ Item {
             if (eventData.id && eventData.id !== "") {
                 evJson.id = eventData.id
                 evJson.calendarId = eventData.calendarId
-                calendarModule.updateEvent(JSON.stringify(evJson))
+                if (!root.ready) return
+                logos.watch(backend.updateEvent(JSON.stringify(evJson)),
+                    function(value) { _onEventSaved() },
+                    function(error) { console.warn("[scala] updateEvent failed:", error) }
+                )
             } else {
                 var calId = eventData.calendarId || selectedCalendarId
                     || (calendarList.length > 0 ? calendarList[0].id : "")
                 evJson.calendarId = calId
-                calendarModule.createEvent(calId, JSON.stringify(evJson))
+                if (!root.ready) return
+                logos.watch(backend.createEvent(calId, JSON.stringify(evJson)),
+                    function(value) { _onEventSaved() },
+                    function(error) { console.warn("[scala] createEvent failed:", error) }
+                )
             }
+        }
+
+        // Helper: called after successful event save (create or update)
+        function _onEventSaved() {
             refreshEvents()
             calendarGrid.events = eventsForGrid()
         }
@@ -1185,13 +1267,18 @@ Item {
                     text: "Create"
                     enabled: newCalNameField.text.trim().length > 0
                     onClicked: {
-                        calendarModule.createCalendar(newCalNameField.text.trim(),
-                                                      newCalendarDialog.selectedColor)
-                        refreshCalendars()
-                        refreshEvents()
-                        calendarGrid.events = eventsForGrid()
-                        newCalendarDialog.close()
-                    }
+                        if (!root.ready) return
+                        var name = newCalNameField.text.trim()
+                        var color = newCalendarDialog.selectedColor
+                        logos.watch(backend.createCalendar(name, color),
+                            function(value) {
+                                refreshCalendars()
+                                refreshEvents()
+                                calendarGrid.events = eventsForGrid()
+                                newCalendarDialog.close()
+                            },
+                            function(error) { console.warn("[scala] createCalendar failed:", error) }
+                        )
                     background: Rectangle {
                         radius: 6
                         color: parent.enabled
@@ -1213,14 +1300,18 @@ Item {
         id: shareDialog
 
         onJoinRequested: function(link) {
-            var ok = calendarModule.handleShareLink(link)
-            if (ok) {
-                refreshCalendars()
-                refreshEvents()
-                calendarGrid.events = eventsForGrid()
-                shareDialog.close()
-            }
-        }
+            if (!root.ready) return
+            logos.watch(backend.handleShareLink(link),
+                function(value) {
+                    if (value) {
+                        refreshCalendars()
+                        refreshEvents()
+                        calendarGrid.events = eventsForGrid()
+                        shareDialog.close()
+                    }
+                },
+                function(error) { console.warn("[scala] handleShareLink failed:", error) }
+            )
     }
 
     // ── Settings panel ───────────────────────────────────────────────────
@@ -1229,11 +1320,7 @@ Item {
 
         onSettingsSaved: {
             // Apply default view setting
-            if (typeof calendarModule !== "undefined") {
-                var dv = calendarModule.getSetting("defaultView", "month")
-                if (dv === "month" || dv === "week" || dv === "day")
-                    viewMode = dv
-            }
+            _loadSettings()
         }
     }
 }
