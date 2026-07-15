@@ -8,12 +8,12 @@
 
 QString ScalaUiBackend::getIdentity()
 {
-    return QString::fromStdString(modules().scala.getIdentity());
+    return modules().scala.getIdentity();
 }
 
 void ScalaUiBackend::setIdentity(QString pubkeyHex)
 {
-    modules().scala.setIdentity(pubkeyHex.toStdString());
+    modules().scala.setIdentity(pubkeyHex);
     updateIdentityProp();
 }
 
@@ -21,112 +21,104 @@ void ScalaUiBackend::setIdentity(QString pubkeyHex)
 
 QString ScalaUiBackend::createCalendar(QString name, QString color)
 {
-    return QString::fromStdString(
-        modules().scala.createCalendar(name.toStdString(), color.toStdString()));
+    return modules().scala.createCalendar(name, color);
 }
 
 QString ScalaUiBackend::listCalendars()
 {
-    return QString::fromStdString(modules().scala.listCalendars());
+    return modules().scala.listCalendars();
 }
 
 bool ScalaUiBackend::deleteCalendar(QString id)
 {
-    return modules().scala.deleteCalendar(id.toStdString());
+    return modules().scala.deleteCalendar(id);
 }
 
 // ── Event CRUD ──────────────────────────────────────────────────────────────
 
 QString ScalaUiBackend::createEvent(QString calendarId, QString eventJson)
 {
-    return QString::fromStdString(
-        modules().scala.createEvent(calendarId.toStdString(), eventJson.toStdString()));
+    return modules().scala.createEvent(calendarId, eventJson);
 }
 
 QString ScalaUiBackend::updateEvent(QString eventJson)
 {
-    return QString::fromStdString(modules().scala.updateEvent(eventJson.toStdString()));
+    return modules().scala.updateEvent(eventJson);
 }
 
 bool ScalaUiBackend::deleteEvent(QString id)
 {
-    return modules().scala.deleteEvent(id.toStdString());
+    return modules().scala.deleteEvent(id);
 }
 
 QString ScalaUiBackend::listEvents(QString calendarId)
 {
-    return QString::fromStdString(
-        modules().scala.listEvents(calendarId.toStdString()));
+    return modules().scala.listEvents(calendarId);
 }
 
 QString ScalaUiBackend::getEvent(QString id)
 {
-    return QString::fromStdString(modules().scala.getEvent(id.toStdString()));
+    return modules().scala.getEvent(id);
 }
 
 // ── Sync / Sharing ──────────────────────────────────────────────────────────
 
 QString ScalaUiBackend::shareCalendar(QString calendarId)
 {
-    return QString::fromStdString(
-        modules().scala.shareCalendar(calendarId.toStdString()));
+    return modules().scala.shareCalendar(calendarId);
 }
 
 bool ScalaUiBackend::joinSharedCalendar(QString calendarId, QString encryptionKey)
 {
-    return modules().scala.joinSharedCalendar(
-        calendarId.toStdString(), encryptionKey.toStdString());
+    return modules().scala.joinSharedCalendar(calendarId, encryptionKey);
 }
 
 QString ScalaUiBackend::getSyncStatus(QString calendarId)
 {
-    return QString::fromStdString(
-        modules().scala.getSyncStatus(calendarId.toStdString()));
+    return modules().scala.getSyncStatus(calendarId);
 }
 
 // ── Share Links ─────────────────────────────────────────────────────────────
 
 QString ScalaUiBackend::generateShareLink(QString calendarId)
 {
-    return QString::fromStdString(
-        modules().scala.generateShareLink(calendarId.toStdString()));
+    return modules().scala.generateShareLink(calendarId);
 }
 
 QString ScalaUiBackend::parseShareLink(QString link)
 {
-    return QString::fromStdString(modules().scala.parseShareLink(link.toStdString()));
+    return modules().scala.parseShareLink(link);
 }
 
 bool ScalaUiBackend::handleShareLink(QString link)
 {
-    return modules().scala.handleShareLink(link.toStdString());
+    return modules().scala.handleShareLink(link);
 }
 
 // ── Search ──────────────────────────────────────────────────────────────────
 
 QString ScalaUiBackend::searchEvents(QString query)
 {
-    return QString::fromStdString(modules().scala.searchEvents(query.toStdString()));
+    return modules().scala.searchEvents(query);
 }
 
 // ── Reminders ───────────────────────────────────────────────────────────────
 
 QString ScalaUiBackend::getPendingReminders()
 {
-    return QString::fromStdString(modules().scala.getPendingReminders());
+    return modules().scala.getPendingReminders();
 }
 
 // ── Settings ────────────────────────────────────────────────────────────────
 
 void ScalaUiBackend::setSetting(QString key, QString value)
 {
-    modules().scala.setSetting(key.toStdString(), value.toStdString());
+    modules().scala.setSetting(key, value);
 }
 
 QString ScalaUiBackend::getSetting(QString key, QString defaultValue)
 {
-    return QString::fromStdString(
-        modules().scala.getSetting(key.toStdString(), defaultValue.toStdString()));
+    return modules().scala.getSetting(key, defaultValue);
 }
 
 // ── Context lifecycle ───────────────────────────────────────────────────────
@@ -156,6 +148,6 @@ void ScalaUiBackend::onContextReady()
 
 void ScalaUiBackend::updateIdentityProp()
 {
-    QString identity = QString::fromStdString(modules().scala.getIdentity());
+    QString identity = modules().scala.getIdentity();
     setCurrentIdentity(identity);
 }
