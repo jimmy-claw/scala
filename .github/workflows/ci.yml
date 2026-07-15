@@ -19,7 +19,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build core module
-        run: nix build -L .
+        run: nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder .
 
       - name: Upload plugin artifact
         uses: actions/upload-artifact@v4
@@ -41,7 +41,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build UI module
-        run: cd scala-ui && nix build -L .
+        run: cd scala-ui && nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder .
 
       - name: Upload UI artifact
         uses: actions/upload-artifact@v4
@@ -62,7 +62,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Check flake metadata (core)
-        run: nix flake metadata --no-update-lock-file
+        run: nix flake metadata --no-update-lock-file --override-input logos-module-builder github:logos-co/logos-module-builder
 
       - name: Check flake metadata (UI)
-        run: cd scala-ui && nix flake metadata --no-update-lock-file
+        run: cd scala-ui && nix flake metadata --no-update-lock-file --override-input logos-module-builder github:logos-co/logos-module-builder

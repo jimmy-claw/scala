@@ -8,8 +8,6 @@
     # Points at scala core module. Override for local dev:
     # nix flake update --override-input scala path:/home/vpavlin/scala
     scala.url = "github:jimmy-claw/scala";
-    # Force scala to use OUR logos-module-builder, not its own dependency chain
-    scala.logos-module-builder.follows = "logos-module-builder";
   };
 
   outputs = inputs@{ logos-module-builder, scala, ... }:
