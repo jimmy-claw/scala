@@ -20,8 +20,8 @@ class CalendarSync;
  */
 class ScalaImpl : public LogosModuleContext {
 public:
-    ScalaImpl() = default;
-    ~ScalaImpl() override = default;
+    ScalaImpl();
+    ~ScalaImpl() override;
 
     // ── Namespace API ────────────────────────────────────────────────────────
     void setNamespace(const std::string& ns);
@@ -105,8 +105,6 @@ private:
     CalendarSync* m_sync = nullptr;
     std::string m_identity;
     std::string m_namespace;
-
-    static std::string generateStableIdentity();
 
     // Handle incoming sync messages from CalendarSync
     void onSyncMessageReceived(const std::string& calendarId, const std::string& msgJson);
