@@ -8,6 +8,8 @@
     # Dependency modules (for LIDL contract consumption)
     # kv_module uses transitional fallback (old format, no lidl output)
     kv_module.url = "github:jimmy-claw/logos-kv-module";
+    # Force kv_module to use OUR logos-module-builder (master), not its own old pin
+    kv_module.logos-module-builder.follows = "logos-module-builder";
   };
 
   outputs = inputs@{ logos-module-builder, ... }:
