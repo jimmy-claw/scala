@@ -19,7 +19,9 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build core module
-        run: nix build -L .#scala_module
+        # Override logos-cpp-sdk to get lidl-frontend/impl_header_parser.cpp
+        # (missing in pinned 95f763b, added in d12a7bb)
+        run: nix build -L . --override-input logos-cpp-sdk github:logos-co/logos-cpp-sdk
 
       - name: Upload plugin artifact
         uses: actions/upload-artifact@v4
@@ -41,7 +43,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build UI module
-        run: nix build -L ./scala-ui#scala_ui_module
+        run: cd scala-ui && nix build -L . --override-input logos-cpp-sdk github:logos-co/logos-cpp-sdk
 
       - name: Upload UI artifact
         uses: actions/upload-artifact@v4

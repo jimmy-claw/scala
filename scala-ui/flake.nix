@@ -4,9 +4,9 @@
   inputs = {
     logos-module-builder.url = "github:logos-co/logos-module-builder/0.2.0";
 
-    # Points at your local scala checkout. Override with:
-    # nix flake update --override-input scala github:jimmy-claw/scala
-    scala.url = "path:/path/to/your/scala";
+    # Points at scala core module. Override for local dev:
+    # nix flake update --override-input scala path:/home/vpavlin/scala
+    scala.url = "github:jimmy-claw/scala";
   };
 
   outputs = inputs@{ logos-module-builder, scala, ... }:
