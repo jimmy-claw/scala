@@ -95,10 +95,13 @@ ScalaImpl::ScalaImpl() {
     m_store = new CalendarStore();
     m_sync = new CalendarSync(nullptr);  // no parent in universal pattern
 
-    // Connect sync signals (use function pointers for Qt signal/slot)
+    // Connect sync signals — lambda adapter because signal uses QString/SyncMessage
+    // but slot expects std::string (universal pattern)
     // TODO: Replace with std::function when CalendarSync is ported to pure C++
     QObject::connect(m_sync, &CalendarSync::messageReceived,
-                     this, &ScalaImpl::onSyncMessageReceived);
+                     [this](const QString& calendarId, const SyncMessage& msg) {
+                         onSyncMessageReceived(calendarId.toStdString(), msg.payload.toStdString());
+                     });
 }
 
 ScalaImpl::~ScalaImpl() {
