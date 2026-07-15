@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <QObject>
 #include <QUrl>
 #include <QUrlQuery>
 
@@ -96,8 +97,8 @@ ScalaImpl::ScalaImpl() {
 
     // Connect sync signals (use function pointers for Qt signal/slot)
     // TODO: Replace with std::function when CalendarSync is ported to pure C++
-    connect(m_sync, &CalendarSync::messageReceived,
-            this, &ScalaImpl::onSyncMessageReceived);
+    QObject::connect(m_sync, &CalendarSync::messageReceived,
+                     this, &ScalaImpl::onSyncMessageReceived);
 }
 
 ScalaImpl::~ScalaImpl() {
