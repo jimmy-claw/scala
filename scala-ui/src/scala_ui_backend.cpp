@@ -126,8 +126,10 @@ QString ScalaUiBackend::getSetting(QString key, QString defaultValue)
 void ScalaUiBackend::onContextReady()
 {
     // Typed module-event subscription. `identityChanged` is scala's event;
-    // the generated wrapper exposes it as onIdentityChanged + a Qt-typed callback.
-    modules().scala.onIdentityChanged([this](const QString& newIdentity) {
+    // the generated wrapper exposes it as onIdentityChanged(std::function<void()>).
+    // No params passed through — fetch current identity inside callback.
+    modules().scala.onIdentityChanged([this]() {
+        QString newIdentity = getIdentity();
         setPendingReminderCount(0);  // reset on identity change
         emit identityChanged(newIdentity);
         updateIdentityProp();
