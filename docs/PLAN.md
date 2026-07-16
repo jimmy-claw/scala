@@ -28,7 +28,8 @@
 
 ### 2. Add .lgx Packaging to Scala CI ✅ DONE 2026-07-16
 ✅ Commit `4ec84b1` — CI now produces scala.lgx + scala-ui.lgx artifacts
-✅ All 5 CI jobs pass (build-core, build-ui, flake-check, package-lgx-core, package-lgx-ui)
+✅ Commit `946dc78` — Fixed variant: use `.#lgx-portable` → `linux-amd64` (was `linux-amd64-dev`, basecamp rejected it)
+✅ All 5 CI jobs pass, both .lgx artifacts downloadable (~3.8 MB each, self-contained)
 
 ```yaml
 # In .github/workflows/ci.yml — add after build-core and build-ui jobs:
