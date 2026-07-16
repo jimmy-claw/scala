@@ -1279,6 +1279,7 @@ Item {
                             },
                             function(error) { console.warn("[scala] createCalendar failed:", error) }
                         )
+                    }
                     background: Rectangle {
                         radius: 6
                         color: parent.enabled
