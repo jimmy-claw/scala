@@ -15,6 +15,8 @@ logos_module(
     SOURCES
         src/scala_impl.h
         src/scala_impl.cpp
+        src/local_storage.cpp
+        src/local_storage.h
         src/calendar_store.cpp
         src/calendar_sync.cpp
         src/qr_generator.cpp

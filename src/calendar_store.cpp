@@ -8,17 +8,22 @@
 #include <QJsonDocument>
 #include <QStandardPaths>
 
-// ── Construction ─────────────────────────────────────────────────────────────
+// ── Construction / Destruction ───────────────────────────────────────────────
 
-CalendarStore::CalendarStore() = default;
+CalendarStore::CalendarStore() {
+    m_storage = new LocalStorage();  // no parent — CalendarStore manages lifetime
+    qDebug() << "CalendarStore: initialized LocalStorage at" << m_storage->storagePath()
+             << "(" << m_storage->count() << "existing keys)";
+}
+
+CalendarStore::~CalendarStore() {
+    delete m_storage;
+}
 
 #ifdef LOGOS_CORE_AVAILABLE
 void CalendarStore::setClient(LogosAPIClient *client) {
     m_kvClient = client;
-    // Switch kv_module to file backend for persistence
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/kv-data";
-    m_kvClient->invokeRemoteMethod("kv_module", "setDataDir", dataDir);
-    qDebug() << "CalendarStore: set kv_module data dir:" << dataDir;
+    qDebug() << "CalendarStore: kv_module client set (cross-module access enabled)";
 }
 #endif
 
@@ -33,42 +38,54 @@ QString CalendarStore::namespacedKey(const QString &key) const {
 }
 
 // ── KV helpers ───────────────────────────────────────────────────────────────
+// Always use LocalStorage (file-based). Optionally sync to kv_module when available.
 
 void CalendarStore::kvSet(const QString &key, const QString &value) const {
     const QString nsKey = namespacedKey(key);
+
+    // Primary: always write to LocalStorage (persistent)
+    m_storage->set(nsKey, value);
+
+    // Secondary: also sync to kv_module if available (cross-module access)
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "set",
                                        QString(KV_NS), nsKey, value);
     }
-#else
-    m_mem[nsKey] = value;
 #endif
 }
 
 QString CalendarStore::kvGet(const QString &key) const {
     const QString nsKey = namespacedKey(key);
+
+    // Primary: always read from LocalStorage (source of truth)
+    QString value = m_storage->get(nsKey);
+    if (!value.isEmpty())
+        return value;
+
+    // Fallback: try kv_module (in case data was written by another module)
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         QVariant result = m_kvClient->invokeRemoteMethod("kv_module", "get",
                                                          QString(KV_NS), nsKey);
         return result.toString();
     }
-    return {};
-#else
-    return m_mem.value(nsKey);
 #endif
+    return {};
 }
 
 void CalendarStore::kvRemove(const QString &key) const {
     const QString nsKey = namespacedKey(key);
+
+    // Primary: always remove from LocalStorage
+    m_storage->remove(nsKey);
+
+    // Secondary: also remove from kv_module if available
 #ifdef LOGOS_CORE_AVAILABLE
     if (m_kvClient) {
         m_kvClient->invokeRemoteMethod("kv_module", "remove",
                                        QString(KV_NS), nsKey);
     }
-#else
-    m_mem.remove(nsKey);
 #endif
 }
 
