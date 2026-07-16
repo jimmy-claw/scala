@@ -63,7 +63,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build .lgx package
-        run: nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder .#lgx
+        run: nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder .#lgx-portable
 
       - name: Upload .lgx artifact
         uses: actions/upload-artifact@v4
@@ -85,7 +85,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build .lgx package
-        run: cd scala-ui && nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder --override-input scala path:.. .#lgx
+        run: cd scala-ui && nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder --override-input scala path:.. .#lgx-portable
 
       - name: Upload .lgx artifact
         uses: actions/upload-artifact@v4
