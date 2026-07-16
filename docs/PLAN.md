@@ -26,8 +26,9 @@
 - **CI:** ✅ passes (Build kv_module — 2m40s)
 - **Action:** Review and merge. This unblocks re-adding kv_module as a scala dependency.
 
-### 2. Add .lgx Packaging to Scala CI ⏳
-The module builder auto-generates `packages.<system>.lgx`. Need to add CI steps:
+### 2. Add .lgx Packaging to Scala CI ✅ DONE 2026-07-16
+✅ Commit `4ec84b1` — CI now produces scala.lgx + scala-ui.lgx artifacts
+✅ All 5 CI jobs pass (build-core, build-ui, flake-check, package-lgx-core, package-lgx-ui)
 
 ```yaml
 # In .github/workflows/ci.yml — add after build-core and build-ui jobs:
