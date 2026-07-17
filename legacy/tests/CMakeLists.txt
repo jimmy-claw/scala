@@ -31,6 +31,7 @@ add_test(NAME test_calendar COMMAND test_calendar)
 
 add_executable(test_sync
     test_sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/local_storage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
@@ -52,6 +53,7 @@ add_test(NAME test_sync COMMAND test_sync)
 
 add_executable(test_sharing
     test_sharing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/local_storage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
@@ -74,6 +76,7 @@ add_test(NAME test_sharing COMMAND test_sharing)
 
 add_executable(test_identity
     test_identity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/local_storage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
@@ -95,6 +98,7 @@ add_test(NAME test_identity COMMAND test_identity)
 
 add_executable(test_module
     test_module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/local_storage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_module.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_sync.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
@@ -116,6 +120,7 @@ add_test(NAME test_module COMMAND test_module)
 
 add_executable(test_namespace
     test_namespace.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/local_storage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/calendar_store.cpp
 )
 
