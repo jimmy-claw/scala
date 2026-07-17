@@ -122,73 +122,22 @@ LogosFrame {
 
 ---
 
-## Phase 3: LMAO-based Sync
+## Phase 3: REMOVED — Keeping delivery_module
 
-### Current State
-`CalendarSync` uses `delivery_module` via `LogosAPIClient::invokeRemoteMethod`:
-- Manual topic management (`/scala/1/<calendarId>/json`)
-- Manual subscription handling
-- No encryption (encryption key stored but not used for actual encryption)
-- No presence/discovery — must know peer's calendar ID
+**Decision (2026-07-17):** CalendarSync already uses `delivery_module` via `LogosAPIClient`. No migration to LMAO needed.
 
-### Target State
-Use LMAO primitives for calendar sync:
-- **WakuA2ANode** as the transport layer (via C FFI or direct integration)
-- **X25519 + ChaCha20** encryption for shared calendar messages
-- **Presence discovery** — find peers who have Scala installed
-- **SDS reliability** — automatic retransmission, deduplication
-- **Storage offload** — large payloads (calendar exports) via Logos Storage
-
-### Architecture
-
-```
-CalendarView (QML)
-    │
-ScalaUiBackend (C++)
-    │  modules().scala.*
-ScalaImpl (core module)
-    │
-CalendarSync → LMAOSync (NEW)
-    │
-WakuA2ANode (via lmao-ffi or direct Rust→C bridge)
-    │
-Logos Messaging Network
-```
-
-### Implementation Approach
-
-**Option A: C FFI wrapper (recommended)**
-- Use `lmao-ffi` crate to expose LMAO as a C library
-- CalendarSync calls into the C library for send/receive/presence
-- Minimal changes to Scala code — just replace delivery_module calls with FFI calls
-
-**Option B: Direct Rust module (future)**
-- Rewrite Scala core in Rust (much larger effort)
-- Full LMAO integration without FFI overhead
-
-### New Files
-- `src/lmao_sync.h/.cpp` — C++ wrapper around lmao-ffi
-- `src/calendar_sync_v2.h/.cpp` — new sync implementation using LMAOSync
-
-### Changes to CalendarSync
-- Replace `delivery_module` calls with LMAO FFI calls
-- Use proper encryption (ChaCha20) instead of HMAC-only signatures
-- Add presence announcement for Scala peers
-- Implement proper message deduplication (SDS handles this)
-
-### Acceptance Criteria
-- Two Scala instances can sync events via LMAO ✅
-- Messages are encrypted end-to-end ✅
-- Presence discovery works (find other Scala users) ✅
-- Graceful degradation when offline (queue messages locally)
+**Rationale:**
+- delivery_module is already wired and working in Scala
+- LMAO adds complexity (FFI setup, new dependency) without clear benefit for this use case
+- Sync requirements (event CRUD over P2P) are met by delivery_module
 
 ---
 
 ## Execution Order
 
-1. **Phase 1: Persistence** (~2 hours) — CRITICAL, unblocks testing
-2. **Phase 2: Design System** (~4 hours) — visual improvement, no logic changes
-3. **Phase 3: LMAO Sync** (~6 hours) — requires FFI setup, most complex
+1. **Phase 1: Persistence** (~2 hours) — ✅ COMPLETED
+2. **Phase 2: Design System** (~4 hours) — ✅ COMPLETED
+3. ~~Phase 3: LMAO Sync~~ — REMOVED (keeping delivery_module)
 
 ---
 
@@ -198,7 +147,6 @@ Logos Messaging Network
 |------|-----------|
 | LocalStorage corrupts data | JSON validation on load, backup before write |
 | Design system breaks layout | Incremental migration per file, test after each |
-| LMAO FFI not ready | Keep delivery_module as fallback (#ifdef) |
 | Build fails on Crib | Test builds incrementally, commit working state |
 
 ---
@@ -207,10 +155,5 @@ Logos Messaging Network
 
 - Branch: `feat/v0.3-persistence-design-sync`
 - Commits per phase (not mixed):
-  - `feat: add LocalStorage for file-based persistence`
-  - `refactor: CalendarStore always uses LocalStorage`
-  - `style: migrate CalendarView to Logos design system`
-  - `style: migrate EventModal to Logos design system`
-  - `style: migrate remaining QML files to Logos design system`
-  - `feat: add LMAO sync wrapper (lmao_sync)`
-  - `refactor: CalendarSync uses LMAO for P2P messaging`
+  - `feat: add LocalStorage for file-based persistence` ✅
+  - `style: migrate all QML files to Logos design system (Phase 2)` ✅
