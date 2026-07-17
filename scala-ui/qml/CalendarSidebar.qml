@@ -2,17 +2,20 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import Logos.Theme
+import Logos.Controls
+
 Rectangle {
     id: root
-    color: "#f9f9f9"
-    border.color: "#e0e0e0"
+    color: Theme.palette.backgroundSecondary
+    border.color: Theme.palette.border
     border.width: 1
 
-    // ── Theme ──────────────────────────────────────────────────────────────
-    property color titleColor: "#212121"
-    property color subtitleColor: "#757575"
-    property color accentColor: "#2196F3"
-    property color newBtnColor: "#4CAF50"
+    // ── Theme (from Logos design system) ─────────────────────────────────
+    readonly property color titleColor: Theme.palette.text
+    readonly property color subtitleColor: Theme.palette.textMuted
+    readonly property color accentColor: Theme.palette.primary
+    readonly property color newBtnColor: Theme.palette.primary
 
     // ── Data ───────────────────────────────────────────────────────────────
     property var calendarModel: null
@@ -52,11 +55,11 @@ Rectangle {
     ListModel {
         id: defaultModel
         ListElement { calId: "personal"; calName: "Personal";
-                      calColor: "#4CAF50"; calVisible: true; creatorId: "" }
+                      calColor: Theme.palette.success; calVisible: true; creatorId: "" }
         ListElement { calId: "work";     calName: "Work";
-                      calColor: "#2196F3"; calVisible: true; creatorId: "" }
+                      calColor: Theme.palette.primary; calVisible: true; creatorId: "" }
         ListElement { calId: "family";   calName: "Family";
-                      calColor: "#FF9800"; calVisible: true; creatorId: "" }
+                      calColor: Theme.palette.warning; calVisible: true; creatorId: "" }
     }
 
     // Use defaultModel as fallback when no calendarModel is set
@@ -72,7 +75,7 @@ Rectangle {
             width: parent ? parent.width : 200
             height: 40
             radius: 6
-            color: delMouse.containsMouse ? "#f0f0f0" : "transparent"
+            color: delMouse.containsMouse ? Theme.palette.backgroundMuted : "transparent"
 
             property string itemCalId
             property string itemCalName
@@ -122,7 +125,7 @@ Rectangle {
 
                     background: Rectangle {
                         radius: 4
-                        color: parent.hovered ? "#e3f2fd" : "transparent"
+                        color: parent.hovered ? Theme.palette.backgroundSecondary : "transparent"
                     }
                 }
 
@@ -153,7 +156,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#e0e0e0"
+            color: Theme.palette.border
         }
 
         // ── Scrollable calendar sections ─────────────────────────────────
@@ -205,7 +208,7 @@ Rectangle {
                         text: "No calendars yet"
                         font.pixelSize: 12
                         font.italic: true
-                        color: "#aaa"
+                        color: Theme.palette.textMuted
                         leftPadding: 8
                         topPadding: 4
                     }
@@ -215,7 +218,7 @@ Rectangle {
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: "#e0e0e0"
+                    color: Theme.palette.border
                     visible: importedCalendars().length > 0
                 }
 

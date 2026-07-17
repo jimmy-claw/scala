@@ -2,6 +2,9 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import Logos.Theme
+import Logos.Controls
+
 Popup {
     id: shareDialog
     modal: true
@@ -19,8 +22,8 @@ Popup {
 
     background: Rectangle {
         radius: 12
-        color: "white"
-        border.color: "#e0e0e0"
+        color: Theme.palette.backgroundPrimary
+        border.color: Theme.palette.border
         border.width: 1
     }
 
@@ -33,14 +36,14 @@ Popup {
             text: "Share Calendar"
             font.pixelSize: 18
             font.bold: true
-            color: "#212121"
+            color: Theme.palette.text
             Layout.fillWidth: true
         }
 
         Text {
             text: calendarName
             font.pixelSize: 14
-            color: "#757575"
+            color: Theme.palette.textMuted
             Layout.fillWidth: true
             visible: calendarName.length > 0
         }
@@ -48,7 +51,7 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#e0e0e0"
+            color: Theme.palette.border
         }
 
         // ── Tab bar ─────────────────────────────────────────────────────────
@@ -79,7 +82,7 @@ Popup {
                 Text {
                     text: "Share this link to invite others:"
                     font.pixelSize: 13
-                    color: "#424242"
+                    color: Theme.palette.text
                 }
 
                 // Link text field (read-only, selectable)
@@ -95,8 +98,8 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: "#f5f5f5"
-                        border.color: "#e0e0e0"
+                        color: Theme.palette.backgroundSecondary
+                        border.color: Theme.palette.border
                         border.width: 1
                     }
                 }
@@ -120,14 +123,14 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: parent.pressed ? "#1976D2"
-                             : parent.hovered ? "#42A5F5"
-                             : "#2196F3"
+                        color: parent.pressed ? Theme.palette.primaryHover
+                             : Theme.palette.primaryHover
+                             : Theme.palette.primary
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
+                        color: Theme.palette.backgroundPrimary
                         font.pixelSize: 13
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -150,7 +153,7 @@ Popup {
                     Layout.alignment: Qt.AlignHCenter
                     text: "(QR code placeholder)"
                     font.pixelSize: 11
-                    color: "#bdbdbd"
+                    color: Theme.palette.textMuted
                     visible: qrDataUrl.length === 0
                 }
 
@@ -164,7 +167,7 @@ Popup {
                 Text {
                     text: "Paste a share link to join a calendar:"
                     font.pixelSize: 13
-                    color: "#424242"
+                    color: Theme.palette.text
                 }
 
                 TextField {
@@ -177,8 +180,8 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: "white"
-                        border.color: joinLinkField.activeFocus ? "#2196F3" : "#e0e0e0"
+                        color: Theme.palette.backgroundPrimary
+                        border.color: joinLinkField.activeFocus ? Theme.palette.primary : Theme.palette.border
                         border.width: 1
                     }
                 }
@@ -186,7 +189,7 @@ Popup {
                 Text {
                     id: joinError
                     Layout.fillWidth: true
-                    color: "#D32F2F"
+                    color: Theme.palette.error
                     font.pixelSize: 12
                     visible: text.length > 0
                 }
@@ -203,15 +206,15 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: !parent.enabled ? "#BDBDBD"
-                             : parent.pressed ? "#388E3C"
-                             : parent.hovered ? "#66BB6A"
-                             : "#4CAF50"
+                        color: !parent.enabled ? Theme.palette.textMuted
+                             : parent.pressed ? Theme.palette.error
+                             : parent.hovered ? Theme.palette.successHover
+                             : Theme.palette.success
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
+                        color: Theme.palette.backgroundPrimary
                         font.pixelSize: 13
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -232,7 +235,7 @@ Popup {
 
             contentItem: Text {
                 text: parent.text
-                color: "#757575"
+                color: Theme.palette.textMuted
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

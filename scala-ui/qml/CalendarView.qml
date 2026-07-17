@@ -2,6 +2,9 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import Logos.Theme
+import Logos.Controls
+
 Item {
     id: root
     width: 800
@@ -26,12 +29,12 @@ Item {
         }
     }
 
-    // ── Theme colors ───────────────────────────────────────────────────────
-    property color primaryColor: "#2196F3"
-    property color bgColor: "#ffffff"
-    property color toolbarColor: "#2196F3"
-    property color sidebarBg: "#f9f9f9"
-    property color newEventBtnColor: "#4CAF50"
+    // ── Theme colors (from Logos design system) ───────────────────────────
+    readonly property color primaryColor: Theme.palette.primary
+    readonly property color bgColor: Theme.palette.backgroundPrimary
+    readonly property color toolbarColor: Theme.palette.backgroundSecondary
+    readonly property color sidebarBg: Theme.palette.backgroundSecondary
+    readonly property color newEventBtnColor: Theme.palette.primary
 
     // ── State ──────────────────────────────────────────────────────────────
     property var selectedEvent: null
@@ -47,7 +50,7 @@ Item {
 
     // ── Preset colors for new calendar dialog ──────────────────────────────
     property var presetColors: [
-        "#4CAF50", "#2196F3", "#FF9800", "#9C27B0",
+        Theme.palette.success, Theme.palette.primary, "#FF9800", "#9C27B0",
         "#F44336", "#00BCD4", "#795548", "#607D8B"
     ]
 
@@ -126,7 +129,7 @@ Item {
             var d = new Date(ev.startTime)
             if (d.getMonth() === month && d.getFullYear() === year) {
                 var cal = findCalendar(ev.calendarId)
-                dots.push({ day: d.getDate(), color: cal ? cal.color : "#2196F3" })
+                dots.push({ day: d.getDate(), color: cal ? cal.color : Theme.palette.primary })
             }
         }
         return dots
@@ -314,23 +317,60 @@ Item {
             Layout.fillHeight: true
             spacing: 0
 
-            // ── Toolbar ────────────────────────────────────────────────────
-            Rectangle {
+            // ── Toolbar (Logos design system) ──────────────────────────────
+            LogosToolBar {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 52
-                color: toolbarColor
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
+                LogosText {
+                    text: "Scala Calendar"
+                    font.pixelSize: Theme.typography.headingSmall
+                    font.weight: Theme.typography.weightBold
+                    color: Theme.palette.text
+                }
 
-                    Text {
-                        text: "Scala Calendar"
-                        color: "white"
-                        font.pixelSize: 20
-                        font.bold: true
+                LogosText {
+                    readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
+                    text: ident.length > 0 ? "ID: " + ident.substring(0,8) + "..." : ""
+                    font.pixelSize: Theme.typography.caption
+                    color: Theme.palette.textMuted
+                    visible: text !== ""
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // ── View mode toggle ──────────────────────────────
+                LogosButton {
+                    text: "Month"
+                    icon.source: LogosIcons.grid
+                    onClicked: viewMode = "month"
+                    variant: viewMode === "month" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
+                }
+
+                LogosButton {
+                    text: "Week"
+                    icon.source: LogosIcons.list
+                    onClicked: viewMode = "week"
+                    variant: viewMode === "week" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
+                }
+
+                LogosButton {
+                    text: "Day"
+                    onClicked: viewMode = "day"
+                    variant: viewMode === "day" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
+                }
+
+                LogosToolSeparator {}
+
+                // ── New Event button ──────────────────────────────
+                LogosButton {
+                    text: "+ New Event"
+                    variant: LogosButton.Variant.Primary
+                    onClicked: {
+                        eventModal.clear();
+                        eventModal.calendars = calendarList;
+                        eventModal.open();
                     }
+                }
 
                     Text {
                         readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
@@ -338,176 +378,49 @@ Item {
                         color: "#ccddee"
                         font.pixelSize: 11
                         visible: text !== ""
+                // ── Search button + field ────────────────────────
+                LogosIconButton {
+                    icon.source: LogosIcons.search
+                    tooltipText: "Search events (Ctrl+F)"
+                    pressed: searchActive
+                    onClicked: {
+                        searchActive = !searchActive
+                        if (searchActive) searchField.forceActiveFocus()
+                        else { searchResults = []; searchField.text = "" }
                     }
+                }
 
-                    Item { Layout.fillWidth: true }
-
-                    // ── View mode toggle ──────────────────────────────
-                    Row {
-                        spacing: 0
-                        Button {
-                            text: "Month"
-                            flat: true
-                            onClicked: viewMode = "month"
-                            background: Rectangle {
-                                radius: 4
-                                color: viewMode === "month" ? "#1976D2" : "transparent"
-                            }
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                font.pixelSize: 13
-                                font.bold: viewMode === "month"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-                        Button {
-                            text: "Week"
-                            flat: true
-                            onClicked: viewMode = "week"
-                            background: Rectangle {
-                                radius: 4
-                                color: viewMode === "week" ? "#1976D2" : "transparent"
-                            }
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                font.pixelSize: 13
-                                font.bold: viewMode === "week"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-                        Button {
-                            text: "Day"
-                            flat: true
-                            onClicked: viewMode = "day"
-                            background: Rectangle {
-                                radius: 4
-                                color: viewMode === "day" ? "#1976D2" : "transparent"
-                            }
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                font.pixelSize: 13
-                                font.bold: viewMode === "day"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-                    }
-
-                    Item { width: 12 }
-
-                    Button {
-                        text: "+ New Event"
-                        onClicked: {
-                            eventModal.clear();
-                            eventModal.calendars = calendarList;
-                            eventModal.open();
-                        }
-                        background: Rectangle {
-                            radius: 6
-                            color: parent.pressed
-                                ? Qt.darker(newEventBtnColor, 1.2)
-                                : parent.hovered
-                                  ? Qt.lighter(newEventBtnColor, 1.1)
-                                  : newEventBtnColor
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.pixelSize: 14
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Item { width: 4 }
-
-                    // Search button
-                    Button {
-                        text: "\uD83D\uDD0D"
-                        flat: true
-                        onClicked: {
-                            searchActive = !searchActive
-                            if (searchActive) searchField.forceActiveFocus()
-                            else { searchResults = []; searchField.text = "" }
-                        }
-                        implicitWidth: 36
-                        implicitHeight: 36
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Search events (Ctrl+F)"
-                        background: Rectangle {
-                            radius: 4
-                            color: searchActive ? "#1976D2" : (parent.hovered ? "#1976D2" : "transparent")
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.pixelSize: 16
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    TextField {
-                        id: searchField
-                        visible: searchActive
-                        placeholderText: "Search events..."
-                        implicitWidth: 180
-                        onTextChanged: {
-                            if (text.length >= 2 && root.ready) {
-                                logos.watch(backend.searchEvents(text),
-                                    function(value) { searchResults = JSON.parse(value || "[]") },
-                                    function(error) { console.warn("[scala] search failed:", error) }
-                                )
-                            } else if (text.length < 2) {
-                                searchResults = []
-                            }
-                        }
-                        Keys.onEscapePressed: {
-                            searchActive = false
+                LogosTextField {
+                    id: searchField
+                    visible: searchActive
+                    placeholderText: "Search events..."
+                    implicitWidth: 180
+                    onTextChanged: {
+                        if (text.length >= 2 && root.ready) {
+                            logos.watch(backend.searchEvents(text),
+                                function(value) { searchResults = JSON.parse(value || "[]") },
+                                function(error) { console.warn("[scala] search failed:", error) }
+                            )
+                        } else if (text.length < 2) {
                             searchResults = []
-                            text = ""
-                        }
-                        background: Rectangle {
-                            radius: 4
-                            color: "white"
-                            border.color: "#90CAF9"
-                            border.width: 1
                         }
                     }
-
-                    Item { width: 4 }
-
-                    // Settings button
-                    Button {
-                        text: "\u2699"
-                        flat: true
-                        onClicked: settingsPanel.open()
-                        implicitWidth: 36
-                        implicitHeight: 36
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Settings"
-                        background: Rectangle {
-                            radius: 4
-                            color: parent.hovered ? "#1976D2" : "transparent"
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.pixelSize: 18
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                    Keys.onEscapePressed: {
+                        searchActive = false
+                        searchResults = []
+                        text = ""
                     }
+                }
+
+                // ── Settings button ──────────────────────────────
+                LogosIconButton {
+                    icon.source: LogosIcons.more
+                    tooltipText: "Settings"
+                    onClicked: settingsPanel.open()
                 }
             }
 
-            // ── Search results overlay ──────────────────────────────────────
+            // ── Search results overlay (Logos design system) ───────────────
             ListView {
                 id: searchResultsList
                 visible: searchActive && searchResults.length > 0
@@ -516,52 +429,45 @@ Item {
                 clip: true
                 model: searchResults
                 z: 10
-                delegate: Rectangle {
+                delegate: LogosItemDelegate {
                     width: searchResultsList.width
                     height: 56
-                    color: mouseArea.containsMouse ? "#e3f2fd" : (index % 2 === 0 ? "#ffffff" : "#fafafa")
-                    border.color: "#e0e0e0"
-                    border.width: index === searchResults.length - 1 ? 1 : 0
-
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            var ev = searchResults[index]
-                            if (ev.startTime) {
-                                var d = new Date(ev.startTime)
-                                dayViewDate = d
-                                viewMode = "day"
-                            }
-                            searchActive = false
-                            searchResults = []
-                            searchField.text = ""
+                    highlighted: mouseArea.containsMouse
+                    onClicked: {
+                        var ev = searchResults[index]
+                        if (ev.startTime) {
+                            var d = new Date(ev.startTime)
+                            dayViewDate = d
+                            viewMode = "day"
                         }
+                        searchActive = false
+                        searchResults = []
+                        searchField.text = ""
                     }
 
-                    Row {
+                    RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
-                        spacing: 10
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: Theme.spacing.large
+                        anchors.rightMargin: Theme.spacing.large
+                        spacing: Theme.spacing.medium
 
                         Rectangle {
                             width: 10; height: 10; radius: 5
-                            color: modelData.calendarColor || "#2196F3"
-                            anchors.verticalCenter: parent.verticalCenter
+                            color: modelData.calendarColor || Theme.palette.primary
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            Text {
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+
+                            LogosText {
                                 text: modelData.title || ""
-                                font.pixelSize: 14
-                                font.bold: true
-                                color: "#333"
+                                font.pixelSize: Theme.typography.bodyText
+                                font.weight: Theme.typography.weightMedium
+                                color: Theme.palette.text
                             }
-                            Text {
+                            LogosText {
                                 text: {
                                     var parts = []
                                     if (modelData.startTime) {
@@ -572,8 +478,8 @@ Item {
                                         parts.push(modelData.calendarName)
                                     return parts.join(" \u2022 ")
                                 }
-                                font.pixelSize: 11
-                                color: "#888"
+                                font.pixelSize: Theme.typography.caption
+                                color: Theme.palette.textMuted
                             }
                         }
                     }
@@ -629,7 +535,7 @@ Item {
                                 endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
                                 allDay: first.allDay || false,
                                 calendarName: cal ? cal.name : "",
-                                calendarColor: cal ? cal.color : "#2196F3"
+                                calendarColor: cal ? cal.color : Theme.palette.primary
                             });
                             showEventDetails = true;
                         } else {
@@ -650,43 +556,36 @@ Item {
                         anchors.fill: parent
                         spacing: 0
 
-                        // Week navigation bar
-                        Rectangle {
+                        // Week navigation bar (Logos design system)
+                        LogosFrame {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 44
-                            color: "#ffffff"
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
+                                anchors.leftMargin: Theme.spacing.medium
+                                anchors.rightMargin: Theme.spacing.medium
 
-                                Button {
-                                    text: "<"
-                                    flat: true
+                                LogosIconButton {
+                                    icon.source: LogosIcons.arrowLeftSLine
                                     onClicked: goToPrevWeek()
-                                    implicitWidth: 36
-                                    implicitHeight: 36
                                 }
 
                                 Item { Layout.fillWidth: true }
 
-                                Text {
+                                LogosText {
                                     text: weekRangeLabel()
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                    color: "#333333"
+                                    font.pixelSize: Theme.typography.bodyText
+                                    font.weight: Theme.typography.weightBold
+                                    color: Theme.palette.text
                                     horizontalAlignment: Text.AlignHCenter
                                 }
 
                                 Item { Layout.fillWidth: true }
 
-                                Button {
-                                    text: ">"
-                                    flat: true
+                                LogosIconButton {
+                                    icon.source: LogosIcons.arrowRightSLine
                                     onClicked: goToNextWeek()
-                                    implicitWidth: 36
-                                    implicitHeight: 36
                                 }
                             }
                         }
@@ -702,9 +601,9 @@ Item {
                                     id: dayColumn
                                     width: weekView.width / 7
                                     height: weekView.height - 44
-                                    border.color: "#e0e0e0"
+                                    border.color: Theme.palette.border
                                     border.width: 1
-                                    color: "#ffffff"
+                                    color: Theme.palette.backgroundPrimary
 
                                     property date columnDate: weekDayDate(index)
                                     property var dayEvents: eventsForDate(columnDate)
@@ -723,7 +622,7 @@ Item {
                                         Rectangle {
                                             Layout.fillWidth: true
                                             Layout.preferredHeight: 48
-                                            color: dayColumn.isToday ? "#e8f5e9" : "#e3f2fd"
+                                            color: dayColumn.isToday ? Theme.palette.backgroundSecondary : Theme.palette.backgroundSecondary
 
                                             ColumnLayout {
                                                 anchors.centerIn: parent
@@ -733,14 +632,14 @@ Item {
                                                     text: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][index]
                                                     font.pixelSize: 11
                                                     font.bold: true
-                                                    color: dayColumn.isToday ? "#2e7d32" : "#1565C0"
+                                                    color: dayColumn.isToday ? Theme.palette.success : Theme.palette.primary
                                                     Layout.alignment: Qt.AlignHCenter
                                                 }
                                                 Text {
                                                     text: dayColumn.columnDate.getDate()
                                                     font.pixelSize: 16
                                                     font.bold: dayColumn.isToday
-                                                    color: dayColumn.isToday ? "#2e7d32" : "#333"
+                                                    color: dayColumn.isToday ? Theme.palette.success : Theme.palette.text
                                                     Layout.alignment: Qt.AlignHCenter
                                                 }
                                             }
@@ -770,7 +669,7 @@ Item {
                                                         radius: 4
                                                         color: {
                                                             var cal = findCalendar(modelData.calendarId)
-                                                            return cal ? cal.color : "#2196F3"
+                                                            return cal ? cal.color : Theme.palette.primary
                                                         }
                                                         opacity: eventMouse.containsMouse ? 0.85 : 1.0
 
@@ -796,7 +695,7 @@ Item {
                                                                     endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
                                                                     allDay: ev.allDay || false,
                                                                     calendarName: cal ? cal.name : "",
-                                                                    calendarColor: cal ? cal.color : "#2196F3"
+                                                                    calendarColor: cal ? cal.color : Theme.palette.primary
                                                                 });
                                                                 showEventDetails = true
                                                             }
@@ -851,61 +750,43 @@ Item {
                         anchors.fill: parent
                         spacing: 0
 
-                        // Day navigation bar
-                        Rectangle {
+                        // Day navigation bar (Logos design system)
+                        LogosFrame {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 44
-                            color: "#ffffff"
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
+                                anchors.leftMargin: Theme.spacing.medium
+                                anchors.rightMargin: Theme.spacing.medium
 
-                                Button {
-                                    text: "<"
-                                    flat: true
+                                LogosIconButton {
+                                    icon.source: LogosIcons.arrowLeftSLine
                                     onClicked: goToPrevDay()
-                                    implicitWidth: 36
-                                    implicitHeight: 36
                                 }
 
-                                Button {
+                                LogosButton {
                                     text: "Today"
-                                    flat: true
                                     onClicked: goToToday()
                                     enabled: !isDayViewToday()
-                                    background: Rectangle {
-                                        radius: 4
-                                        color: parent.hovered ? "#e0e0e0" : "#f5f5f5"
-                                    }
-                                    contentItem: Text {
-                                        text: parent.text
-                                        font.pixelSize: 12
-                                        color: parent.enabled ? "#333" : "#aaa"
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
+                                    variant: LogosButton.Variant.Secondary
                                 }
 
                                 Item { Layout.fillWidth: true }
 
-                                Text {
+                                LogosText {
                                     text: dayViewLabel()
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                    color: "#333333"
+                                    font.pixelSize: Theme.typography.bodyText
+                                    font.weight: Theme.typography.weightBold
+                                    color: Theme.palette.text
                                     horizontalAlignment: Text.AlignHCenter
                                 }
 
                                 Item { Layout.fillWidth: true }
 
-                                Button {
-                                    text: ">"
-                                    flat: true
+                                LogosIconButton {
+                                    icon.source: LogosIcons.arrowRightSLine
                                     onClicked: goToNextDay()
-                                    implicitWidth: 36
-                                    implicitHeight: 36
                                 }
                             }
                         }
@@ -928,8 +809,8 @@ Item {
                                         id: hourRow
                                         width: timeGridColumn.width
                                         height: 60
-                                        color: "#ffffff"
-                                        border.color: "#f0f0f0"
+                                        color: Theme.palette.backgroundPrimary
+                                        border.color: Theme.palette.backgroundMuted
                                         border.width: 1
 
                                         property int hour: index
@@ -963,7 +844,7 @@ Item {
                                                     anchors.rightMargin: 8
                                                     text: (hour < 10 ? "0" : "") + hour + ":00"
                                                     font.pixelSize: 11
-                                                    color: "#999999"
+                                                    color: Theme.palette.textMuted
                                                 }
                                             }
 
@@ -971,7 +852,7 @@ Item {
                                             Rectangle {
                                                 Layout.preferredWidth: 1
                                                 Layout.fillHeight: true
-                                                color: "#e0e0e0"
+                                                color: Theme.palette.border
                                             }
 
                                             // Event area
@@ -1019,7 +900,7 @@ Item {
                                                             radius: 4
                                                             color: {
                                                                 var cal = findCalendar(modelData.calendarId)
-                                                                return cal ? cal.color : "#2196F3"
+                                                                return cal ? cal.color : Theme.palette.primary
                                                             }
                                                             opacity: evtMouse.containsMouse ? 0.85 : 1.0
 
@@ -1045,7 +926,7 @@ Item {
                                                                         endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
                                                                         allDay: ev.allDay || false,
                                                                         calendarName: cal ? cal.name : "",
-                                                                        calendarColor: cal ? cal.color : "#2196F3"
+                                                                        calendarColor: cal ? cal.color : Theme.palette.primary
                                                                     });
                                                                     showEventDetails = true
                                                                 }
@@ -1206,7 +1087,7 @@ Item {
 
         property string selectedColor: presetColors[0]
 
-        background: Rectangle { radius: 12; color: "white"; border.color: "#e0e0e0" }
+        background: Rectangle { radius: 12; color: "white"; border.color: Theme.palette.border }
 
         onOpened: {
             newCalNameField.text = ""
@@ -1218,19 +1099,19 @@ Item {
             anchors.fill: parent
             spacing: 12
 
-            Text { text: "New Calendar"; font.pixelSize: 18; font.bold: true; color: "#212121" }
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+            Text { text: "New Calendar"; font.pixelSize: 18; font.bold: true; color: Theme.palette.text }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.palette.border }
 
-            Text { text: "Name"; font.pixelSize: 13; color: "#555" }
+            Text { text: "Name"; font.pixelSize: 13; color: Theme.palette.textMuted }
             TextField {
                 id: newCalNameField
                 Layout.fillWidth: true
                 placeholderText: "Calendar name"
                 font.pixelSize: 14
-                background: Rectangle { radius: 4; color: "#f5f5f5"; border.color: "#e0e0e0" }
+                background: Rectangle { radius: 4; color: Theme.palette.backgroundMuted; border.color: Theme.palette.border }
             }
 
-            Text { text: "Color"; font.pixelSize: 13; color: "#555" }
+            Text { text: "Color"; font.pixelSize: 13; color: Theme.palette.textMuted }
             Row {
                 spacing: 8
                 Repeater {
@@ -1239,7 +1120,7 @@ Item {
                         width: 28; height: 28; radius: 14
                         color: modelData
                         border.width: newCalendarDialog.selectedColor === modelData ? 3 : 0
-                        border.color: "#333"
+                        border.color: Theme.palette.text
                         MouseArea {
                             anchors.fill: parent
                             onClicked: newCalendarDialog.selectedColor = modelData
@@ -1256,9 +1137,9 @@ Item {
                 Button {
                     text: "Cancel"
                     onClicked: newCalendarDialog.close()
-                    background: Rectangle { radius: 6; color: parent.hovered ? "#eee" : "#f5f5f5" }
+                    background: Rectangle { radius: 6; color: parent.hovered ? Theme.palette.border : Theme.palette.backgroundMuted }
                     contentItem: Text {
-                        text: parent.text; font.pixelSize: 14; color: "#555"
+                        text: parent.text; font.pixelSize: 14; color: Theme.palette.textMuted
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -1283,11 +1164,11 @@ Item {
                     background: Rectangle {
                         radius: 6
                         color: parent.enabled
-                            ? (parent.hovered ? Qt.lighter("#4CAF50", 1.1) : "#4CAF50")
-                            : "#ccc"
+                            ? (parent.hovered ? Qt.lighter(Theme.palette.success, 1.1) : Theme.palette.success)
+                            : Theme.palette.textMuted
                     }
                     contentItem: Text {
-                        text: parent.text; font.pixelSize: 14; font.bold: true; color: "white"
+                        text: parent.text; font.pixelSize: 14; font.bold: true; color: Theme.palette.backgroundPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

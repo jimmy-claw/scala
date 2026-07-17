@@ -2,6 +2,9 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import Logos.Theme
+import Logos.Controls
+
 Popup {
     id: root
     modal: true
@@ -13,10 +16,10 @@ Popup {
     padding: 0
 
     // ── Theme ──────────────────────────────────────────────────────────────
-    property color headerColor: "#2196F3"
-    property color fieldBg: "#f5f5f5"
-    property color fieldBorder: "#e0e0e0"
-    property color saveBtnColor: "#4CAF50"
+    property color headerColor: Theme.palette.primary
+    property color fieldBg: Theme.palette.backgroundSecondary
+    property color fieldBorder: Theme.palette.border
+    property color saveBtnColor: Theme.palette.success
 
     signal settingsSaved()
 
@@ -63,7 +66,7 @@ Popup {
     background: Rectangle {
         radius: 8
         color: "white"
-        border.color: "#e0e0e0"
+        border.color: Theme.palette.border
     }
 
     contentItem: ColumnLayout {
@@ -137,7 +140,7 @@ Popup {
                 anchors.topMargin: 16
 
                 // Default view
-                Text { text: "Default View"; font.pixelSize: 13; font.bold: true; color: "#333" }
+                Text { text: "Default View"; font.pixelSize: 13; font.bold: true; color: Theme.palette.text }
                 ComboBox {
                     id: defaultViewCombo
                     Layout.fillWidth: true
@@ -148,10 +151,10 @@ Popup {
                 }
 
                 // Divider
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.palette.border }
 
                 // First day of week
-                Text { text: "First Day of Week"; font.pixelSize: 13; font.bold: true; color: "#333" }
+                Text { text: "First Day of Week"; font.pixelSize: 13; font.bold: true; color: Theme.palette.text }
                 ComboBox {
                     id: firstDayCombo
                     Layout.fillWidth: true
@@ -162,7 +165,7 @@ Popup {
                 }
 
                 // Divider
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.palette.border }
 
                 // Show declined events
                 RowLayout {
@@ -172,7 +175,7 @@ Popup {
                         text: "Show Declined Events"
                         font.pixelSize: 13
                         font.bold: true
-                        color: "#333"
+                        color: Theme.palette.text
                         Layout.fillWidth: true
                     }
                     Switch {
@@ -181,11 +184,11 @@ Popup {
                 }
 
                 // Divider
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.palette.border }
 
                 // Identity
-                Text { text: "Identity"; font.pixelSize: 13; font.bold: true; color: "#333" }
-                Text { text: "Your public key (read-only)"; font.pixelSize: 11; color: "#999" }
+                Text { text: "Identity"; font.pixelSize: 13; font.bold: true; color: Theme.palette.text }
+                Text { text: "Your public key (read-only)"; font.pixelSize: 11; color: Theme.palette.textMuted }
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
@@ -198,7 +201,7 @@ Popup {
                         font.family: "monospace"
                         selectByMouse: true
                         background: Rectangle {
-                            radius: 4; color: "#eee"; border.color: fieldBorder
+                            radius: 4; color: Theme.palette.backgroundMuted; border.color: fieldBorder
                         }
                     }
 
@@ -214,13 +217,13 @@ Popup {
                         }
                         background: Rectangle {
                             radius: 4
-                            color: parent.hovered ? "#e3f2fd" : fieldBg
+                            color: parent.hovered ? Theme.palette.backgroundSecondary : fieldBg
                             border.color: fieldBorder
                         }
                         contentItem: Text {
                             text: parent.text
                             font.pixelSize: 12
-                            color: "#333"
+                            color: Theme.palette.text
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -249,8 +252,8 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
-            color: "white"
-            border.color: "#eee"
+            color: Theme.palette.backgroundPrimary
+            border.color: Theme.palette.border
             border.width: 1
 
             RowLayout {
@@ -265,11 +268,11 @@ Popup {
                     onClicked: root.close()
                     background: Rectangle {
                         radius: 6
-                        color: parent.hovered ? "#e0e0e0" : "#eeeeee"
+                        color: parent.hovered ? Theme.palette.border : Theme.palette.backgroundMuted
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14
-                        color: "#555"
+                        color: Theme.palette.textMuted
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

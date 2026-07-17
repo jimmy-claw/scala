@@ -2,20 +2,23 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import Logos.Theme
+import Logos.Controls
+
 Item {
     id: root
 
     // ── Theme colors ───────────────────────────────────────────────────────
-    property color bgColor: "#ffffff"
-    property color headerBg: "#e3f2fd"
-    property color headerText: "#1565C0"
-    property color cellBorder: "#e0e0e0"
-    property color todayBg: "#e8f5e9"
-    property color todayText: "#2e7d32"
-    property color selectedBg: "#e3f2fd"
-    property color dayTextColor: "#333333"
-    property color otherMonthText: "#bdbdbd"
-    property color hoverBg: "#f5f5f5"
+    property color bgColor: Theme.palette.backgroundPrimary
+    property color headerBg: Theme.palette.backgroundSecondary
+    property color headerText: Theme.palette.primary
+    property color cellBorder: Theme.palette.border
+    property color todayBg: Theme.palette.backgroundMuted
+    property color todayText: Theme.palette.success
+    property color selectedBg: Theme.palette.backgroundSecondary
+    property color dayTextColor: Theme.palette.text
+    property color otherMonthText: Theme.palette.textMuted
+    property color hoverBg: Theme.palette.backgroundSecondary
 
     // ── State ──────────────────────────────────────────────────────────────
     property int displayYear: new Date().getFullYear()
@@ -218,7 +221,7 @@ Item {
                                     width: 6
                                     height: 6
                                     radius: 3
-                                    color: modelData.color || "#2196F3"
+                                    color: modelData.color || Theme.palette.primary
                                 }
                             }
                         }
