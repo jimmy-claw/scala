@@ -20,31 +20,39 @@ Popup {
 
     signal settingsSaved()
 
+    // Access backend through parent (CalendarView)
+    readonly property var backend: (parent && parent.backend) ? parent.backend : null
+    readonly property bool ready: (parent && parent.ready) ? parent.ready : false
+
     function loadSettings() {
-        if (typeof calendarModule === "undefined") return
-        var dv = calendarModule.getSetting("defaultView", "month")
-        if (dv === "week") defaultViewCombo.currentIndex = 1
-        else if (dv === "day") defaultViewCombo.currentIndex = 2
-        else defaultViewCombo.currentIndex = 0
-
-        var fdow = calendarModule.getSetting("firstDayOfWeek", "monday")
-        firstDayCombo.currentIndex = fdow === "sunday" ? 1 : 0
-
-        var showDeclined = calendarModule.getSetting("showDeclinedEvents", "false")
-        showDeclinedSwitch.checked = showDeclined === "true"
-
-        identityField.text = calendarModule.getIdentity()
+        if (!root.ready || !backend) return
+        // Load settings asynchronously via logos.watch
+        logos.watch(backend.getSetting("defaultView", "month"),
+            function(value) {
+                if (value === "week") defaultViewCombo.currentIndex = 1
+                else if (value === "day") defaultViewCombo.currentIndex = 2
+                else defaultViewCombo.currentIndex = 0
+            }
+        )
+        logos.watch(backend.getSetting("firstDayOfWeek", "monday"),
+            function(value) { firstDayCombo.currentIndex = value === "sunday" ? 1 : 0 }
+        )
+        logos.watch(backend.getSetting("showDeclinedEvents", "false"),
+            function(value) { showDeclinedSwitch.checked = value === "true" }
+        )
+        // Identity is a PROP — read directly, no async needed
+        identityField.text = backend.currentIdentity || ""
     }
 
     function saveSettings() {
-        if (typeof calendarModule === "undefined") return
+        if (!root.ready || !backend) return
         var views = ["month", "week", "day"]
-        calendarModule.setSetting("defaultView", views[defaultViewCombo.currentIndex])
+        backend.setSetting("defaultView", views[defaultViewCombo.currentIndex])
 
         var days = ["monday", "sunday"]
-        calendarModule.setSetting("firstDayOfWeek", days[firstDayCombo.currentIndex])
+        backend.setSetting("firstDayOfWeek", days[firstDayCombo.currentIndex])
 
-        calendarModule.setSetting("showDeclinedEvents",
+        backend.setSetting("showDeclinedEvents",
             showDeclinedSwitch.checked ? "true" : "false")
 
         settingsSaved()

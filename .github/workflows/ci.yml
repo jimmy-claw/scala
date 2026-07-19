@@ -6,41 +6,9 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-core:
+    name: "Build scala core module"
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Qt6
-        run: sudo apt-get install -y qt6-base-dev qt6-declarative-dev qt6-remoteobjects-dev xvfb qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-qtquick-window qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qttest qt6-tools-dev
-      - name: Build plugin
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
-          cmake --build build -j4
-      - name: Run tests
-        run: cd build && ctest -V --output-junit test-results.xml
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: build/test-results.xml
-      - name: Build UI plugin
-        run: |
-          cmake -B build-ui-plugin -DBUILD_UI_PLUGIN=ON
-          cmake --build build-ui-plugin -j4 --target scala_ui
-
-  e2e:
-    continue-on-error: true
-    name: "E2E — scala_module integration tests"
-    runs-on: ubuntu-latest
-    needs: build
-    # Requires CACHIX_AUTH_TOKEN secret to be set.
-    # First run builds logoscore from source (~20min) and caches it.
-    # Subsequent runs pull from cache (~1min).
-    #
-    # Setup (one-time):
-    #   1. Create cache at https://app.cachix.org → name: jimmy-claw
-    #   2. Add CACHIX_AUTH_TOKEN to repo secrets
     steps:
       - uses: actions/checkout@v4
 
@@ -48,37 +16,97 @@ jobs:
         uses: cachix/install-nix-action@v27
         with:
           extra_nix_config: |
-            experimental-features = nix-command flakes
-            accept-flake-config = true
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Cachix
-        uses: cachix/cachix-action@v15
-        continue-on-error: true
+      - name: Build core module
+        run: nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder .
+
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: jimmy-claw
-          # If CACHIX_AUTH_TOKEN is not set, this step is a no-op (read-only public cache)
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: scala-plugin
+          path: result/
 
-      - name: Build logoscore
-        run: |
-          nix build github:logos-co/logos-liblogos#logos-liblogos-bin \
-            --out-link ./logoscore-out \
-            --print-build-logs
-          echo "LOGOSCORE=$(readlink -f ./logoscore-out)/bin/logoscore" >> $GITHUB_ENV
-          echo "LOGOS_LIB=$(nix build github:logos-co/logos-liblogos#logos-liblogos-lib --no-link --print-out-paths)" >> $GITHUB_ENV
-          echo "LOGOS_SDK=$(nix build github:logos-co/logos-liblogos#logos-cpp-sdk --no-link --print-out-paths 2>/dev/null || echo '')" >> $GITHUB_ENV
+  build-ui:
+    name: "Build scala-ui module"
+    runs-on: ubuntu-latest
+    needs: build-core
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Install Qt6
-        run: sudo apt-get install -y qt6-base-dev qt6-remoteobjects-dev
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build scala_module
-        run: |
-          make build-module \
-            LOGOS_LIBLOGOS_ROOT=$LOGOS_LIB \
-            LOGOS_CPP_SDK_ROOT=$LOGOS_SDK
+      - name: Build UI module
+        run: cd scala-ui && nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder --override-input scala path:.. .
 
-      - name: Run e2e tests
-        run: bash tools/e2e-test.sh || true
-        timeout-minutes: 10
-        env:
-          SCALA_E2E_TIMEOUT: "180"
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scala-ui-plugin
+          path: result/
+
+  package-lgx-core:
+    name: "Package scala core as .lgx"
+    runs-on: ubuntu-latest
+    needs: build-core
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build .lgx package
+        run: nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder .#lgx-portable
+
+      - name: Upload .lgx artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scala.lgx
+          path: result/
+
+  package-lgx-ui:
+    name: "Package scala-ui as .lgx"
+    runs-on: ubuntu-latest
+    needs: build-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build .lgx package
+        run: cd scala-ui && nix build -L --override-input logos-module-builder github:logos-co/logos-module-builder --override-input scala path:.. .#lgx-portable
+
+      - name: Upload .lgx artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scala-ui.lgx
+          path: scala-ui/result/
+
+  flake-check:
+    name: "Flake metadata check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check flake metadata (core)
+        run: nix flake metadata --no-update-lock-file --override-input logos-module-builder github:logos-co/logos-module-builder
+
+      - name: Check flake metadata (UI)
+        run: cd scala-ui && nix flake metadata --no-update-lock-file --override-input logos-module-builder github:logos-co/logos-module-builder --override-input scala path:..
