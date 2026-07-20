@@ -378,7 +378,9 @@ Item {
                         color: "#ccddee"
                         font.pixelSize: 11
                         visible: text !== ""
-                // ── Search button + field ────────────────────────
+                    }
+
+                    // ── Search button + field ────────────────────────
                 LogosIconButton {
                     icon.source: LogosIcons.search
                     tooltipText: "Search events (Ctrl+F)"
@@ -1195,6 +1197,7 @@ Item {
                 function(error) { console.warn("[scala] handleShareLink failed:", error) }
             )
     }
+    }
 
     // ── Settings panel ───────────────────────────────────────────────────
     SettingsPanel {
@@ -1205,6 +1208,5 @@ Item {
             _loadSettings()
         }
     }
-}
 }
 }
