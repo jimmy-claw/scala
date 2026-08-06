@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 2,
+  "repositoryName": "jimmy-scala-modules",
+  "generatedAt": "2026-08-06T11:28:19Z",
+  "packages": [
+    {
+      "name": "scala",
+      "versions": [
+        {
+          "releasedAt": "2026-08-06T11:28:19Z",
+          "publisherRef": "scala-v0.3.0",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0-rc1/logos-scala-module-lib.lgx",
+          "size": 3972161,
+          "sha256": "84c1a74044276f315a676bd31a6ca0fd2549031c2f5e9c5df63f451eeae98b3b",
+          "rootHash": "9ac49d8c84162508d15c74ddc447115908f38a28fcb14cb7c60210e1e970ace9",
+          "manifest": {
+            "author": "",
+            "category": "productivity",
+            "dependencies": [],
+            "description": "Secure Calendar App \u2014 privacy-first shared calendar module for Logos Core",
+            "hashes": {
+              "root": "9ac49d8c84162508d15c74ddc447115908f38a28fcb14cb7c60210e1e970ace9",
+              "variants": "671e5e8d89500997f7ed07f800589d87b4b2321d7448d359a22be942a94f8046",
+              "variants/linux-amd64": "96afc7112a159fd2b226b3a21466267746c8aba12a28e9a0915e8babe278ac1b"
+            },
+            "icon": "",
+            "main": {
+              "linux-amd64": "scala_plugin.so"
+            },
+            "manifestVersion": "0.3.0",
+            "name": "scala",
+            "type": "core",
+            "version": "0.3.0"
+          },
+          "signature": {
+            "algorithm": "ed25519",
+            "did": "did:jwk:{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"woOJlOCIQQZhbEWef1JzftnozzPmy5QCUV-PC2ZzjjI\"}",
+            "linkedDids": [],
+            "signature": "jq3UFICzuEHpzlFgv5fWoffHaN1by0gfyWQK2y2e1ZXpnxhVaNxTDilRxwr4k0FSVX1PQMGZnZ6DDn/8MJWqDA==",
+            "signer": {},
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "scala_ui",
+      "versions": [
+        {
+          "releasedAt": "2026-08-06T11:28:19Z",
+          "publisherRef": "scala_ui-v0.3.0",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0-rc1/logos-scala_ui-module.lgx",
+          "size": 3879263,
+          "sha256": "217511564f0aad38396a11b7870deaa4c3343014c095932e972d906d3217f790",
+          "rootHash": "2973bce0ce5f995c5b3d29d6746599f8078408faed4e6f69ab700fd6e0fa0bc4",
+          "manifest": {
+            "author": "",
+            "category": "productivity",
+            "dependencies": [
+              "scala"
+            ],
+            "description": "Scala Calendar UI \u2014 QML view with process-isolated backend for scala core module",
+            "hashes": {
+              "root": "2973bce0ce5f995c5b3d29d6746599f8078408faed4e6f69ab700fd6e0fa0bc4",
+              "variants": "f52d076f0b64d25bd1c6a373d903b4462dd28231e3a36b36a19f47ec43456eb2",
+              "variants/linux-amd64": "8929eef752a56470c9c7588554681e9fabc7fe11d4f2df755e7fee8bd7f1a8f7"
+            },
+            "icon": "",
+            "main": {
+              "linux-amd64": "scala_ui_plugin.so"
+            },
+            "manifestVersion": "0.3.0",
+            "name": "scala_ui",
+            "type": "ui_qml",
+            "version": "0.3.0",
+            "view": "qml/CalendarView.qml"
+          },
+          "signature": {
+            "algorithm": "ed25519",
+            "did": "did:jwk:{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"woOJlOCIQQZhbEWef1JzftnozzPmy5QCUV-PC2ZzjjI\"}",
+            "linkedDids": [],
+            "signature": "1ToyVC2pniYcgwHZoPtez/wP/6CCBI5xt5QbumMQZoGw54NKekODLctwfm18unzUH1yKPemdEJ9H2RFohczQBQ==",
+            "signer": {},
+            "version": 1
+          }
+        }
+      ]
+    }
+  ]
+}

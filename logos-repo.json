@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "jimmy-scala-modules",
+  "displayName": "Jimmy's Scala Modules",
+  "description": "SCALA \u2014 Secure Calendar App on Logos Core. Privacy-first P2P shared calendar.",
+  "homepage": "https://github.com/jimmy-claw/scala",
+  "indexUrl": "https://raw.githubusercontent.com/jimmy-claw/scala/main/repo-index.json",
+  "trustedSigners": [
+    {
+      "did": "did:jwk:{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"woOJlOCIQQZhbEWef1JzftnozzPmy5QCUV-PC2ZzjjI\"}",
+      "name": "jimmy-claw"
+    }
+  ]
+}
