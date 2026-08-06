@@ -9,8 +9,10 @@
 set -euo pipefail
 
 DRY_RUN=false
+DRY_RUN_BOOL="False"
 if [[ "${1:-}" == "--dry-run" ]]; then
     DRY_RUN=true
+    DRY_RUN_BOOL="True"
     echo "=== DRY RUN MODE ==="
 fi
 
@@ -76,7 +78,7 @@ from cryptography.hazmat.primitives import serialization
 
 work_dir = "$WORK_DIR"
 signing_key = "$SIGNING_KEY"
-dry_run = ${DRY_RUN,,} == "true"
+dry_run = $DRY_RUN_BOOL
 
 # Load signing key
 with open(signing_key, "rb") as f:
@@ -236,7 +238,7 @@ from cryptography.hazmat.primitives import serialization
 work_dir = "$WORK_DIR"
 signing_key = "$SIGNING_KEY"
 repo = "$REPO"
-dry_run = ${DRY_RUN,,} == "true"
+dry_run = $DRY_RUN_BOOL
 version = "$VERSION"
 
 # Load signing key
