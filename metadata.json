@@ -6,7 +6,7 @@
   "description": "Secure Calendar App — privacy-first shared calendar module for Logos Core",
   "main": "scala_plugin",
   "interface": "universal",
-  "dependencies": [],
+  "dependencies": ["delivery_module"],
 
   "nix": {
     "packages": {
@@ -15,10 +15,10 @@
     },
     "external_libraries": [],
     "cmake": {
-      "find_packages": [],
-      "extra_sources": [],
-      "extra_include_dirs": [],
-      "extra_link_libraries": []
+      "find_packages": ["OpenSSL"],
+      "extra_sources": ["src/logos_transport.hpp"],
+      "extra_include_dirs": ["src"],
+      "extra_link_libraries": ["OpenSSL::Crypto"]
     }
   }
 }

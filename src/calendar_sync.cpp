@@ -1,261 +1,274 @@
 #include "calendar_sync.h"
+#include "logos_transport.hpp"
 
-#ifdef LOGOS_CORE_AVAILABLE
-#include <logos_api_client.h>
-#endif
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include <openssl/hmac.h>
 
-#include <QDebug>
-#include <QJsonDocument>
-#include <QMessageAuthenticationCode>
+#include <cstdio>
+#include <sstream>
+#include <iomanip>
+
+using LogosMap = nlohmann::json;
+using Tx = logos_transport::Transport<LogosMap>;
+
+// Forward declaration — ScalaImpl builds Ops and constructs Transport
+extern "C" void scala_init_transport(CalendarSync *sync, const std::string &deviceId);
 
 // ── SyncMessage helpers ─────────────────────────────────────────────────────
 
-QString SyncMessage::typeToString(SyncMessageType t) {
+std::string SyncMessage::typeToString(SyncMessageType t) {
     switch (t) {
-    case SyncMessageType::CreateEvent:         return QStringLiteral("CreateEvent");
-    case SyncMessageType::UpdateEvent:         return QStringLiteral("UpdateEvent");
-    case SyncMessageType::DeleteEvent:         return QStringLiteral("DeleteEvent");
-    case SyncMessageType::SyncEvents:          return QStringLiteral("SyncEvents");
-    case SyncMessageType::UnshareCalendar:     return QStringLiteral("UnshareCalendar");
-    case SyncMessageType::CalendarReconnected: return QStringLiteral("CalendarReconnected");
+    case SyncMessageType::CreateEvent:         return "CreateEvent";
+    case SyncMessageType::UpdateEvent:         return "UpdateEvent";
+    case SyncMessageType::DeleteEvent:         return "DeleteEvent";
+    case SyncMessageType::SyncEvents:          return "SyncEvents";
+    case SyncMessageType::UnshareCalendar:     return "UnshareCalendar";
+    case SyncMessageType::CalendarReconnected: return "CalendarReconnected";
     }
-    return QStringLiteral("CreateEvent");
+    return "CreateEvent";
 }
 
-SyncMessageType SyncMessage::typeFromString(const QString &s) {
-    if (s == QLatin1String("CreateEvent"))         return SyncMessageType::CreateEvent;
-    if (s == QLatin1String("UpdateEvent"))         return SyncMessageType::UpdateEvent;
-    if (s == QLatin1String("DeleteEvent"))         return SyncMessageType::DeleteEvent;
-    if (s == QLatin1String("SyncEvents"))          return SyncMessageType::SyncEvents;
-    if (s == QLatin1String("UnshareCalendar"))     return SyncMessageType::UnshareCalendar;
-    if (s == QLatin1String("CalendarReconnected")) return SyncMessageType::CalendarReconnected;
+SyncMessageType SyncMessage::typeFromString(const std::string &s) {
+    if (s == "CreateEvent")         return SyncMessageType::CreateEvent;
+    if (s == "UpdateEvent")         return SyncMessageType::UpdateEvent;
+    if (s == "DeleteEvent")         return SyncMessageType::DeleteEvent;
+    if (s == "SyncEvents")          return SyncMessageType::SyncEvents;
+    if (s == "UnshareCalendar")     return SyncMessageType::UnshareCalendar;
+    if (s == "CalendarReconnected") return SyncMessageType::CalendarReconnected;
     return SyncMessageType::CreateEvent;
 }
 
-QJsonObject SyncMessage::toJson() const {
-    QJsonObject obj;
-    obj[QLatin1String("type")]       = typeToString(type);
-    obj[QLatin1String("calendarId")] = calendarId;
-    obj[QLatin1String("payload")]    = payload;
-    obj[QLatin1String("senderId")]   = senderId;
-    obj[QLatin1String("timestamp")]  = timestamp;
-    if (!signature.isEmpty())
-        obj[QLatin1String("signature")] = signature;
+nlohmann::json SyncMessage::toJson() const {
+    nlohmann::json obj;
+    obj["type"]       = typeToString(type);
+    obj["calendarId"] = calendarId;
+    obj["payload"]    = payload;
+    obj["senderId"]   = senderId;
+    obj["timestamp"]  = timestamp;
+    if (!signature.empty())
+        obj["signature"] = signature;
     return obj;
 }
 
-SyncMessage SyncMessage::fromJson(const QJsonObject &obj) {
+SyncMessage SyncMessage::fromJson(const nlohmann::json &obj) {
     SyncMessage msg;
-    msg.type       = typeFromString(obj[QLatin1String("type")].toString());
-    msg.calendarId = obj[QLatin1String("calendarId")].toString();
-    msg.payload    = obj[QLatin1String("payload")].toString();
-    msg.senderId   = obj[QLatin1String("senderId")].toString();
-    msg.timestamp  = static_cast<qint64>(obj[QLatin1String("timestamp")].toDouble());
-    msg.signature  = obj[QLatin1String("signature")].toString();
+    msg.type       = typeFromString(obj.value("type", std::string("CreateEvent")));
+    msg.calendarId = obj.value("calendarId", std::string());
+    msg.payload    = obj.value("payload", std::string());
+    msg.senderId   = obj.value("senderId", std::string());
+    msg.timestamp  = obj.value("timestamp", int64_t(0));
+    msg.signature  = obj.value("signature", std::string());
     return msg;
 }
 
-QByteArray SyncMessage::toBytes() const {
-    return QJsonDocument(toJson()).toJson(QJsonDocument::Compact);
+std::string SyncMessage::toBytes() const {
+    return toJson().dump();
 }
 
-SyncMessage SyncMessage::fromBytes(const QByteArray &data) {
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    return fromJson(doc.object());
+SyncMessage SyncMessage::fromBytes(const std::string &data) {
+    return fromJson(nlohmann::json::parse(data, nullptr, false));
 }
 
-QString SyncMessage::sign(const QString &payload, const QString &key) {
-    QByteArray mac = QMessageAuthenticationCode::hash(
-        payload.toUtf8(), key.toUtf8(), QCryptographicHash::Sha256);
-    return QString::fromLatin1(mac.toHex());
+static std::string hexEncode(const unsigned char *data, size_t len) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < len; i++)
+        oss << std::hex << std::setfill('0') << std::setw(2) << (int)data[i];
+    return oss.str();
 }
 
-bool SyncMessage::verify(const QString &payload, const QString &signature,
-                          const QString &key) {
+std::string SyncMessage::sign(const std::string &payload, const std::string &key) {
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int digestLen = 0;
+    unsigned char *mac = HMAC(EVP_sha256(), key.c_str(), key.size(),
+                              (unsigned char*)payload.c_str(), payload.size(),
+                              digest, &digestLen);
+    return mac ? hexEncode(digest, digestLen) : std::string();
+}
+
+bool SyncMessage::verify(const std::string &payload, const std::string &signature, const std::string &key) {
     return sign(payload, key) == signature;
 }
 
 // ── CalendarSync ────────────────────────────────────────────────────────────
 
-CalendarSync::CalendarSync(QObject *parent)
-    : QObject(parent) {}
+CalendarSync::CalendarSync() {}
+CalendarSync::~CalendarSync() {}
 
-QString CalendarSync::topicForCalendar(const QString &calendarId) {
-    return QStringLiteral("/scala/1/") + calendarId + QStringLiteral("/json");
+void CalendarSync::setMessageHandler(OnMessageReceived h) { m_onMessage = std::move(h); }
+void CalendarSync::setStatusHandler(OnSyncStatus h) { m_onStatus = std::move(h); }
+
+std::string CalendarSync::topicForCalendar(const std::string &calendarId) {
+    return "/scala/1/" + calendarId + "/json";
 }
 
-bool CalendarSync::isSyncing(const QString &calendarId) const {
-    return m_activeTopics.contains(calendarId);
+bool CalendarSync::isSyncing(const std::string &calendarId) const {
+    return m_activeTopics.count(calendarId) > 0;
 }
 
-#ifdef LOGOS_CORE_AVAILABLE
-void CalendarSync::setDeliveryClient(LogosAPIClient *client) {
-    m_deliveryClient = client;
-
-    if (m_deliveryClient) {
-        ensureDeliveryNode();
-
-        // Listen for messageReceived events from delivery_module
-        QObject *replica = m_deliveryClient->requestObject("delivery_module");
-        if (replica) {
-            m_deliveryClient->onEvent(
-                replica, this, QStringLiteral("messageReceived"),
-                [this](const QString &eventName, const QVariantList &args) {
-                    Q_UNUSED(eventName)
-                    if (args.size() >= 4) {
-                        onDeliveryMessageReceived(
-                            args.at(0).toString(),   // hash
-                            args.at(1).toString(),   // topic
-                            args.at(2).toString(),   // payload_base64
-                            args.at(3).toLongLong()  // timestamp
-                        );
-                    }
-                });
-            qInfo() << "CalendarSync: registered messageReceived event handler";
-        } else {
-            qWarning() << "CalendarSync: failed to get delivery_module replica for events";
-        }
-    }
-}
-
-void CalendarSync::ensureDeliveryNode() {
-    if (m_deliveryNodeStarted || m_deliveryNodeStarting || !m_deliveryClient)
+void CalendarSync::startSync(const std::string &calendarId, const std::string &encryptionKey) {
+    if (m_activeTopics.count(calendarId)) {
+        fprintf(stderr, "CalendarSync: already syncing %s\n", calendarId.c_str());
         return;
-
-    m_deliveryNodeStarting = true;
-
-    // Register connectionStateChanged — subscribe pending calendars only when connected
-    QObject *replica = m_deliveryClient->requestObject("delivery_module");
-    if (replica) {
-        m_deliveryClient->onEvent(
-            replica, this, QStringLiteral("connectionStateChanged"),
-            [this](const QString &, const QVariantList &args) {
-                QString status = args.value(0).toString();
-                qInfo() << "CalendarSync: delivery connection state:" << status;
-                if (!m_deliveryNodeStarted &&
-                    (status.toLower() == "connected")) {
-                    m_deliveryNodeStarted = true;
-                    for (const QString &calendarId : m_pendingSubscriptions) {
-                        QString topic = QStringLiteral("/scala/1/%1/json").arg(calendarId);
-                        m_deliveryClient->invokeRemoteMethod(
-                            "delivery_module", "subscribe", topic);
-                        m_subscribedTopics.insert(calendarId, topic);
-                        qInfo() << "CalendarSync: subscribed to topic" << topic;
-                    }
-                    m_pendingSubscriptions.clear();
-                }
-            });
     }
 
-    // Create and start the delivery node
-    m_deliveryClient->invokeRemoteMethod(
-        "delivery_module", "createNode",
-        QStringLiteral(R"({"logLevel":"INFO","mode":"Core","preset":"logos.dev"})"));
-    m_deliveryClient->invokeRemoteMethod("delivery_module", "start");
-    qInfo() << "CalendarSync: delivery node starting...";
+    m_activeTopics[calendarId] = encryptionKey;
+
+    // If transport is ready, join the topic immediately
+    if (m_tx && m_tx->ready()) {
+        std::string topic = topicForCalendar(calendarId);
+        m_tx->join(topic);
+        fprintf(stderr, "CalendarSync: joined topic %s\n", topic.c_str());
+    }
+
+    if (m_onStatus) m_onStatus(calendarId, "syncing");
 }
 
-void CalendarSync::onDeliveryMessageReceived(const QString &hash, const QString &topic,
-                                              const QString &payloadBase64, qint64 timestamp) {
-    Q_UNUSED(hash)
-    Q_UNUSED(timestamp)
+void CalendarSync::stopSync(const std::string &calendarId) {
+    if (!m_activeTopics.count(calendarId)) return;
+    m_activeTopics.erase(calendarId);
+    if (m_onStatus) m_onStatus(calendarId, "stopped");
+}
 
+void CalendarSync::sendMessage(const std::string &calendarId, const SyncMessage &msg) {
+    if (!m_activeTopics.count(calendarId)) {
+        if (m_onStatus) m_onStatus(calendarId, "error: not syncing");
+        return;
+    }
+
+    if (!m_tx || !m_tx->ready()) {
+        fprintf(stderr, "CalendarSync: transport not ready, dropping message\n");
+        return;
+    }
+
+    // Seal the message bytes
+    std::string sealed = seal(calendarId, msg.toBytes());
+
+    // Send via transport (it does double-base64 framing)
+    std::string topic = topicForCalendar(calendarId);
+    m_tx->send(topic, sealed);
+
+    fprintf(stderr, "CalendarSync: sent %s to %s (%zu bytes)\n",
+            SyncMessage::typeToString(msg.type).c_str(), topic.c_str(), msg.toBytes().size());
+}
+
+// ── Crypto helpers (seal/open) ─────────────────────────────────────────────
+
+std::string CalendarSync::seal(const std::string &calendarId, const std::string &plaintext) {
+    auto it = m_activeTopics.find(calendarId);
+    if (it == m_activeTopics.end()) return plaintext; // fallback
+
+    const std::string &keyHex = it->second;
+    // Convert hex key to bytes
+    std::vector<unsigned char> key(32);
+    for (size_t i = 0; i < 32 && i * 2 < keyHex.size(); i++) {
+        sscanf(keyHex.c_str() + i * 2, "%2hhx", &key[i]);
+    }
+
+    // Generate random nonce (12 bytes)
+    std::vector<unsigned char> nonce(12);
+    RAND_bytes(nonce.data(), 12);
+
+    // AES-256-GCM encrypt
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    unsigned char ciphertext[plaintext.size() + 32];
+    int len = 0, ciphertextLen = 0;
+
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, key.data(), nonce.data());
+    EVP_EncryptUpdate(ctx, ciphertext, &len, (unsigned char*)plaintext.data(), plaintext.size());
+    EVP_EncryptFinal_ex(ctx, ciphertext + len, &ciphertextLen);
+
+    // Get tag
+    unsigned char tag[16];
+    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag);
+    EVP_CIPHER_CTX_free(ctx);
+
+    // Pack: nonce(12) + tag(16) + ciphertext
+    std::string result;
+    result.resize(12 + 16 + len);
+    memcpy(&result[0], nonce.data(), 12);
+    memcpy(&result[12], tag, 16);
+    memcpy(&result[28], ciphertext, len);
+
+    return result;
+}
+
+std::optional<std::string> CalendarSync::open(const std::string &calendarId, const std::string &sealedBytes) {
+    auto it = m_activeTopics.find(calendarId);
+    if (it == m_activeTopics.end()) return std::nullopt;
+
+    if (sealedBytes.size() < 28 + 16) return std::nullopt; // min: nonce+tag+16 bytes ciphertext
+
+    const std::string &keyHex = it->second;
+    std::vector<unsigned char> key(32);
+    for (size_t i = 0; i < 32 && i * 2 < keyHex.size(); i++) {
+        sscanf(keyHex.c_str() + i * 2, "%2hhx", &key[i]);
+    }
+
+    // Extract nonce, tag, ciphertext
+    std::vector<unsigned char> nonce(12);
+    unsigned char tag[16];
+    memcpy(nonce.data(), sealedBytes.data(), 12);
+    memcpy(tag, sealedBytes.data() + 12, 16);
+    size_t ctLen = sealedBytes.size() - 28;
+    const unsigned char *ct = (const unsigned char*)sealedBytes.data() + 28;
+
+    // AES-256-GCM decrypt
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    std::string plaintext(ctLen, '\0');
+
+    EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, key.data(), nonce.data());
+    EVP_DecryptUpdate(ctx, (unsigned char*)plaintext.data(), (int*)(&ctLen), ct, (int)ctLen);
+
+    // Set tag for verification
+    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag);
+
+    int finalLen = 0;
+    int ok = EVP_DecryptFinal_ex(ctx, (unsigned char*)plaintext.data() + ctLen, &finalLen);
+    EVP_CIPHER_CTX_free(ctx);
+
+    if (ok <= 0) return std::nullopt; // auth failure
+    plaintext.resize(ctLen);
+    return plaintext;
+}
+
+// ── Transport integration ───────────────────────────────────────────────────
+
+void CalendarSync::handleReceive(const std::string &topic, const std::string &sealedOnceDecoded) {
     // Find which calendar this topic belongs to
-    for (auto it = m_activeTopics.constBegin(); it != m_activeTopics.constEnd(); ++it) {
-        if (topicForCalendar(it.key()) == topic) {
-            QByteArray payload = QByteArray::fromBase64(payloadBase64.toUtf8());
-            SyncMessage msg = SyncMessage::fromBytes(payload);
-            emit messageReceived(it.key(), msg);
+    for (auto &[calendarId, _] : m_activeTopics) {
+        if (topicForCalendar(calendarId) == topic) {
+            // Open the sealed bytes
+            auto plain = open(calendarId, sealedOnceDecoded);
+            if (!plain) {
+                fprintf(stderr, "CalendarSync: failed to open message for %s\n", calendarId.c_str());
+                return;
+            }
+
+            // Parse and dispatch
+            SyncMessage msg = SyncMessage::fromBytes(*plain);
+            if (m_onMessage) m_onMessage(calendarId, msg);
             return;
         }
     }
-    qDebug() << "CalendarSync: received message for unknown topic" << topic;
-}
-#endif
-
-void CalendarSync::startSync(const QString &calendarId, const QString &encryptionKey) {
-    if (m_activeTopics.contains(calendarId)) {
-        qDebug() << "CalendarSync: already syncing" << calendarId;
-        return;
-    }
-
-    const QString topic = topicForCalendar(calendarId);
-    m_activeTopics.insert(calendarId, encryptionKey);
-
-#ifdef LOGOS_CORE_AVAILABLE
-    if (m_deliveryClient) {
-        ensureDeliveryNode();
-        if (m_deliveryNodeStarted) {
-            // Node already connected — subscribe immediately
-            m_deliveryClient->invokeRemoteMethod(
-                "delivery_module", "subscribe", topic);
-            m_subscribedTopics.insert(calendarId, topic);
-            qInfo() << "CalendarSync: subscribed to topic" << topic;
-        } else {
-            // Node starting — queue for when connection is established
-            m_pendingSubscriptions.append(calendarId);
-            qInfo() << "CalendarSync: queued subscription for" << calendarId;
-        }
-        emit syncStarted(calendarId);
-        return;
-    }
-    qWarning() << "CalendarSync: no delivery client, falling back to stub";
-#endif
-
-    // Stub: emit syncStarted immediately for testing without Logos Core
-    qDebug() << "CalendarSync [stub]: startSync" << calendarId
-             << "topic:" << topic;
-    emit syncStarted(calendarId);
+    fprintf(stderr, "CalendarSync: received message for unknown topic %s\n", topic.c_str());
 }
 
-void CalendarSync::stopSync(const QString &calendarId) {
-    if (!m_activeTopics.contains(calendarId)) {
-        qDebug() << "CalendarSync: not syncing" << calendarId;
-        return;
-    }
-
-    const QString topic = topicForCalendar(calendarId);
-    m_activeTopics.remove(calendarId);
-
-#ifdef LOGOS_CORE_AVAILABLE
-    if (m_deliveryClient) {
-        // delivery_module does not have an explicit unsubscribe;
-        // topic is simply no longer tracked locally
-        qInfo() << "CalendarSync: unsubscribed from topic" << topic;
-        emit syncStopped(calendarId);
-        return;
-    }
-#endif
-
-    qDebug() << "CalendarSync [stub]: stopSync" << calendarId;
-    emit syncStopped(calendarId);
+void CalendarSync::initTransport() {
+    // Transport is constructed externally by ScalaImpl which has access to modules()
+    // See scala_impl.cpp for the actual Ops construction
 }
 
-void CalendarSync::sendMessage(const QString &calendarId, const SyncMessage &msg) {
-    if (!m_activeTopics.contains(calendarId)) {
-        emit syncError(calendarId,
-                       QStringLiteral("Cannot send: calendar not syncing"));
-        return;
-    }
+// Called from ScalaImpl after transport is constructed
+void CalendarSync::setTransport(std::optional<Tx> tx) {
+    m_tx = std::move(tx);
+}
 
-    const QString topic = topicForCalendar(calendarId);
-    const QByteArray data = msg.toBytes();
+void CalendarSync::bootstrap() {
+    if (m_tx && m_tx->ready()) return;
+    if (m_tx) m_tx->bootstrap();
+}
 
-#ifdef LOGOS_CORE_AVAILABLE
-    if (m_deliveryClient) {
-        ensureDeliveryNode();
-        m_deliveryClient->invokeRemoteMethod(
-            "delivery_module", "send", topic, data);
-
-        qDebug() << "CalendarSync: sent" << SyncMessage::typeToString(msg.type)
-                 << "to" << topic << "(" << data.size() << "bytes)";
-        return;
-    }
-#endif
-
-    // Stub: log the message for debugging
-    qDebug() << "CalendarSync [stub]: sendMessage"
-             << SyncMessage::typeToString(msg.type)
-             << "calendarId:" << calendarId
-             << "payload size:" << data.size();
+bool CalendarSync::ready() const {
+    return m_tx.has_value() && m_tx->ready();
 }

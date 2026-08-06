@@ -1,15 +1,10 @@
 {
-  description = "Secure Calendar App — core module for Logos";
-
+  description = "scala engine + sync CORE module (delivery via the shared logos-transport).";
   inputs = {
-    # Use master (not 0.2.0 tag) — 0.2.0 pins old cpp-sdk missing lidl-frontend files
-    logos-module-builder.url = "github:logos-co/logos-module-builder";
-
-    # TODO: re-add kv_module after it's migrated to universal pattern
-    # (old-format generates incompatible SDK wrappers in logos-module-builder)
-    # kv_module.url = "github:jimmy-claw/logos-kv-module";
+    delivery_module.url = "github:logos-co/logos-delivery-module/0fb3a7427b29c98ab0fa2465bcd1e90cbfdf50a3";
+    logos-module-builder.url = "github:logos-co/logos-module-builder/afe4430ee6eb7ba45c08a516a43e18500720c715";
+    delivery_module.inputs.logos-module-builder.follows = "logos-module-builder";
   };
-
   outputs = inputs@{ logos-module-builder, ... }:
     logos-module-builder.lib.mkLogosModule {
       src = ./.;

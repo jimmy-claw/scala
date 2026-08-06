@@ -10,6 +10,8 @@ else()
     message(FATAL_ERROR "LogosModule.cmake not found. Set LOGOS_MODULE_BUILDER_ROOT or ensure logos-module-builder is in your flake inputs.")
 endif()
 
+find_package(OpenSSL REQUIRED)
+
 logos_module(
     NAME scala
     SOURCES
@@ -19,5 +21,9 @@ logos_module(
         src/local_storage.h
         src/calendar_store.cpp
         src/calendar_sync.cpp
+        src/calendar_sync.h
+        src/logos_transport.hpp
         src/qr_generator.cpp
+    INCLUDE_DIRS src
+    LINK_LIBRARIES OpenSSL::Crypto
 )

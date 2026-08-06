@@ -1,20 +1,23 @@
 #pragma once
 
-#include <QByteArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QMap>
-#include <QObject>
-#include <QString>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <optional>
+#include <string>
+#include <vector>
 
-#ifdef LOGOS_CORE_AVAILABLE
-class LogosAPIClient;
-#endif
+#include <nlohmann/json.hpp>
 
-// ── Sync message types (mirror original js-waku types) ──────────────────────
+// Forward declarations
+namespace logos_transport {
+template <class LogosMap> class Transport;
+}
 
-enum class SyncMessageType {
-    CreateEvent,
+// ── Sync message types ──────────────────────────────────────────────────────
+
+enum class SyncMessageType : int {
+    CreateEvent = 0,
     UpdateEvent,
     DeleteEvent,
     SyncEvents,          // bulk sync on join
@@ -22,77 +25,93 @@ enum class SyncMessageType {
     CalendarReconnected
 };
 
-// ── SyncMessage ─────────────────────────────────────────────────────────────
+// ── SyncMessage (wire envelope) ────────────────────────────────────────────
 
 struct SyncMessage {
     SyncMessageType type = SyncMessageType::CreateEvent;
-    QString calendarId;
-    QString payload;     // JSON-encoded CalendarEvent or empty
-    QString senderId;    // Logos identity pubkey
-    qint64 timestamp = 0;
+    std::string calendarId;
+    std::string payload;     // JSON-encoded CalendarEvent or empty
+    std::string senderId;    // Logos identity pubkey
+    int64_t timestamp = 0;
+    std::string signature;
 
-    QString signature;
+    nlohmann::json toJson() const;
+    static SyncMessage fromJson(const nlohmann::json &obj);
+    std::string toBytes() const;
+    static SyncMessage fromBytes(const std::string &data);
 
-    QJsonObject toJson() const;
-    static SyncMessage fromJson(const QJsonObject &obj);
-    QByteArray toBytes() const;
-    static SyncMessage fromBytes(const QByteArray &data);
+    static std::string typeToString(SyncMessageType t);
+    static SyncMessageType typeFromString(const std::string &s);
 
-    static QString typeToString(SyncMessageType t);
-    static SyncMessageType typeFromString(const QString &s);
-
-    // Sign message with identity key (stub — real crypto in follow-up)
-    // For now: HMAC-SHA256(key, payload) as signature field
-    static QString sign(const QString &payload, const QString &key);
-    static bool verify(const QString &payload, const QString &signature, const QString &key);
+    // HMAC-SHA256 signature
+    static std::string sign(const std::string &payload, const std::string &key);
+    static bool verify(const std::string &payload, const std::string &signature, const std::string &key);
 };
 
-// ── CalendarSync ────────────────────────────────────────────────────────────
+// ── CalendarSync (transport-backed) ────────────────────────────────────────
 
-class CalendarSync : public QObject {
-    Q_OBJECT
+using LogosMap = nlohmann::json;
 
+class CalendarSync {
 public:
-    explicit CalendarSync(QObject *parent = nullptr);
+    using OnMessageReceived = std::function<void(const std::string &calendarId, const SyncMessage &msg)>;
+    using OnSyncStatus = std::function<void(const std::string &calendarId, const std::string &status)>;
 
-    /// Start syncing a calendar (subscribe to its topic).
-    void startSync(const QString &calendarId, const QString &encryptionKey);
+    CalendarSync();
+    ~CalendarSync();
+
+    /// Set callbacks (called from ScalaImpl)
+    void setMessageHandler(OnMessageReceived h);
+    void setStatusHandler(OnSyncStatus h);
+
+    /// Start syncing a calendar (subscribe to its topic via transport).
+    void startSync(const std::string &calendarId, const std::string &encryptionKey);
 
     /// Stop syncing a calendar.
-    void stopSync(const QString &calendarId);
+    void stopSync(const std::string &calendarId);
 
-    /// Send a sync message for a calendar.
-    void sendMessage(const QString &calendarId, const SyncMessage &msg);
+    /// Send a sync message for a calendar (seals + broadcasts via transport).
+    void sendMessage(const std::string &calendarId, const SyncMessage &msg);
 
     /// Whether a calendar is currently syncing.
-    bool isSyncing(const QString &calendarId) const;
+    bool isSyncing(const std::string &calendarId) const;
 
     /// Topic format: /scala/1/<calendarId>/json
-    static QString topicForCalendar(const QString &calendarId);
+    static std::string topicForCalendar(const std::string &calendarId);
 
-#ifdef LOGOS_CORE_AVAILABLE
-    void setDeliveryClient(LogosAPIClient *client);
-#endif
+    /// Build and initialize the transport (called from ScalaImpl::onContextReady).
+    /// Requires: delivery_module methods available via modules().
+    void initTransport();
 
-signals:
-    void messageReceived(const QString &calendarId, const SyncMessage &msg);
-    void syncStarted(const QString &calendarId);
-    void syncStopped(const QString &calendarId);
-    void syncError(const QString &calendarId, const QString &error);
+    /// Set the constructed transport (called from ScalaImpl after Ops wiring).
+    void setTransport(std::optional<logos_transport::Transport<LogosMap>> tx);
+
+    /// Bootstrap the transport (bring up node, join topics).
+    void bootstrap();
+
+    /// Check if transport is ready.
+    bool ready() const;
+
+    /// Handle incoming sealed message from transport (called by ScalaImpl callback).
+    void handleReceive(const std::string &topic, const std::string &sealedOnceDecoded);
 
 private:
     // calendarId -> encryption key
-    QMap<QString, QString> m_activeTopics;
-    QMap<QString, QString> m_subscribedTopics;
+    std::map<std::string, std::string> m_activeTopics;
 
-#ifdef LOGOS_CORE_AVAILABLE
-    LogosAPIClient *m_deliveryClient = nullptr;
-    bool m_deliveryNodeStarted = false;
-    bool m_deliveryNodeStarting = false;
-    QStringList m_pendingSubscriptions;
+    // Transport (optional — constructed in initTransport)
+    std::optional<logos_transport::Transport<LogosMap>> m_tx;
 
-    void ensureDeliveryNode();
-    void onDeliveryMessageReceived(const QString &hash, const QString &topic,
-                                   const QString &payloadBase64, qint64 timestamp);
-#endif
+    // Callbacks
+    OnMessageReceived m_onMessage;
+    OnSyncStatus m_onStatus;
+
+    // Device identity (set from ScalaImpl)
+    std::string m_deviceId;
+
+    /// Seal bytes with calendar encryption key + random nonce.
+    std::string seal(const std::string &calendarId, const std::string &plaintext);
+
+    /// Open sealed bytes with calendar encryption key.
+    std::optional<std::string> open(const std::string &calendarId, const std::string &sealedBytes);
 };

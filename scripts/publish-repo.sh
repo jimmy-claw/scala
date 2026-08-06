@@ -71,6 +71,15 @@ done
 echo ""
 echo "=== Signing packages ==="
 
+# Build Python list from bash array (MUST be outside heredoc)
+LGX_LIST=""
+for f in "${LGX_FILES[@]}"; do
+    if [[ -n "$LGX_LIST" ]]; then
+        LGX_LIST+=","
+    fi
+    LGX_LIST+="\"$f\""
+done
+
 python3 << PYEOF
 import json, hashlib, base64, os, sys, tarfile, io, shutil
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -96,18 +105,7 @@ did = f'did:jwk:{jwk_b64}'
 
 print(f"Signer DID: {did}")
 
-# Process each .lgx
-# Process each .lgx
-# Build Python list from bash array
-lgx_list=""
-for f in "${LGX_FILES[@]}"; do
-    if [[ -n "$lgx_list" ]]; then
-        lgx_list+=","
-    fi
-    lgx_list+="\"$f\""
-done
-
-lgx_files = [$lgx_list]
+lgx_files = [$LGX_LIST]
 
 results = []  # Collect data for index update
 
