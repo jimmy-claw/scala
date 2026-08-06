@@ -97,9 +97,17 @@ did = f'did:jwk:{jwk_b64}'
 print(f"Signer DID: {did}")
 
 # Process each .lgx
-lgx_files = [
-    $(printf '"%s"\n' "${LGX_FILES[@]}")
-]
+# Process each .lgx
+# Build Python list from bash array
+lgx_list=""
+for f in "${LGX_FILES[@]}"; do
+    if [[ -n "$lgx_list" ]]; then
+        lgx_list+=","
+    fi
+    lgx_list+="\"$f\""
+done
+
+lgx_files = [$lgx_list]
 
 results = []  # Collect data for index update
 
