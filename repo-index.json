@@ -7,11 +7,11 @@
       "name": "scala",
       "versions": [
         {
-          "releasedAt": "2026-08-06T12:45:00Z",
+          "releasedAt": "2026-08-06T12:51:00Z",
           "publisherRef": "scala-v0.3.0",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala-module-lib-signed.lgx",
-          "size": 3947558,
-          "sha256": "d3def5e8332157c384f1107c839f0b1667e1f6dfe1afe6f502dc2da70292c5e1",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala-module-lib-signed-v2.lgx",
+          "size": 3981538,
+          "sha256": "b1486c009f89a1b2650e065d6ab36c20fadafd9882501ad9259210b34659a810",
           "rootHash": "9ac49d8c84162508d15c74ddc447115908f38a28fcb14cb7c60210e1e970ace9",
           "manifest": {
             "author": "",
@@ -40,7 +40,7 @@
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
-            "signature": "q5Vfes+wejDBgBBNe3MIP/zoVaKgulTVizQBhB1suiObkwSi8fsHSJnh+sDWwnITHpc+PfG/fy7Dr0gnIDnIAg==",
+            "signature": "F3NsHl8BEIL7Im5kQHWaI0pTqYEDa1WA7ROoss5HDpDTKfCBTWNPabH+dBn5iPyNhaHWhJImSWgXhK3RcjlGCg==",
             "signer": {},
             "version": 1
           }
@@ -51,11 +51,11 @@
       "name": "scala_ui",
       "versions": [
         {
-          "releasedAt": "2026-08-06T12:45:00Z",
+          "releasedAt": "2026-08-06T12:51:00Z",
           "publisherRef": "scala_ui-v0.3.0",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala_ui-module-signed.lgx",
-          "size": 3857380,
-          "sha256": "879d3c138748efda1b64436b6c007076843daec9f0701612f132b53fc1c76d16",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala_ui-module-signed-v2.lgx",
+          "size": 3886239,
+          "sha256": "596c2dfba59b8c41b853085fb54f4e36822342471c917cd6601c5f86c497e838",
           "rootHash": "2973bce0ce5f995c5b3d29d6746599f8078408faed4e6f69ab700fd6e0fa0bc4",
           "manifest": {
             "author": "",
@@ -87,7 +87,7 @@
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
-            "signature": "Bz1CGqlT9a4q1aCveQmqzQ1NuCYMRXGVLIjc3ms6CYlZ5mDb0O80+GDPgEP15TRbWvUYfIrJJYkIhCYhau/dCw==",
+            "signature": "DQItM3ydhmbRQ11fVDogIQBDQvsstuVAgL7t3m63n8cUWz8ZjBtkXukgAiSsIdmVLUn/rKm9fxXWl7gzQAlMAQ==",
             "signer": {},
             "version": 1
           }
