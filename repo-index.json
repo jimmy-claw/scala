@@ -7,11 +7,11 @@
       "name": "scala",
       "versions": [
         {
-          "releasedAt": "2026-08-06T13:00:00Z",
+          "releasedAt": "2026-08-06T13:25:00Z",
           "publisherRef": "scala-v0.3.0",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala-module-lib-v3.lgx",
-          "size": 3981653,
-          "sha256": "6b0947d87a234860bbf4a2de1ba2d6dc7a5de67834d103616045d284170b76fd",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala-module-lib-v3final.lgx",
+          "size": 3983312,
+          "sha256": "78c8319457184e08f0e6c5f68e2d6e56bf34720bb0acec2fbae8dfc7520c0862",
           "rootHash": "9ac49d8c84162508d15c74ddc447115908f38a28fcb14cb7c60210e1e970ace9",
           "manifest": {
             "author": "",
@@ -30,13 +30,13 @@
             "manifestVersion": "0.3.0",
             "name": "scala",
             "type": "core",
-            "version": "0.2.0"
+            "version": "0.3.0"
           },
           "signature": {
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
-            "signature": "II+29DO5R62R8AZNMgrUjsKbFOaq/3VWJPKGxdcnKmqzJ1BiJwgQdXIAHwt/19uf94s+CIojCAX7CD7+zAU7Ag==",
+            "signature": "/u+T6+oupMkYzpuADu/LuBisUVO+/Y58j5zJWVEomdjWHmijgJEr29VFbGKArV517dlW9XApHig1sotDkqVvDQ==",
             "signer": {},
             "version": 1
           }
@@ -47,11 +47,11 @@
       "name": "scala_ui",
       "versions": [
         {
-          "releasedAt": "2026-08-06T13:15:00Z",
+          "releasedAt": "2026-08-06T13:25:00Z",
           "publisherRef": "scala_ui-v0.3.0",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala_ui-module-qmlfix.lgx",
-          "size": 3891613,
-          "sha256": "ac3236f2797fcdcb2480c032cb5f317d4bb009a022f16276b68387c3b3e75f55",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala_ui-module-v3final.lgx",
+          "size": 3888549,
+          "sha256": "93888beb63b8dc4062d44d733ebf4755a4a553da1c568acd5443552a4b4fa962",
           "rootHash": "2973bce0ce5f995c5b3d29d6746599f8078408faed4e6f69ab700fd6e0fa0bc4",
           "manifest": {
             "author": "",
@@ -72,14 +72,14 @@
             "manifestVersion": "0.3.0",
             "name": "scala_ui",
             "type": "ui_qml",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "view": "qml/CalendarView.qml"
           },
           "signature": {
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
-            "signature": "iflUCoiQHfpny9EeXVPaBrILWW0UyJe+dKkTOVJ/ew72TeHSioln/QL8EOFSpAb5J3n9YVPLu8Kx2+ebwoDvCw==",
+            "signature": "Ieodwj6bEXiXAYe/MwW8Qx8XVNm12/qIrCiYoNS5OiABgIxIsNsjpsvFZVm8k4dxPu6hC3MsktK1eEm+1rEzAg==",
             "signer": {},
             "version": 1
           }
