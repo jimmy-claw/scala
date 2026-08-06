@@ -2,7 +2,10 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Popup {
+import Logos.Theme
+import Logos.Controls
+
+LogosDialog {
     id: root
     modal: true
     focus: true
@@ -12,12 +15,12 @@ Popup {
     height: Math.min(parent.height - 40, 560)
     padding: 0
 
-    // ── Theme ──────────────────────────────────────────────────────────────
-    property color headerColor: "#2196F3"
-    property color fieldBg: "#f5f5f5"
-    property color fieldBorder: "#e0e0e0"
-    property color saveBtnColor: "#4CAF50"
-    property color cancelBtnColor: "#9e9e9e"
+    // ── Theme (from Logos design system) ─────────────────────────────────
+    readonly property color headerColor: Theme.palette.primary
+    readonly property color fieldBg: Theme.palette.backgroundSecondary
+    readonly property color fieldBorder: Theme.palette.border
+    readonly property color saveBtnColor: Theme.palette.primary
+    readonly property color cancelBtnColor: Theme.palette.textMuted
 
     // ── Mode: "create" or "edit" ───────────────────────────────────────────
     property string mode: "create"
@@ -121,8 +124,8 @@ Popup {
 
     background: Rectangle {
         radius: 8
-        color: "white"
-        border.color: "#e0e0e0"
+        color: Theme.palette.backgroundPrimary
+        border.color: Theme.palette.border
     }
 
     contentItem: ColumnLayout {
@@ -151,7 +154,7 @@ Popup {
 
                 Text {
                     text: mode === "edit" ? "Edit Event" : "New Event"
-                    color: "white"
+                    color: Theme.palette.backgroundPrimary
                     font.pixelSize: 18
                     font.bold: true
                 }
@@ -166,7 +169,7 @@ Popup {
                     implicitHeight: 32
                     contentItem: Text {
                         text: "X"
-                        color: "white"
+                        color: Theme.palette.backgroundPrimary
                         font.pixelSize: 16
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -201,7 +204,7 @@ Popup {
                 Text {
                     text: "Calendar"
                     font.pixelSize: 13
-                    color: "#555"
+                    color: Theme.palette.textMuted
                     visible: calendars.length > 0
                 }
                 ComboBox {
@@ -221,7 +224,7 @@ Popup {
                             spacing: 8
                             Rectangle {
                                 width: 10; height: 10; radius: 5
-                                color: modelData.color || "#2196F3"
+                                color: modelData.color || Theme.palette.primary
                             }
                             Text {
                                 text: modelData.name || ""
@@ -233,7 +236,7 @@ Popup {
                 }
 
                 // Title
-                Text { text: "Title *"; font.pixelSize: 13; color: "#555" }
+                Text { text: "Title *"; font.pixelSize: 13; color: Theme.palette.textMuted }
                 TextField {
                     id: titleField
                     Layout.fillWidth: true
@@ -247,7 +250,7 @@ Popup {
                 // All-day toggle
                 RowLayout {
                     spacing: 8
-                    Text { text: "All day"; font.pixelSize: 13; color: "#555" }
+                    Text { text: "All day"; font.pixelSize: 13; color: Theme.palette.textMuted }
                     Switch { id: allDaySwitch }
                 }
 
@@ -258,7 +261,7 @@ Popup {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "Start Date"; font.pixelSize: 12; color: "#555" }
+                        Text { text: "Start Date"; font.pixelSize: 12; color: Theme.palette.textMuted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -268,7 +271,7 @@ Popup {
                                 implicitWidth: 90
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
                             SpinBox {
                                 id: startMonthSpin
                                 from: 1; to: 12; value: new Date().getMonth() + 1
@@ -276,7 +279,7 @@ Popup {
                                 implicitWidth: 70
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
                             SpinBox {
                                 id: startDaySpin
                                 from: 1; to: 31; value: new Date().getDate()
@@ -289,7 +292,7 @@ Popup {
 
                     ColumnLayout {
                         visible: !allDaySwitch.checked
-                        Text { text: "Start Time"; font.pixelSize: 12; color: "#555" }
+                        Text { text: "Start Time"; font.pixelSize: 12; color: Theme.palette.textMuted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -302,7 +305,7 @@ Popup {
                                     return value < 10 ? "0" + value : "" + value
                                 }
                             }
-                            Text { text: ":"; color: "#555"; font.pixelSize: 14; font.bold: true }
+                            Text { text: ":"; color: Theme.palette.textMuted; font.pixelSize: 14; font.bold: true }
                             SpinBox {
                                 id: startMinuteSpin
                                 from: 0; to: 59; value: 0; stepSize: 5
@@ -324,7 +327,7 @@ Popup {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "End Date"; font.pixelSize: 12; color: "#555" }
+                        Text { text: "End Date"; font.pixelSize: 12; color: Theme.palette.textMuted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -334,7 +337,7 @@ Popup {
                                 implicitWidth: 90
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
                             SpinBox {
                                 id: endMonthSpin
                                 from: 1; to: 12; value: new Date().getMonth() + 1
@@ -342,7 +345,7 @@ Popup {
                                 implicitWidth: 70
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#555"; font.pixelSize: 14 }
+                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
                             SpinBox {
                                 id: endDaySpin
                                 from: 1; to: 31; value: new Date().getDate()
@@ -355,7 +358,7 @@ Popup {
 
                     ColumnLayout {
                         visible: !allDaySwitch.checked
-                        Text { text: "End Time"; font.pixelSize: 12; color: "#555" }
+                        Text { text: "End Time"; font.pixelSize: 12; color: Theme.palette.textMuted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -368,7 +371,7 @@ Popup {
                                     return value < 10 ? "0" + value : "" + value
                                 }
                             }
-                            Text { text: ":"; color: "#555"; font.pixelSize: 14; font.bold: true }
+                            Text { text: ":"; color: Theme.palette.textMuted; font.pixelSize: 14; font.bold: true }
                             SpinBox {
                                 id: endMinuteSpin
                                 from: 0; to: 59; value: 0; stepSize: 5
@@ -384,7 +387,7 @@ Popup {
                 }
 
                 // Location
-                Text { text: "Location"; font.pixelSize: 13; color: "#555" }
+                Text { text: "Location"; font.pixelSize: 13; color: Theme.palette.textMuted }
                 TextField {
                     id: locationField
                     Layout.fillWidth: true
@@ -396,7 +399,7 @@ Popup {
                 }
 
                 // Description
-                Text { text: "Description"; font.pixelSize: 13; color: "#555" }
+                Text { text: "Description"; font.pixelSize: 13; color: Theme.palette.textMuted }
                 TextArea {
                     id: descField
                     Layout.fillWidth: true
@@ -410,7 +413,7 @@ Popup {
                 }
 
                 // Reminder
-                Text { text: "Reminder"; font.pixelSize: 13; color: "#555" }
+                Text { text: "Reminder"; font.pixelSize: 13; color: Theme.palette.textMuted }
                 ComboBox {
                     id: reminderCombo
                     Layout.fillWidth: true
@@ -428,7 +431,7 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
-            color: "white"
+            color: Theme.palette.backgroundPrimary
             border.color: "#eee"
             border.width: 1
 
@@ -445,11 +448,11 @@ Popup {
                     background: Rectangle {
                         radius: 6
                         color: parent.pressed ? Qt.darker(cancelBtnColor, 1.2)
-                             : parent.hovered ? cancelBtnColor : "#eeeeee"
+                             : parent.hovered ? cancelBtnColor : Theme.palette.backgroundMuted
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14
-                        color: "#555"
+                        color: Theme.palette.textMuted
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -482,11 +485,11 @@ Popup {
                                : parent.hovered
                                  ? Qt.lighter(saveBtnColor, 1.1)
                                  : saveBtnColor)
-                            : "#cccccc"
+                            : Theme.palette.textMuted
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14; font.bold: true
-                        color: "white"
+                        color: Theme.palette.backgroundPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
