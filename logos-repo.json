@@ -7,7 +7,7 @@
   "indexUrl": "https://raw.githubusercontent.com/jimmy-claw/scala/main/repo-index.json",
   "trustedSigners": [
     {
-      "did": "did:jwk:{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"woOJlOCIQQZhbEWef1JzftnozzPmy5QCUV-PC2ZzjjI\"}",
+      "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
       "name": "jimmy-claw"
     }
   ]

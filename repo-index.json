@@ -34,7 +34,7 @@
           },
           "signature": {
             "algorithm": "ed25519",
-            "did": "did:jwk:{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"woOJlOCIQQZhbEWef1JzftnozzPmy5QCUV-PC2ZzjjI\"}",
+            "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
             "signature": "jq3UFICzuEHpzlFgv5fWoffHaN1by0gfyWQK2y2e1ZXpnxhVaNxTDilRxwr4k0FSVX1PQMGZnZ6DDn/8MJWqDA==",
             "signer": {},
@@ -77,7 +77,7 @@
           },
           "signature": {
             "algorithm": "ed25519",
-            "did": "did:jwk:{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"woOJlOCIQQZhbEWef1JzftnozzPmy5QCUV-PC2ZzjjI\"}",
+            "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
             "signature": "1ToyVC2pniYcgwHZoPtez/wP/6CCBI5xt5QbumMQZoGw54NKekODLctwfm18unzUH1yKPemdEJ9H2RFohczQBQ==",
             "signer": {},
