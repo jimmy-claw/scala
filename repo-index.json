@@ -30,7 +30,7 @@
             "manifestVersion": "0.3.0",
             "name": "scala",
             "type": "core",
-            "version": "0.3.0"
+            "version": "0.2.0"
           },
           "signature": {
             "algorithm": "ed25519",
@@ -72,7 +72,7 @@
             "manifestVersion": "0.3.0",
             "name": "scala_ui",
             "type": "ui_qml",
-            "version": "0.3.0",
+            "version": "0.2.0",
             "view": "qml/CalendarView.qml"
           },
           "signature": {
