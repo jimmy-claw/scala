@@ -161,8 +161,9 @@ void ScalaImpl::onContextReady() {
     };
 
     // Receive handlers — connect delivery_module events to transport callbacks
+    // The builder generates typed event subscription methods from logos_events:
     ops.onMessage = [this](Tx::RecvCb handler) {
-        onEvent("delivery_module", "messageReceived",
+        modules().delivery_module.onMessageReceived(
             [handler](const std::string& hash, const std::string& topic,
                       const std::vector<uint8_t>& payload, int64_t ts) {
                 std::string s(payload.begin(), payload.end());
@@ -172,7 +173,7 @@ void ScalaImpl::onContextReady() {
             });
     };
     ops.onChannelMessage = [this](Tx::RecvCb handler) {
-        onEvent("delivery_module", "channelMessageReceived",
+        modules().delivery_module.onChannelMessageReceived(
             [handler](const std::string& channelId, const std::string& senderId,
                       const std::vector<uint8_t>& payload, int64_t ts) {
                 std::string s(payload.begin(), payload.end());
