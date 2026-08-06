@@ -12,7 +12,10 @@
 #include <QUrl>
 #include <QUrlQuery>
 
-// Transport integration
+// nlohmann/json must be included before transport header (templated on it)
+#include <nlohmann/json.hpp>
+
+// Transport integration — include AFTER nlohmann and generated types
 #include "logos_transport.hpp"
 
 // ── Minimal JSON helpers (replace QJsonDocument for universal pattern) ───────
@@ -186,10 +189,14 @@ void ScalaImpl::onContextReady() {
     // Construct transport
     std::string deviceId = m_identity.empty() ? "scala-default" : m_identity;
     Tx tx(std::move(ops),
-          Tx::Config{ .useChannels = true,
-                      .hubMode = false,
-                      .deviceId = deviceId,
-                      .entryNodes = {} },
+          Tx::Config{
+              .logLevel = "INFO",
+              .preset = "logos.dev",
+              .entryNodes = {},  // empty on GUI host
+              .useChannels = true,
+              .hubMode = false,
+              .deviceId = deviceId
+          },
           [this]{ std::vector<std::string> topics;
                   auto calIds = m_store->listCalendars();
                   for (const auto& cal : calIds) {
@@ -601,9 +608,7 @@ std::string ScalaImpl::getSetting(const std::string& key, const std::string& def
 
 void ScalaImpl::onSyncMessageReceived(const std::string& calendarId, const std::string& msgJson) {
     // Parse the SyncMessage from JSON string
-    // TODO: Replace with proper SyncMessage parsing when ported to pure C++
-    QJsonDocument doc = QJsonDocument::fromJson(QString::fromStdString(msgJson).toUtf8());
-    QJsonObject obj = doc.object();
+    nlohmann::json obj = nlohmann::json::parse(msgJson);
     SyncMessage msg = SyncMessage::fromJson(obj);
 
     QString qCalId = QString::fromStdString(calendarId);
@@ -627,7 +632,7 @@ void ScalaImpl::onSyncMessageReceived(const std::string& calendarId, const std::
     }
     case SyncMessageType::DeleteEvent: {
         std::string eventId = msg.payload;
-        if (!eventId.isEmpty()) {
+        if (!eventId.empty()) {
             m_store->deleteEvent(QString::fromStdString(eventId));
         }
         break;
@@ -641,7 +646,7 @@ void ScalaImpl::onSyncMessageReceived(const std::string& calendarId, const std::
             reply.calendarId = qCalId.toStdString();
             reply.senderId = m_identity;
             reply.payload = QString::fromUtf8(
-                QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact));
+                QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact)).toStdString();
             reply.timestamp = QDateTime::currentMSecsSinceEpoch();
             m_sync->sendMessage(qCalId.toStdString(), reply);
         }
