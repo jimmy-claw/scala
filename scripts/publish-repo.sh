@@ -28,15 +28,13 @@ echo "=== Collecting .lgx artifacts ==="
 declare -a LGX_FILES=()
 declare -A LGX_NAMES=()
 
-# Find all .lgx files in result/ directories
-for lgx in $(find . -path '*/result/*' -name '*.lgx' -o -name 'result' -type d 2>/dev/null); do
-    if [[ -d "$lgx" ]]; then
-        # result/ directory — find .lgx inside
-        for f in "$lgx"/*.lgx; do
-            [[ -f "$f" ]] && LGX_FILES+=("$f")
-        done
-    elif [[ -f "$lgx" ]]; then
-        LGX_FILES+=("$lgx")
+# nix build outputs to result/ symlink → find actual .lgx anywhere under it
+for root_dir in . ./scala-ui; do
+    if [[ -L "$root_dir/result" ]]; then
+        # Follow symlink, search for .lgx files
+        while IFS= read -r -d '' f; do
+            LGX_FILES+=("$f")
+        done < <(find "$root_dir/result" -name '*.lgx' -print0 2>/dev/null)
     fi
 done
 
