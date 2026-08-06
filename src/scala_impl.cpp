@@ -1,5 +1,8 @@
 #include "scala_impl.h"
 
+// Generated umbrella: modules() + typed dependency wrappers (delivery_module)
+#include "logos_sdk.h"
+
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
@@ -358,7 +361,7 @@ std::string ScalaImpl::getEvent(const std::string& id) {
     if (ev.id.isEmpty())
         return {};
     return QString::fromUtf8(
-        QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact).toStdString();
+        QJsonDocument(ev.toJson()).toJson(QJsonDocument::Compact)).toStdString();
 }
 
 // ── Sync API ─────────────────────────────────────────────────────────────────
