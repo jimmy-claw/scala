@@ -47,11 +47,11 @@
       "name": "scala_ui",
       "versions": [
         {
-          "releasedAt": "2026-08-06T13:00:00Z",
+          "releasedAt": "2026-08-06T13:15:00Z",
           "publisherRef": "scala_ui-v0.3.0",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala_ui-module-v3.lgx",
-          "size": 3887131,
-          "sha256": "cacb3c9c2b6b199dfcea2e38e3a902b810578bea5f5b98cb281173369567fb50",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.0/logos-scala_ui-module-qmlfix.lgx",
+          "size": 3891613,
+          "sha256": "ac3236f2797fcdcb2480c032cb5f317d4bb009a022f16276b68387c3b3e75f55",
           "rootHash": "2973bce0ce5f995c5b3d29d6746599f8078408faed4e6f69ab700fd6e0fa0bc4",
           "manifest": {
             "author": "",
@@ -79,7 +79,7 @@
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IndvT0psT0NJUVFaaGJFV2VmMUp6ZnRub3p6UG15NVFDVVYtUEMyWnpqakkifQ",
             "linkedDids": [],
-            "signature": "4ZNdCSYH6D1/W2sG8yBfk59bQQ1UCP26NY/b3orVtXt1V0PzgLSIECnDIn5ksB4ICjxxj5UbBnfmCiFMbjz4Ag==",
+            "signature": "iflUCoiQHfpny9EeXVPaBrILWW0UyJe+dKkTOVJ/ew72TeHSioln/QL8EOFSpAb5J3n9YVPLu8Kx2+ebwoDvCw==",
             "signer": {},
             "version": 1
           }
