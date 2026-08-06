@@ -28,20 +28,30 @@ echo "=== Collecting .lgx artifacts ==="
 declare -a LGX_FILES=()
 declare -A LGX_NAMES=()
 
+# Check build-output/ first (CI workflow pre-collects here)
+if [[ -d "build-output" ]]; then
+    for f in build-output/*.lgx; do
+        [[ -f "$f" ]] && LGX_FILES+=("$f")
+    done
+fi
+
 # nix build outputs to result/ symlink → find actual .lgx anywhere under it
-for root_dir in . ./scala-ui; do
-    if [[ -L "$root_dir/result" ]]; then
-        # Follow symlink, search for .lgx files
-        while IFS= read -r -d '' f; do
-            LGX_FILES+=("$f")
-        done < <(find "$root_dir/result" -name '*.lgx' -print0 2>/dev/null)
-    fi
-done
+if [[ ${#LGX_FILES[@]} -eq 0 ]]; then
+    for root_dir in . ./scala-ui; do
+        if [[ -L "$root_dir/result" ]]; then
+            while IFS= read -r -d '' f; do
+                LGX_FILES+=("$f")
+            done < <(find "$root_dir/result" -name '*.lgx' -print0 2>/dev/null)
+        fi
+    done
+fi
 
 # Also check for .lgx in current directory (manual placement)
-for f in *.lgx; do
-    [[ -f "$f" ]] && LGX_FILES+=("$f")
-done
+if [[ ${#LGX_FILES[@]} -eq 0 ]]; then
+    for f in *.lgx; do
+        [[ -f "$f" ]] && LGX_FILES+=("$f")
+    done
+fi
 
 if [[ ${#LGX_FILES[@]} -eq 0 ]]; then
     echo "ERROR: No .lgx files found. Run nix build first."

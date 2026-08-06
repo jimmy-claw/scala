@@ -31,6 +31,26 @@ jobs:
             --override-input scala path:.. \
             .#lgx-portable
 
+      - name: Collect .lgx artifacts
+        run: |
+          # Find and copy .lgx files to known locations
+          mkdir -p build-output
+          
+          # Core module
+          if [[ -L result ]]; then
+            find result -name '*.lgx' -exec cp {} build-output/ \;
+          fi
+          
+          # UI module  
+          cd scala-ui
+          if [[ -L result ]]; then
+            find result -name '*.lgx' -exec cp {} ../build-output/ \;
+          fi
+          cd ..
+          
+          echo "=== Collected artifacts ==="
+          ls -la build-output/
+          
       - name: Install Python dependencies
         run: pip3 install cryptography
 
