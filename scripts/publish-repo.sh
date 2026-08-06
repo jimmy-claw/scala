@@ -76,7 +76,7 @@ from cryptography.hazmat.primitives import serialization
 
 work_dir = "$WORK_DIR"
 signing_key = "$SIGNING_KEY"
-dry_run = $DRY_RUN
+dry_run = ${DRY_RUN,,} == "true"
 
 # Load signing key
 with open(signing_key, "rb") as f:
@@ -236,7 +236,7 @@ from cryptography.hazmat.primitives import serialization
 work_dir = "$WORK_DIR"
 signing_key = "$SIGNING_KEY"
 repo = "$REPO"
-dry_run = $DRY_RUN
+dry_run = ${DRY_RUN,,} == "true"
 version = "$VERSION"
 
 # Load signing key
