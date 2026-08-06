@@ -123,9 +123,7 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: parent.pressed ? Theme.palette.primaryHover
-                             : Theme.palette.primaryHover
-                             : Theme.palette.primary
+                        color: parent.pressed ? Theme.palette.primary : Theme.palette.primaryHover
                     }
 
                     contentItem: Text {
