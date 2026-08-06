@@ -28,11 +28,11 @@ echo "=== Collecting .lgx artifacts ==="
 declare -a LGX_FILES=()
 declare -A LGX_NAMES=()
 
-# Check build-output/ first (CI workflow pre-collects here)
+# CI workflow downloads artifacts to build-output/ (artifact-name/ subdirs)
 if [[ -d "build-output" ]]; then
-    for f in build-output/*.lgx; do
-        [[ -f "$f" ]] && LGX_FILES+=("$f")
-    done
+    while IFS= read -r -d '' f; do
+        LGX_FILES+=("$f")
+    done < <(find build-output -name '*.lgx' -print0 2>/dev/null)
 fi
 
 # nix build outputs to result/ symlink → find actual .lgx anywhere under it
