@@ -55,11 +55,11 @@ Rectangle {
     ListModel {
         id: defaultModel
         ListElement { calId: "personal"; calName: "Personal";
-                      calColor: Theme.palette.success; calVisible: true; creatorId: "" }
+                      calColor: "#34d399"; calVisible: true; creatorId: "" }
         ListElement { calId: "work";     calName: "Work";
-                      calColor: Theme.palette.primary; calVisible: true; creatorId: "" }
+                      calColor: "#60a5fa"; calVisible: true; creatorId: "" }
         ListElement { calId: "family";   calName: "Family";
-                      calColor: Theme.palette.warning; calVisible: true; creatorId: "" }
+                      calColor: "#fbbf24"; calVisible: true; creatorId: "" }
     }
 
     // Use defaultModel as fallback when no calendarModel is set
