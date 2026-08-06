@@ -9,10 +9,8 @@
 
 #include <nlohmann/json.hpp>
 
-// Forward declarations
-namespace logos_transport {
-template <class LogosMap> class Transport;
-}
+// Transport header (complete type needed for std::optional member)
+#include "logos_transport.hpp"
 
 // ── Sync message types ──────────────────────────────────────────────────────
 
