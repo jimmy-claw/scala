@@ -123,7 +123,7 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: parent.pressed ? "#89b4fa" : "#89b4fa"Hover
+                        color: parent.pressed ? "#89b4fa" : "#72a0e8"
                     }
 
                     contentItem: Text {
@@ -206,7 +206,7 @@ Popup {
                         radius: 6
                         color: !parent.enabled ? "#9399b2"
                              : parent.pressed ? "#f38ba8"
-                             : parent.hovered ? "#a6e3a1"Hover
+                             : parent.hovered ? "#8bc987"
                              : "#a6e3a1"
                     }
 
