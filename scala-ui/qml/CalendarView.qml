@@ -342,19 +342,16 @@ Item {
                 LogosButton {
                     text: "Month"
                     onClicked: viewMode = "month"
-                    variant: viewMode === "month" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
                 }
 
                 LogosButton {
                     text: "Week"
                     onClicked: viewMode = "week"
-                    variant: viewMode === "week" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
                 }
 
                 LogosButton {
                     text: "Day"
                     onClicked: viewMode = "day"
-                    variant: viewMode === "day" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
                 }
 
                 LogosToolSeparator {}
@@ -362,7 +359,6 @@ Item {
                 // ── New Event button ──────────────────────────────
                 LogosButton {
                     text: "+ New Event"
-                    variant: LogosButton.Variant.Primary
                     onClicked: {
                         eventModal.clear();
                         eventModal.calendars = calendarList;
@@ -764,7 +760,6 @@ Item {
                                     text: "Today"
                                     onClicked: goToToday()
                                     enabled: !isDayViewToday()
-                                    variant: LogosButton.Variant.Secondary
                                 }
 
                                 Item { Layout.fillWidth: true }
