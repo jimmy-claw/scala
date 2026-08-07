@@ -341,14 +341,12 @@ Item {
                 // ── View mode toggle ──────────────────────────────
                 LogosButton {
                     text: "Month"
-                    icon.source: LogosIcons.grid
                     onClicked: viewMode = "month"
                     variant: viewMode === "month" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
                 }
 
                 LogosButton {
                     text: "Week"
-                    icon.source: LogosIcons.list
                     onClicked: viewMode = "week"
                     variant: viewMode === "week" ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
                 }
@@ -382,7 +380,6 @@ Item {
 
                     // ── Search button + field ────────────────────────
                 LogosIconButton {
-                    icon.source: LogosIcons.search
                     tooltipText: "Search events (Ctrl+F)"
                     pressed: searchActive
                     onClicked: {
@@ -416,7 +413,6 @@ Item {
 
                 // ── Settings button ──────────────────────────────
                 LogosIconButton {
-                    icon.source: LogosIcons.more
                     tooltipText: "Settings"
                     onClicked: settingsPanel.open()
                 }
@@ -569,7 +565,6 @@ Item {
                                 anchors.rightMargin: Theme.spacing.medium
 
                                 LogosIconButton {
-                                    icon.source: LogosIcons.arrowLeftSLine
                                     onClicked: goToPrevWeek()
                                 }
 
@@ -586,7 +581,6 @@ Item {
                                 Item { Layout.fillWidth: true }
 
                                 LogosIconButton {
-                                    icon.source: LogosIcons.arrowRightSLine
                                     onClicked: goToNextWeek()
                                 }
                             }
@@ -763,7 +757,6 @@ Item {
                                 anchors.rightMargin: Theme.spacing.medium
 
                                 LogosIconButton {
-                                    icon.source: LogosIcons.arrowLeftSLine
                                     onClicked: goToPrevDay()
                                 }
 
@@ -787,7 +780,6 @@ Item {
                                 Item { Layout.fillWidth: true }
 
                                 LogosIconButton {
-                                    icon.source: LogosIcons.arrowRightSLine
                                     onClicked: goToNextDay()
                                 }
                             }
