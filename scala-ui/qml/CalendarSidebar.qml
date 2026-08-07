@@ -13,7 +13,7 @@ Rectangle {
 
     // ── Theme (from Logos design system) ─────────────────────────────────
     readonly property color titleColor: "#cdd6f4"
-    readonly property color subtitleColor: "#cdd6f4"Muted
+    readonly property color subtitleColor: "#9399b2"
     readonly property color accentColor: "#89b4fa"
     readonly property color newBtnColor: "#89b4fa"
 
@@ -208,7 +208,7 @@ Rectangle {
                         text: "No calendars yet"
                         font.pixelSize: 12
                         font.italic: true
-                        color: "#cdd6f4"Muted
+                        color: "#9399b2"
                         leftPadding: 8
                         topPadding: 4
                     }

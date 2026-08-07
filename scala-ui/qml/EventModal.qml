@@ -20,7 +20,7 @@ LogosDialog {
     readonly property color fieldBg: "#2a2a3c"
     readonly property color fieldBorder: "#45475a"
     readonly property color saveBtnColor: "#89b4fa"
-    readonly property color cancelBtnColor: "#cdd6f4"Muted
+    readonly property color cancelBtnColor: "#9399b2"
 
     // ── Mode: "create" or "edit" ───────────────────────────────────────────
     property string mode: "create"
@@ -204,7 +204,7 @@ LogosDialog {
                 Text {
                     text: "Calendar"
                     font.pixelSize: 13
-                    color: "#cdd6f4"Muted
+                    color: "#9399b2"
                     visible: calendars.length > 0
                 }
                 ComboBox {
@@ -236,7 +236,7 @@ LogosDialog {
                 }
 
                 // Title
-                Text { text: "Title *"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+                Text { text: "Title *"; font.pixelSize: 13; color: "#9399b2" }
                 TextField {
                     id: titleField
                     Layout.fillWidth: true
@@ -250,7 +250,7 @@ LogosDialog {
                 // All-day toggle
                 RowLayout {
                     spacing: 8
-                    Text { text: "All day"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+                    Text { text: "All day"; font.pixelSize: 13; color: "#9399b2" }
                     Switch { id: allDaySwitch }
                 }
 
@@ -261,7 +261,7 @@ LogosDialog {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "Start Date"; font.pixelSize: 12; color: "#cdd6f4"Muted }
+                        Text { text: "Start Date"; font.pixelSize: 12; color: "#9399b2" }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -271,7 +271,7 @@ LogosDialog {
                                 implicitWidth: 90
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#9399b2"; font.pixelSize: 14 }
                             SpinBox {
                                 id: startMonthSpin
                                 from: 1; to: 12; value: new Date().getMonth() + 1
@@ -279,7 +279,7 @@ LogosDialog {
                                 implicitWidth: 70
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#9399b2"; font.pixelSize: 14 }
                             SpinBox {
                                 id: startDaySpin
                                 from: 1; to: 31; value: new Date().getDate()
@@ -292,7 +292,7 @@ LogosDialog {
 
                     ColumnLayout {
                         visible: !allDaySwitch.checked
-                        Text { text: "Start Time"; font.pixelSize: 12; color: "#cdd6f4"Muted }
+                        Text { text: "Start Time"; font.pixelSize: 12; color: "#9399b2" }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -305,7 +305,7 @@ LogosDialog {
                                     return value < 10 ? "0" + value : "" + value
                                 }
                             }
-                            Text { text: ":"; color: "#cdd6f4"Muted; font.pixelSize: 14; font.bold: true }
+                            Text { text: ":"; color: "#9399b2"; font.pixelSize: 14; font.bold: true }
                             SpinBox {
                                 id: startMinuteSpin
                                 from: 0; to: 59; value: 0; stepSize: 5
@@ -327,7 +327,7 @@ LogosDialog {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "End Date"; font.pixelSize: 12; color: "#cdd6f4"Muted }
+                        Text { text: "End Date"; font.pixelSize: 12; color: "#9399b2" }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -337,7 +337,7 @@ LogosDialog {
                                 implicitWidth: 90
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#9399b2"; font.pixelSize: 14 }
                             SpinBox {
                                 id: endMonthSpin
                                 from: 1; to: 12; value: new Date().getMonth() + 1
@@ -345,7 +345,7 @@ LogosDialog {
                                 implicitWidth: 70
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#9399b2"; font.pixelSize: 14 }
                             SpinBox {
                                 id: endDaySpin
                                 from: 1; to: 31; value: new Date().getDate()
@@ -358,7 +358,7 @@ LogosDialog {
 
                     ColumnLayout {
                         visible: !allDaySwitch.checked
-                        Text { text: "End Time"; font.pixelSize: 12; color: "#cdd6f4"Muted }
+                        Text { text: "End Time"; font.pixelSize: 12; color: "#9399b2" }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -371,7 +371,7 @@ LogosDialog {
                                     return value < 10 ? "0" + value : "" + value
                                 }
                             }
-                            Text { text: ":"; color: "#cdd6f4"Muted; font.pixelSize: 14; font.bold: true }
+                            Text { text: ":"; color: "#9399b2"; font.pixelSize: 14; font.bold: true }
                             SpinBox {
                                 id: endMinuteSpin
                                 from: 0; to: 59; value: 0; stepSize: 5
@@ -387,7 +387,7 @@ LogosDialog {
                 }
 
                 // Location
-                Text { text: "Location"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+                Text { text: "Location"; font.pixelSize: 13; color: "#9399b2" }
                 TextField {
                     id: locationField
                     Layout.fillWidth: true
@@ -399,7 +399,7 @@ LogosDialog {
                 }
 
                 // Description
-                Text { text: "Description"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+                Text { text: "Description"; font.pixelSize: 13; color: "#9399b2" }
                 TextArea {
                     id: descField
                     Layout.fillWidth: true
@@ -413,7 +413,7 @@ LogosDialog {
                 }
 
                 // Reminder
-                Text { text: "Reminder"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+                Text { text: "Reminder"; font.pixelSize: 13; color: "#9399b2" }
                 ComboBox {
                     id: reminderCombo
                     Layout.fillWidth: true
@@ -452,7 +452,7 @@ LogosDialog {
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14
-                        color: "#cdd6f4"Muted
+                        color: "#9399b2"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -485,7 +485,7 @@ LogosDialog {
                                : parent.hovered
                                  ? Qt.lighter(saveBtnColor, 1.1)
                                  : saveBtnColor)
-                            : "#cdd6f4"Muted
+                            : "#9399b2"
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14; font.bold: true

@@ -332,7 +332,7 @@ Item {
                     readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
                     text: ident.length > 0 ? "ID: " + ident.substring(0,8) + "..." : ""
                     font.pixelSize: Theme.typography.caption
-                    color: "#cdd6f4"Muted
+                    color: "#9399b2"
                     visible: text !== ""
                 }
 
@@ -470,7 +470,7 @@ Item {
                                     return parts.join(" \u2022 ")
                                 }
                                 font.pixelSize: Theme.typography.caption
-                                color: "#cdd6f4"Muted
+                                color: "#9399b2"
                             }
                         }
                     }
@@ -830,7 +830,7 @@ Item {
                                                     anchors.rightMargin: 8
                                                     text: (hour < 10 ? "0" : "") + hour + ":00"
                                                     font.pixelSize: 11
-                                                    color: "#cdd6f4"Muted
+                                                    color: "#9399b2"
                                                 }
                                             }
 
@@ -1088,7 +1088,7 @@ Item {
             Text { text: "New Calendar"; font.pixelSize: 18; font.bold: true; color: "#cdd6f4" }
             Rectangle { Layout.fillWidth: true; height: 1; color: "#45475a" }
 
-            Text { text: "Name"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+            Text { text: "Name"; font.pixelSize: 13; color: "#9399b2" }
             TextField {
                 id: newCalNameField
                 Layout.fillWidth: true
@@ -1097,7 +1097,7 @@ Item {
                 background: Rectangle { radius: 4; color: "#33334a"; border.color: "#45475a" }
             }
 
-            Text { text: "Color"; font.pixelSize: 13; color: "#cdd6f4"Muted }
+            Text { text: "Color"; font.pixelSize: 13; color: "#9399b2" }
             Row {
                 spacing: 8
                 Repeater {
@@ -1125,7 +1125,7 @@ Item {
                     onClicked: newCalendarDialog.close()
                     background: Rectangle { radius: 6; color: parent.hovered ? "#45475a" : "#33334a" }
                     contentItem: Text {
-                        text: parent.text; font.pixelSize: 14; color: "#cdd6f4"Muted
+                        text: parent.text; font.pixelSize: 14; color: "#9399b2"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -1151,7 +1151,7 @@ Item {
                         radius: 6
                         color: parent.enabled
                             ? (parent.hovered ? Qt.lighter("#a6e3a1", 1.1) : "#a6e3a1")
-                            : "#cdd6f4"Muted
+                            : "#9399b2"
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14; font.bold: true; color: "#1e1e2e"

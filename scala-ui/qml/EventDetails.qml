@@ -14,7 +14,7 @@ Rectangle {
 
     // ── Theme ──────────────────────────────────────────────────────────────
     property color headerColor: "#89b4fa"
-    property color labelColor: "#cdd6f4"Muted
+    property color labelColor: "#9399b2"
     property color valueColor: "#cdd6f4"
     property color editBtnColor: "#89b4fa"
     property color deleteBtnColor: "#f38ba8"

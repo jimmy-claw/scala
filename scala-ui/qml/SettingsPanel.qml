@@ -188,7 +188,7 @@ Popup {
 
                 // Identity
                 Text { text: "Identity"; font.pixelSize: 13; font.bold: true; color: "#cdd6f4" }
-                Text { text: "Your public key (read-only)"; font.pixelSize: 11; color: "#cdd6f4"Muted }
+                Text { text: "Your public key (read-only)"; font.pixelSize: 11; color: "#9399b2" }
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
@@ -272,7 +272,7 @@ Popup {
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14
-                        color: "#cdd6f4"Muted
+                        color: "#9399b2"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

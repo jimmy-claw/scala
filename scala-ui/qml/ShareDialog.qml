@@ -43,7 +43,7 @@ Popup {
         Text {
             text: calendarName
             font.pixelSize: 14
-            color: "#cdd6f4"Muted
+            color: "#9399b2"
             Layout.fillWidth: true
             visible: calendarName.length > 0
         }
@@ -151,7 +151,7 @@ Popup {
                     Layout.alignment: Qt.AlignHCenter
                     text: "(QR code placeholder)"
                     font.pixelSize: 11
-                    color: "#cdd6f4"Muted
+                    color: "#9399b2"
                     visible: qrDataUrl.length === 0
                 }
 
@@ -204,7 +204,7 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: !parent.enabled ? "#cdd6f4"Muted
+                        color: !parent.enabled ? "#9399b2"
                              : parent.pressed ? "#f38ba8"
                              : parent.hovered ? "#a6e3a1"Hover
                              : "#a6e3a1"
@@ -233,7 +233,7 @@ Popup {
 
             contentItem: Text {
                 text: parent.text
-                color: "#cdd6f4"Muted
+                color: "#9399b2"
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

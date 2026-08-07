@@ -17,7 +17,7 @@ Item {
     property color todayText: "#a6e3a1"
     property color selectedBg: "#2a2a3c"
     property color dayTextColor: "#cdd6f4"
-    property color otherMonthText: "#cdd6f4"Muted
+    property color otherMonthText: "#9399b2"
     property color hoverBg: "#2a2a3c"
 
     // ── State ──────────────────────────────────────────────────────────────
