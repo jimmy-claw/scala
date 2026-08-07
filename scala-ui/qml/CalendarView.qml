@@ -377,7 +377,6 @@ Item {
                     // ── Search button + field ────────────────────────
                 LogosIconButton {
                     tooltipText: "Search events (Ctrl+F)"
-                    pressed: searchActive
                     onClicked: {
                         searchActive = !searchActive
                         if (searchActive) searchField.forceActiveFocus()
