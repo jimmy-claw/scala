@@ -1,18 +1,18 @@
 {
   "schemaVersion": 2,
   "repositoryName": "jimmy-scala-modules",
-  "generatedAt": "2026-08-07T09:38:25Z",
+  "generatedAt": "2026-08-07T09:56:16Z",
   "packages": [
     {
       "name": "scala",
       "versions": [
         {
-          "releasedAt": "2026-08-07T09:38:25Z",
-          "publisherRef": "scala-v0.3.1",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.1/scala-signed.lgx",
-          "size": 4151056,
-          "sha256": "09f21edd3b4ad26835b40591d0e01a3db483e09b934593df190a151cf1485981",
-          "rootHash": "10e8690e16ba4ff497c3fc0c9ec91fe6b3d03c4a9c07fccb9576e61d5d814094",
+          "releasedAt": "2026-08-07T09:56:16Z",
+          "publisherRef": "scala-v0.3.2",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.2/scala-signed.lgx",
+          "size": 4151680,
+          "sha256": "40e5828b5417bd04f291d476bd321e04eb65638deca95e6271ad578c02a4b44c",
+          "rootHash": "b1210c74218b6fadb0de4a550d161c7658265e8c660d7d9a980bf98e58d8098e",
           "manifest": {
             "author": "",
             "category": "general",
@@ -21,9 +21,9 @@
             ],
             "description": "Secure Calendar App \u2014 privacy-first shared calendar module for Logos Core",
             "hashes": {
-              "root": "10e8690e16ba4ff497c3fc0c9ec91fe6b3d03c4a9c07fccb9576e61d5d814094",
-              "variants": "ac6000d29edb74ed9186b528d69b42a6152de46742a40ce0e8b6b7cd1b11b3da",
-              "variants/linux-amd64": "c3534a418997c9e9320c8a3d363220af7dffadc2f18f048bf92f85a7873d2968"
+              "root": "b1210c74218b6fadb0de4a550d161c7658265e8c660d7d9a980bf98e58d8098e",
+              "variants": "36ba6028a79421d766aac84c23ade7544562d34c159f0f7b97d1db7d51f1afa8",
+              "variants/linux-amd64": "facc5053aa2f9a14be53bb89340e5917b8904ccff16381de492c57a5fd1801ac"
             },
             "icon": "",
             "main": {
@@ -32,13 +32,13 @@
             "manifestVersion": "0.3.0",
             "name": "scala",
             "type": "core",
-            "version": "0.3.1"
+            "version": "0.3.2"
           },
           "signature": {
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InNUb080bEZIdE9WdHBSUmpzZFJZWmZXYlFsWmZXcUxtNXg5NEpjc2pyRDAifQ",
             "linkedDids": [],
-            "signature": "zLyj+A16MeRJ62AmeSdVHhJMur2sMKB8wqW+8UNT7HysfI9fdJhXRnkWy1ywQRgpEApyLjBElua+4/kabQ+2Aw==",
+            "signature": "w8HAxqFs3TytDRGgqnWpnpa4oBLr2Fz9IakNhdqqrMbXFAvQeKbrJJmMBD4I+nHtqCrjbdKAJFFGLI2ve70QCw==",
             "signer": {},
             "version": 1
           }
@@ -49,12 +49,12 @@
       "name": "scala_ui",
       "versions": [
         {
-          "releasedAt": "2026-08-07T09:38:25Z",
-          "publisherRef": "scala_ui-v0.3.1",
-          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.1/scala-ui-signed.lgx",
-          "size": 3986031,
-          "sha256": "435f23e1cb97d97f695e6a564033dafa7547c48dbc8be7c2ec3277f03b3a234a",
-          "rootHash": "30d1cd303ade02514b721d6c8d2af11acebed144fc0d119e3481eb5fbd530199",
+          "releasedAt": "2026-08-07T09:56:16Z",
+          "publisherRef": "scala_ui-v0.3.2",
+          "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.2/scala-ui-signed.lgx",
+          "size": 3986043,
+          "sha256": "b8ad10bf4fc8ee1f28a59f2fdabf8e52a169f85a268d4a7a1dd40675c517ca35",
+          "rootHash": "0973d71c4a9de8d1a82d6ea4b305432f2017c6b7982987289b056f24dec9bc22",
           "manifest": {
             "author": "",
             "category": "general",
@@ -63,9 +63,9 @@
             ],
             "description": "Scala Calendar UI \u2014 QML view with process-isolated backend for scala core module",
             "hashes": {
-              "root": "30d1cd303ade02514b721d6c8d2af11acebed144fc0d119e3481eb5fbd530199",
-              "variants": "9e15b41eef221108a82cc9a275963ee3a9d0b5797399821f04771bb91c39a09a",
-              "variants/linux-amd64": "901dfea3886fbaec1996b92a5a9a2706d625ea49c3b8b0aa4959d6ece76b4152"
+              "root": "0973d71c4a9de8d1a82d6ea4b305432f2017c6b7982987289b056f24dec9bc22",
+              "variants": "300a22366c0b6fb9efd2f602453ff7c5566c06d1627185537f728865f2939669",
+              "variants/linux-amd64": "d83da048817aed0db112ce5e1aac4e1035c1ecdc096a94238c3d46cc068a1109"
             },
             "icon": "",
             "main": {
@@ -74,14 +74,14 @@
             "manifestVersion": "0.3.0",
             "name": "scala_ui",
             "type": "ui_qml",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "view": "qml/CalendarView.qml"
           },
           "signature": {
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InNUb080bEZIdE9WdHBSUmpzZFJZWmZXYlFsWmZXcUxtNXg5NEpjc2pyRDAifQ",
             "linkedDids": [],
-            "signature": "c4Kio79eDi3YBL+frJJZRt+zKzwdP+KAS4i1x2S+Qt+GyhLWR8PAAaWh1381AK7VPaJ4hM1hlsKU/G6cyI0PBg==",
+            "signature": "7mhnIhsx7+0hXcbQDQzJPizH//wxnbRGKbgofnHojDK2MYZgzHyORav9FghV/MgM/prYXfM9FNyiT0bFl8BfCQ==",
             "signer": {},
             "version": 1
           }
