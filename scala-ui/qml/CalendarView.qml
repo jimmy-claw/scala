@@ -376,7 +376,6 @@ Item {
 
                     // ── Search button + field ────────────────────────
                 LogosIconButton {
-                    tooltipText: "Search events (Ctrl+F)"
                     onClicked: {
                         searchActive = !searchActive
                         if (searchActive) searchField.forceActiveFocus()
@@ -408,7 +407,6 @@ Item {
 
                 // ── Settings button ──────────────────────────────
                 LogosIconButton {
-                    tooltipText: "Settings"
                     onClicked: settingsPanel.open()
                 }
             }
