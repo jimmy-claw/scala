@@ -1,24 +1,33 @@
 {
-  "name": "scala",
-  "version": "0.2.0",
-  "type": "core",
-  "category": "general",
-  "description": "Secure Calendar App — privacy-first shared calendar module for Logos Core",
-  "main": "scala_plugin",
-  "interface": "universal",
-  "dependencies": ["delivery_module"],
-
-  "nix": {
-    "packages": {
-      "build": [],
-      "runtime": []
-    },
-    "external_libraries": [],
-    "cmake": {
-      "find_packages": ["OpenSSL"],
-      "extra_sources": ["src/logos_transport.hpp"],
-      "extra_include_dirs": ["src"],
-      "extra_link_libraries": ["OpenSSL::Crypto"]
+    "name": "scala",
+    "version": "0.3.1",
+    "type": "core",
+    "category": "general",
+    "description": "Secure Calendar App \u2014 privacy-first shared calendar module for Logos Core",
+    "main": "scala_plugin",
+    "interface": "universal",
+    "dependencies": [
+        "delivery_module"
+    ],
+    "nix": {
+        "packages": {
+            "build": [],
+            "runtime": []
+        },
+        "external_libraries": [],
+        "cmake": {
+            "find_packages": [
+                "OpenSSL"
+            ],
+            "extra_sources": [
+                "src/logos_transport.hpp"
+            ],
+            "extra_include_dirs": [
+                "src"
+            ],
+            "extra_link_libraries": [
+                "OpenSSL::Crypto"
+            ]
+        }
     }
-  }
 }
