@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
   "repositoryName": "jimmy-scala-modules",
-  "generatedAt": "2026-08-07T09:13:53Z",
+  "generatedAt": "2026-08-07T09:38:25Z",
   "packages": [
     {
       "name": "scala",
       "versions": [
         {
-          "releasedAt": "2026-08-07T09:13:53Z",
+          "releasedAt": "2026-08-07T09:38:25Z",
           "publisherRef": "scala-v0.3.1",
           "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.1/scala-signed.lgx",
-          "size": 4151085,
-          "sha256": "00bdffc159f4ff5f9b558558af8c494cbce5c3917c8a4df1deeeabc8f232c6f5",
+          "size": 4151056,
+          "sha256": "09f21edd3b4ad26835b40591d0e01a3db483e09b934593df190a151cf1485981",
           "rootHash": "10e8690e16ba4ff497c3fc0c9ec91fe6b3d03c4a9c07fccb9576e61d5d814094",
           "manifest": {
             "author": "",
@@ -38,7 +38,7 @@
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InNUb080bEZIdE9WdHBSUmpzZFJZWmZXYlFsWmZXcUxtNXg5NEpjc2pyRDAifQ",
             "linkedDids": [],
-            "signature": "7vfsoGbFUbrpe+lgYKttmnAXRdTdtgjxVchHIU1+ImB4aCmqBe1FfEPN5LuBqtwu7PiW18lsLzqYdOHtW/ioAA==",
+            "signature": "zLyj+A16MeRJ62AmeSdVHhJMur2sMKB8wqW+8UNT7HysfI9fdJhXRnkWy1ywQRgpEApyLjBElua+4/kabQ+2Aw==",
             "signer": {},
             "version": 1
           }
@@ -49,12 +49,12 @@
       "name": "scala_ui",
       "versions": [
         {
-          "releasedAt": "2026-08-07T09:13:53Z",
+          "releasedAt": "2026-08-07T09:38:25Z",
           "publisherRef": "scala_ui-v0.3.1",
           "url": "https://github.com/jimmy-claw/scala/releases/download/v0.3.1/scala-ui-signed.lgx",
-          "size": 3986054,
-          "sha256": "9dbbe81ec52fcd1c671675ffcbac2f769cb7eeae4f2b607126bdcb1fa7d5a47b",
-          "rootHash": "fb4f6244fd739e173ba6c79f1d58336c66f13cf90d944495400ddd0bacc2d772",
+          "size": 3986031,
+          "sha256": "435f23e1cb97d97f695e6a564033dafa7547c48dbc8be7c2ec3277f03b3a234a",
+          "rootHash": "30d1cd303ade02514b721d6c8d2af11acebed144fc0d119e3481eb5fbd530199",
           "manifest": {
             "author": "",
             "category": "general",
@@ -63,9 +63,9 @@
             ],
             "description": "Scala Calendar UI \u2014 QML view with process-isolated backend for scala core module",
             "hashes": {
-              "root": "fb4f6244fd739e173ba6c79f1d58336c66f13cf90d944495400ddd0bacc2d772",
-              "variants": "1c2146ea8b439eb421f93fb2d97a592caadac7870dce42deacd1b65ffd903750",
-              "variants/linux-amd64": "69232ca1934dbc8b05bf0bf57d6deb2ea2d4e3b17623d4d02c210987d4eee512"
+              "root": "30d1cd303ade02514b721d6c8d2af11acebed144fc0d119e3481eb5fbd530199",
+              "variants": "9e15b41eef221108a82cc9a275963ee3a9d0b5797399821f04771bb91c39a09a",
+              "variants/linux-amd64": "901dfea3886fbaec1996b92a5a9a2706d625ea49c3b8b0aa4959d6ece76b4152"
             },
             "icon": "",
             "main": {
@@ -81,7 +81,7 @@
             "algorithm": "ed25519",
             "did": "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InNUb080bEZIdE9WdHBSUmpzZFJZWmZXYlFsWmZXcUxtNXg5NEpjc2pyRDAifQ",
             "linkedDids": [],
-            "signature": "5qHjDWpWUQse7MrEPp0DHOE6Isxx+cdYArpD3Y6x9tUiYgL7AgimJr+oC9z8EAMPqbvohA+SZN4BOZ87DYLGAw==",
+            "signature": "c4Kio79eDi3YBL+frJJZRt+zKzwdP+KAS4i1x2S+Qt+GyhLWR8PAAaWh1381AK7VPaJ4hM1hlsKU/G6cyI0PBg==",
             "signer": {},
             "version": 1
           }
