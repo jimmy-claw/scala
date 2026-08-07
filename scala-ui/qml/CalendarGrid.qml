@@ -9,16 +9,16 @@ Item {
     id: root
 
     // ── Theme colors ───────────────────────────────────────────────────────
-    property color bgColor: Theme.palette.backgroundPrimary
-    property color headerBg: Theme.palette.backgroundSecondary
-    property color headerText: Theme.palette.primary
-    property color cellBorder: Theme.palette.border
-    property color todayBg: Theme.palette.backgroundMuted
-    property color todayText: Theme.palette.success
-    property color selectedBg: Theme.palette.backgroundSecondary
-    property color dayTextColor: Theme.palette.text
-    property color otherMonthText: Theme.palette.textMuted
-    property color hoverBg: Theme.palette.backgroundSecondary
+    property color bgColor: "#1e1e2e"
+    property color headerBg: "#2a2a3c"
+    property color headerText: "#89b4fa"
+    property color cellBorder: "#45475a"
+    property color todayBg: "#33334a"
+    property color todayText: "#a6e3a1"
+    property color selectedBg: "#2a2a3c"
+    property color dayTextColor: "#cdd6f4"
+    property color otherMonthText: "#cdd6f4"Muted
+    property color hoverBg: "#2a2a3c"
 
     // ── State ──────────────────────────────────────────────────────────────
     property int displayYear: new Date().getFullYear()
@@ -221,7 +221,7 @@ Item {
                                     width: 6
                                     height: 6
                                     radius: 3
-                                    color: modelData.color || Theme.palette.primary
+                                    color: modelData.color || "#89b4fa"
                                 }
                             }
                         }

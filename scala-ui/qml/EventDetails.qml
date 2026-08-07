@@ -7,17 +7,17 @@ import Logos.Controls
 
 Rectangle {
     id: root
-    color: Theme.palette.backgroundPrimary
-    border.color: Theme.palette.border
+    color: "#1e1e2e"
+    border.color: "#45475a"
     border.width: 1
     radius: 8
 
     // ── Theme ──────────────────────────────────────────────────────────────
-    property color headerColor: Theme.palette.primary
-    property color labelColor: Theme.palette.textMuted
-    property color valueColor: Theme.palette.text
-    property color editBtnColor: Theme.palette.primary
-    property color deleteBtnColor: Theme.palette.error
+    property color headerColor: "#89b4fa"
+    property color labelColor: "#cdd6f4"Muted
+    property color valueColor: "#cdd6f4"
+    property color editBtnColor: "#89b4fa"
+    property color deleteBtnColor: "#f38ba8"
 
     // ── Event data ─────────────────────────────────────────────────────────
     property string eventId: ""
@@ -30,7 +30,7 @@ Rectangle {
     property string eventEndTime: ""
     property bool eventAllDay: false
     property string eventCalendarName: ""
-    property color eventCalendarColor: Theme.palette.primary
+    property color eventCalendarColor: "#89b4fa"
 
     property bool confirmingDelete: false
 
@@ -49,7 +49,7 @@ Rectangle {
         eventEndTime = ev.endTime || "";
         eventAllDay = ev.allDay || false;
         eventCalendarName = ev.calendarName || "";
-        eventCalendarColor = ev.calendarColor || Theme.palette.primary;
+        eventCalendarColor = ev.calendarColor || "#89b4fa";
         confirmingDelete = false;
     }
 
@@ -96,7 +96,7 @@ Rectangle {
                     implicitHeight: 28
                     onClicked: closeRequested()
                     contentItem: Text {
-                        text: "X"; color: Theme.palette.backgroundPrimary; font.pixelSize: 14
+                        text: "X"; color: "#1e1e2e"; font.pixelSize: 14
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -198,8 +198,8 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 52
-            color: Theme.palette.backgroundPrimary
-            border.color: Theme.palette.border
+            color: "#1e1e2e"
+            border.color: "#45475a"
             border.width: 1
 
             RowLayout {
@@ -245,8 +245,8 @@ Rectangle {
                                 return parent.pressed
                                     ? Qt.darker(deleteBtnColor, 1.3)
                                     : deleteBtnColor;
-                            return parent.pressed ? Theme.palette.border
-                                 : parent.hovered ? Theme.palette.backgroundSecondary : Theme.palette.backgroundMuted;
+                            return parent.pressed ? "#45475a"
+                                 : parent.hovered ? "#2a2a3c" : "#33334a";
                         }
                     }
                     contentItem: Text {

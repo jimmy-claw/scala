@@ -30,11 +30,11 @@ Item {
     }
 
     // ── Theme colors (from Logos design system) ───────────────────────────
-    readonly property color primaryColor: Theme.palette.primary
-    readonly property color bgColor: Theme.palette.backgroundPrimary
-    readonly property color toolbarColor: Theme.palette.backgroundSecondary
-    readonly property color sidebarBg: Theme.palette.backgroundSecondary
-    readonly property color newEventBtnColor: Theme.palette.primary
+    readonly property color primaryColor: "#89b4fa"
+    readonly property color bgColor: "#1e1e2e"
+    readonly property color toolbarColor: "#2a2a3c"
+    readonly property color sidebarBg: "#2a2a3c"
+    readonly property color newEventBtnColor: "#89b4fa"
 
     // ── State ──────────────────────────────────────────────────────────────
     property var selectedEvent: null
@@ -50,7 +50,7 @@ Item {
 
     // ── Preset colors for new calendar dialog ──────────────────────────────
     property var presetColors: [
-        Theme.palette.success, Theme.palette.primary, "#FF9800", "#9C27B0",
+        "#a6e3a1", "#89b4fa", "#FF9800", "#9C27B0",
         "#F44336", "#00BCD4", "#795548", "#607D8B"
     ]
 
@@ -129,7 +129,7 @@ Item {
             var d = new Date(ev.startTime)
             if (d.getMonth() === month && d.getFullYear() === year) {
                 var cal = findCalendar(ev.calendarId)
-                dots.push({ day: d.getDate(), color: cal ? cal.color : Theme.palette.primary })
+                dots.push({ day: d.getDate(), color: cal ? cal.color : "#89b4fa" })
             }
         }
         return dots
@@ -325,14 +325,14 @@ Item {
                     text: "Scala Calendar"
                     font.pixelSize: Theme.typography.headingSmall
                     font.weight: Theme.typography.weightBold
-                    color: Theme.palette.text
+                    color: "#cdd6f4"
                 }
 
                 LogosText {
                     readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
                     text: ident.length > 0 ? "ID: " + ident.substring(0,8) + "..." : ""
                     font.pixelSize: Theme.typography.caption
-                    color: Theme.palette.textMuted
+                    color: "#cdd6f4"Muted
                     visible: text !== ""
                 }
 
@@ -444,7 +444,7 @@ Item {
 
                         Rectangle {
                             width: 10; height: 10; radius: 5
-                            color: modelData.calendarColor || Theme.palette.primary
+                            color: modelData.calendarColor || "#89b4fa"
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -456,7 +456,7 @@ Item {
                                 text: modelData.title || ""
                                 font.pixelSize: Theme.typography.bodyText
                                 font.weight: Theme.typography.weightMedium
-                                color: Theme.palette.text
+                                color: "#cdd6f4"
                             }
                             LogosText {
                                 text: {
@@ -470,7 +470,7 @@ Item {
                                     return parts.join(" \u2022 ")
                                 }
                                 font.pixelSize: Theme.typography.caption
-                                color: Theme.palette.textMuted
+                                color: "#cdd6f4"Muted
                             }
                         }
                     }
@@ -526,7 +526,7 @@ Item {
                                 endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
                                 allDay: first.allDay || false,
                                 calendarName: cal ? cal.name : "",
-                                calendarColor: cal ? cal.color : Theme.palette.primary
+                                calendarColor: cal ? cal.color : "#89b4fa"
                             });
                             showEventDetails = true;
                         } else {
@@ -567,7 +567,7 @@ Item {
                                     text: weekRangeLabel()
                                     font.pixelSize: Theme.typography.bodyText
                                     font.weight: Theme.typography.weightBold
-                                    color: Theme.palette.text
+                                    color: "#cdd6f4"
                                     horizontalAlignment: Text.AlignHCenter
                                 }
 
@@ -590,9 +590,9 @@ Item {
                                     id: dayColumn
                                     width: weekView.width / 7
                                     height: weekView.height - 44
-                                    border.color: Theme.palette.border
+                                    border.color: "#45475a"
                                     border.width: 1
-                                    color: Theme.palette.backgroundPrimary
+                                    color: "#1e1e2e"
 
                                     property date columnDate: weekDayDate(index)
                                     property var dayEvents: eventsForDate(columnDate)
@@ -611,7 +611,7 @@ Item {
                                         Rectangle {
                                             Layout.fillWidth: true
                                             Layout.preferredHeight: 48
-                                            color: dayColumn.isToday ? Theme.palette.backgroundSecondary : Theme.palette.backgroundSecondary
+                                            color: dayColumn.isToday ? "#2a2a3c" : "#2a2a3c"
 
                                             ColumnLayout {
                                                 anchors.centerIn: parent
@@ -621,14 +621,14 @@ Item {
                                                     text: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][index]
                                                     font.pixelSize: 11
                                                     font.bold: true
-                                                    color: dayColumn.isToday ? Theme.palette.success : Theme.palette.primary
+                                                    color: dayColumn.isToday ? "#a6e3a1" : "#89b4fa"
                                                     Layout.alignment: Qt.AlignHCenter
                                                 }
                                                 Text {
                                                     text: dayColumn.columnDate.getDate()
                                                     font.pixelSize: 16
                                                     font.bold: dayColumn.isToday
-                                                    color: dayColumn.isToday ? Theme.palette.success : Theme.palette.text
+                                                    color: dayColumn.isToday ? "#a6e3a1" : "#cdd6f4"
                                                     Layout.alignment: Qt.AlignHCenter
                                                 }
                                             }
@@ -658,7 +658,7 @@ Item {
                                                         radius: 4
                                                         color: {
                                                             var cal = findCalendar(modelData.calendarId)
-                                                            return cal ? cal.color : Theme.palette.primary
+                                                            return cal ? cal.color : "#89b4fa"
                                                         }
                                                         opacity: eventMouse.containsMouse ? 0.85 : 1.0
 
@@ -684,7 +684,7 @@ Item {
                                                                     endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
                                                                     allDay: ev.allDay || false,
                                                                     calendarName: cal ? cal.name : "",
-                                                                    calendarColor: cal ? cal.color : Theme.palette.primary
+                                                                    calendarColor: cal ? cal.color : "#89b4fa"
                                                                 });
                                                                 showEventDetails = true
                                                             }
@@ -765,7 +765,7 @@ Item {
                                     text: dayViewLabel()
                                     font.pixelSize: Theme.typography.bodyText
                                     font.weight: Theme.typography.weightBold
-                                    color: Theme.palette.text
+                                    color: "#cdd6f4"
                                     horizontalAlignment: Text.AlignHCenter
                                 }
 
@@ -795,8 +795,8 @@ Item {
                                         id: hourRow
                                         width: timeGridColumn.width
                                         height: 60
-                                        color: Theme.palette.backgroundPrimary
-                                        border.color: Theme.palette.backgroundMuted
+                                        color: "#1e1e2e"
+                                        border.color: "#33334a"
                                         border.width: 1
 
                                         property int hour: index
@@ -830,7 +830,7 @@ Item {
                                                     anchors.rightMargin: 8
                                                     text: (hour < 10 ? "0" : "") + hour + ":00"
                                                     font.pixelSize: 11
-                                                    color: Theme.palette.textMuted
+                                                    color: "#cdd6f4"Muted
                                                 }
                                             }
 
@@ -838,7 +838,7 @@ Item {
                                             Rectangle {
                                                 Layout.preferredWidth: 1
                                                 Layout.fillHeight: true
-                                                color: Theme.palette.border
+                                                color: "#45475a"
                                             }
 
                                             // Event area
@@ -886,7 +886,7 @@ Item {
                                                             radius: 4
                                                             color: {
                                                                 var cal = findCalendar(modelData.calendarId)
-                                                                return cal ? cal.color : Theme.palette.primary
+                                                                return cal ? cal.color : "#89b4fa"
                                                             }
                                                             opacity: evtMouse.containsMouse ? 0.85 : 1.0
 
@@ -912,7 +912,7 @@ Item {
                                                                         endTime: pad(endDt.getHours()) + ":" + pad(endDt.getMinutes()),
                                                                         allDay: ev.allDay || false,
                                                                         calendarName: cal ? cal.name : "",
-                                                                        calendarColor: cal ? cal.color : Theme.palette.primary
+                                                                        calendarColor: cal ? cal.color : "#89b4fa"
                                                                     });
                                                                     showEventDetails = true
                                                                 }
@@ -1073,7 +1073,7 @@ Item {
 
         property string selectedColor: presetColors[0]
 
-        background: Rectangle { radius: 12; color: "white"; border.color: Theme.palette.border }
+        background: Rectangle { radius: 12; color: "white"; border.color: "#45475a" }
 
         onOpened: {
             newCalNameField.text = ""
@@ -1085,19 +1085,19 @@ Item {
             anchors.fill: parent
             spacing: 12
 
-            Text { text: "New Calendar"; font.pixelSize: 18; font.bold: true; color: Theme.palette.text }
-            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.palette.border }
+            Text { text: "New Calendar"; font.pixelSize: 18; font.bold: true; color: "#cdd6f4" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#45475a" }
 
-            Text { text: "Name"; font.pixelSize: 13; color: Theme.palette.textMuted }
+            Text { text: "Name"; font.pixelSize: 13; color: "#cdd6f4"Muted }
             TextField {
                 id: newCalNameField
                 Layout.fillWidth: true
                 placeholderText: "Calendar name"
                 font.pixelSize: 14
-                background: Rectangle { radius: 4; color: Theme.palette.backgroundMuted; border.color: Theme.palette.border }
+                background: Rectangle { radius: 4; color: "#33334a"; border.color: "#45475a" }
             }
 
-            Text { text: "Color"; font.pixelSize: 13; color: Theme.palette.textMuted }
+            Text { text: "Color"; font.pixelSize: 13; color: "#cdd6f4"Muted }
             Row {
                 spacing: 8
                 Repeater {
@@ -1106,7 +1106,7 @@ Item {
                         width: 28; height: 28; radius: 14
                         color: modelData
                         border.width: newCalendarDialog.selectedColor === modelData ? 3 : 0
-                        border.color: Theme.palette.text
+                        border.color: "#cdd6f4"
                         MouseArea {
                             anchors.fill: parent
                             onClicked: newCalendarDialog.selectedColor = modelData
@@ -1123,9 +1123,9 @@ Item {
                 Button {
                     text: "Cancel"
                     onClicked: newCalendarDialog.close()
-                    background: Rectangle { radius: 6; color: parent.hovered ? Theme.palette.border : Theme.palette.backgroundMuted }
+                    background: Rectangle { radius: 6; color: parent.hovered ? "#45475a" : "#33334a" }
                     contentItem: Text {
-                        text: parent.text; font.pixelSize: 14; color: Theme.palette.textMuted
+                        text: parent.text; font.pixelSize: 14; color: "#cdd6f4"Muted
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -1150,11 +1150,11 @@ Item {
                     background: Rectangle {
                         radius: 6
                         color: parent.enabled
-                            ? (parent.hovered ? Qt.lighter(Theme.palette.success, 1.1) : Theme.palette.success)
-                            : Theme.palette.textMuted
+                            ? (parent.hovered ? Qt.lighter("#a6e3a1", 1.1) : "#a6e3a1")
+                            : "#cdd6f4"Muted
                     }
                     contentItem: Text {
-                        text: parent.text; font.pixelSize: 14; font.bold: true; color: Theme.palette.backgroundPrimary
+                        text: parent.text; font.pixelSize: 14; font.bold: true; color: "#1e1e2e"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

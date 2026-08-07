@@ -16,11 +16,11 @@ LogosDialog {
     padding: 0
 
     // ── Theme (from Logos design system) ─────────────────────────────────
-    readonly property color headerColor: Theme.palette.primary
-    readonly property color fieldBg: Theme.palette.backgroundSecondary
-    readonly property color fieldBorder: Theme.palette.border
-    readonly property color saveBtnColor: Theme.palette.primary
-    readonly property color cancelBtnColor: Theme.palette.textMuted
+    readonly property color headerColor: "#89b4fa"
+    readonly property color fieldBg: "#2a2a3c"
+    readonly property color fieldBorder: "#45475a"
+    readonly property color saveBtnColor: "#89b4fa"
+    readonly property color cancelBtnColor: "#cdd6f4"Muted
 
     // ── Mode: "create" or "edit" ───────────────────────────────────────────
     property string mode: "create"
@@ -124,8 +124,8 @@ LogosDialog {
 
     background: Rectangle {
         radius: 8
-        color: Theme.palette.backgroundPrimary
-        border.color: Theme.palette.border
+        color: "#1e1e2e"
+        border.color: "#45475a"
     }
 
     contentItem: ColumnLayout {
@@ -154,7 +154,7 @@ LogosDialog {
 
                 Text {
                     text: mode === "edit" ? "Edit Event" : "New Event"
-                    color: Theme.palette.backgroundPrimary
+                    color: "#1e1e2e"
                     font.pixelSize: 18
                     font.bold: true
                 }
@@ -169,7 +169,7 @@ LogosDialog {
                     implicitHeight: 32
                     contentItem: Text {
                         text: "X"
-                        color: Theme.palette.backgroundPrimary
+                        color: "#1e1e2e"
                         font.pixelSize: 16
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -204,7 +204,7 @@ LogosDialog {
                 Text {
                     text: "Calendar"
                     font.pixelSize: 13
-                    color: Theme.palette.textMuted
+                    color: "#cdd6f4"Muted
                     visible: calendars.length > 0
                 }
                 ComboBox {
@@ -224,7 +224,7 @@ LogosDialog {
                             spacing: 8
                             Rectangle {
                                 width: 10; height: 10; radius: 5
-                                color: modelData.color || Theme.palette.primary
+                                color: modelData.color || "#89b4fa"
                             }
                             Text {
                                 text: modelData.name || ""
@@ -236,7 +236,7 @@ LogosDialog {
                 }
 
                 // Title
-                Text { text: "Title *"; font.pixelSize: 13; color: Theme.palette.textMuted }
+                Text { text: "Title *"; font.pixelSize: 13; color: "#cdd6f4"Muted }
                 TextField {
                     id: titleField
                     Layout.fillWidth: true
@@ -250,7 +250,7 @@ LogosDialog {
                 // All-day toggle
                 RowLayout {
                     spacing: 8
-                    Text { text: "All day"; font.pixelSize: 13; color: Theme.palette.textMuted }
+                    Text { text: "All day"; font.pixelSize: 13; color: "#cdd6f4"Muted }
                     Switch { id: allDaySwitch }
                 }
 
@@ -261,7 +261,7 @@ LogosDialog {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "Start Date"; font.pixelSize: 12; color: Theme.palette.textMuted }
+                        Text { text: "Start Date"; font.pixelSize: 12; color: "#cdd6f4"Muted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -271,7 +271,7 @@ LogosDialog {
                                 implicitWidth: 90
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
                             SpinBox {
                                 id: startMonthSpin
                                 from: 1; to: 12; value: new Date().getMonth() + 1
@@ -279,7 +279,7 @@ LogosDialog {
                                 implicitWidth: 70
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
                             SpinBox {
                                 id: startDaySpin
                                 from: 1; to: 31; value: new Date().getDate()
@@ -292,7 +292,7 @@ LogosDialog {
 
                     ColumnLayout {
                         visible: !allDaySwitch.checked
-                        Text { text: "Start Time"; font.pixelSize: 12; color: Theme.palette.textMuted }
+                        Text { text: "Start Time"; font.pixelSize: 12; color: "#cdd6f4"Muted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -305,7 +305,7 @@ LogosDialog {
                                     return value < 10 ? "0" + value : "" + value
                                 }
                             }
-                            Text { text: ":"; color: Theme.palette.textMuted; font.pixelSize: 14; font.bold: true }
+                            Text { text: ":"; color: "#cdd6f4"Muted; font.pixelSize: 14; font.bold: true }
                             SpinBox {
                                 id: startMinuteSpin
                                 from: 0; to: 59; value: 0; stepSize: 5
@@ -327,7 +327,7 @@ LogosDialog {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { text: "End Date"; font.pixelSize: 12; color: Theme.palette.textMuted }
+                        Text { text: "End Date"; font.pixelSize: 12; color: "#cdd6f4"Muted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -337,7 +337,7 @@ LogosDialog {
                                 implicitWidth: 90
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
                             SpinBox {
                                 id: endMonthSpin
                                 from: 1; to: 12; value: new Date().getMonth() + 1
@@ -345,7 +345,7 @@ LogosDialog {
                                 implicitWidth: 70
                                 font.pixelSize: 12
                             }
-                            Text { text: "-"; color: Theme.palette.textMuted; font.pixelSize: 14 }
+                            Text { text: "-"; color: "#cdd6f4"Muted; font.pixelSize: 14 }
                             SpinBox {
                                 id: endDaySpin
                                 from: 1; to: 31; value: new Date().getDate()
@@ -358,7 +358,7 @@ LogosDialog {
 
                     ColumnLayout {
                         visible: !allDaySwitch.checked
-                        Text { text: "End Time"; font.pixelSize: 12; color: Theme.palette.textMuted }
+                        Text { text: "End Time"; font.pixelSize: 12; color: "#cdd6f4"Muted }
                         RowLayout {
                             spacing: 4
                             SpinBox {
@@ -371,7 +371,7 @@ LogosDialog {
                                     return value < 10 ? "0" + value : "" + value
                                 }
                             }
-                            Text { text: ":"; color: Theme.palette.textMuted; font.pixelSize: 14; font.bold: true }
+                            Text { text: ":"; color: "#cdd6f4"Muted; font.pixelSize: 14; font.bold: true }
                             SpinBox {
                                 id: endMinuteSpin
                                 from: 0; to: 59; value: 0; stepSize: 5
@@ -387,7 +387,7 @@ LogosDialog {
                 }
 
                 // Location
-                Text { text: "Location"; font.pixelSize: 13; color: Theme.palette.textMuted }
+                Text { text: "Location"; font.pixelSize: 13; color: "#cdd6f4"Muted }
                 TextField {
                     id: locationField
                     Layout.fillWidth: true
@@ -399,7 +399,7 @@ LogosDialog {
                 }
 
                 // Description
-                Text { text: "Description"; font.pixelSize: 13; color: Theme.palette.textMuted }
+                Text { text: "Description"; font.pixelSize: 13; color: "#cdd6f4"Muted }
                 TextArea {
                     id: descField
                     Layout.fillWidth: true
@@ -413,7 +413,7 @@ LogosDialog {
                 }
 
                 // Reminder
-                Text { text: "Reminder"; font.pixelSize: 13; color: Theme.palette.textMuted }
+                Text { text: "Reminder"; font.pixelSize: 13; color: "#cdd6f4"Muted }
                 ComboBox {
                     id: reminderCombo
                     Layout.fillWidth: true
@@ -431,7 +431,7 @@ LogosDialog {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
-            color: Theme.palette.backgroundPrimary
+            color: "#1e1e2e"
             border.color: "#eee"
             border.width: 1
 
@@ -448,11 +448,11 @@ LogosDialog {
                     background: Rectangle {
                         radius: 6
                         color: parent.pressed ? Qt.darker(cancelBtnColor, 1.2)
-                             : parent.hovered ? cancelBtnColor : Theme.palette.backgroundMuted
+                             : parent.hovered ? cancelBtnColor : "#33334a"
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14
-                        color: Theme.palette.textMuted
+                        color: "#cdd6f4"Muted
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -485,11 +485,11 @@ LogosDialog {
                                : parent.hovered
                                  ? Qt.lighter(saveBtnColor, 1.1)
                                  : saveBtnColor)
-                            : Theme.palette.textMuted
+                            : "#cdd6f4"Muted
                     }
                     contentItem: Text {
                         text: parent.text; font.pixelSize: 14; font.bold: true
-                        color: Theme.palette.backgroundPrimary
+                        color: "#1e1e2e"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

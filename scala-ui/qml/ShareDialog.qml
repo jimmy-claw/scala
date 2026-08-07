@@ -22,8 +22,8 @@ Popup {
 
     background: Rectangle {
         radius: 12
-        color: Theme.palette.backgroundPrimary
-        border.color: Theme.palette.border
+        color: "#1e1e2e"
+        border.color: "#45475a"
         border.width: 1
     }
 
@@ -36,14 +36,14 @@ Popup {
             text: "Share Calendar"
             font.pixelSize: 18
             font.bold: true
-            color: Theme.palette.text
+            color: "#cdd6f4"
             Layout.fillWidth: true
         }
 
         Text {
             text: calendarName
             font.pixelSize: 14
-            color: Theme.palette.textMuted
+            color: "#cdd6f4"Muted
             Layout.fillWidth: true
             visible: calendarName.length > 0
         }
@@ -51,7 +51,7 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: Theme.palette.border
+            color: "#45475a"
         }
 
         // ── Tab bar ─────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ Popup {
                 Text {
                     text: "Share this link to invite others:"
                     font.pixelSize: 13
-                    color: Theme.palette.text
+                    color: "#cdd6f4"
                 }
 
                 // Link text field (read-only, selectable)
@@ -98,8 +98,8 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: Theme.palette.backgroundSecondary
-                        border.color: Theme.palette.border
+                        color: "#2a2a3c"
+                        border.color: "#45475a"
                         border.width: 1
                     }
                 }
@@ -123,12 +123,12 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: parent.pressed ? Theme.palette.primary : Theme.palette.primaryHover
+                        color: parent.pressed ? "#89b4fa" : "#89b4fa"Hover
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        color: Theme.palette.backgroundPrimary
+                        color: "#1e1e2e"
                         font.pixelSize: 13
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -151,7 +151,7 @@ Popup {
                     Layout.alignment: Qt.AlignHCenter
                     text: "(QR code placeholder)"
                     font.pixelSize: 11
-                    color: Theme.palette.textMuted
+                    color: "#cdd6f4"Muted
                     visible: qrDataUrl.length === 0
                 }
 
@@ -165,7 +165,7 @@ Popup {
                 Text {
                     text: "Paste a share link to join a calendar:"
                     font.pixelSize: 13
-                    color: Theme.palette.text
+                    color: "#cdd6f4"
                 }
 
                 TextField {
@@ -178,8 +178,8 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: Theme.palette.backgroundPrimary
-                        border.color: joinLinkField.activeFocus ? Theme.palette.primary : Theme.palette.border
+                        color: "#1e1e2e"
+                        border.color: joinLinkField.activeFocus ? "#89b4fa" : "#45475a"
                         border.width: 1
                     }
                 }
@@ -187,7 +187,7 @@ Popup {
                 Text {
                     id: joinError
                     Layout.fillWidth: true
-                    color: Theme.palette.error
+                    color: "#f38ba8"
                     font.pixelSize: 12
                     visible: text.length > 0
                 }
@@ -204,15 +204,15 @@ Popup {
 
                     background: Rectangle {
                         radius: 6
-                        color: !parent.enabled ? Theme.palette.textMuted
-                             : parent.pressed ? Theme.palette.error
-                             : parent.hovered ? Theme.palette.successHover
-                             : Theme.palette.success
+                        color: !parent.enabled ? "#cdd6f4"Muted
+                             : parent.pressed ? "#f38ba8"
+                             : parent.hovered ? "#a6e3a1"Hover
+                             : "#a6e3a1"
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        color: Theme.palette.backgroundPrimary
+                        color: "#1e1e2e"
                         font.pixelSize: 13
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -233,7 +233,7 @@ Popup {
 
             contentItem: Text {
                 text: parent.text
-                color: Theme.palette.textMuted
+                color: "#cdd6f4"Muted
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

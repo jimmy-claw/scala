@@ -7,15 +7,15 @@ import Logos.Controls
 
 Rectangle {
     id: root
-    color: Theme.palette.backgroundSecondary
-    border.color: Theme.palette.border
+    color: "#2a2a3c"
+    border.color: "#45475a"
     border.width: 1
 
     // ── Theme (from Logos design system) ─────────────────────────────────
-    readonly property color titleColor: Theme.palette.text
-    readonly property color subtitleColor: Theme.palette.textMuted
-    readonly property color accentColor: Theme.palette.primary
-    readonly property color newBtnColor: Theme.palette.primary
+    readonly property color titleColor: "#cdd6f4"
+    readonly property color subtitleColor: "#cdd6f4"Muted
+    readonly property color accentColor: "#89b4fa"
+    readonly property color newBtnColor: "#89b4fa"
 
     // ── Data ───────────────────────────────────────────────────────────────
     property var calendarModel: null
@@ -75,7 +75,7 @@ Rectangle {
             width: parent ? parent.width : 200
             height: 40
             radius: 6
-            color: delMouse.containsMouse ? Theme.palette.backgroundMuted : "transparent"
+            color: delMouse.containsMouse ? "#33334a" : "transparent"
 
             property string itemCalId
             property string itemCalName
@@ -125,7 +125,7 @@ Rectangle {
 
                     background: Rectangle {
                         radius: 4
-                        color: parent.hovered ? Theme.palette.backgroundSecondary : "transparent"
+                        color: parent.hovered ? "#2a2a3c" : "transparent"
                     }
                 }
 
@@ -156,7 +156,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: Theme.palette.border
+            color: "#45475a"
         }
 
         // ── Scrollable calendar sections ─────────────────────────────────
@@ -208,7 +208,7 @@ Rectangle {
                         text: "No calendars yet"
                         font.pixelSize: 12
                         font.italic: true
-                        color: Theme.palette.textMuted
+                        color: "#cdd6f4"Muted
                         leftPadding: 8
                         topPadding: 4
                     }
@@ -218,7 +218,7 @@ Rectangle {
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: Theme.palette.border
+                    color: "#45475a"
                     visible: importedCalendars().length > 0
                 }
 
