@@ -10,24 +10,54 @@ Item {
     width: 800
     height: 600
 
-    // ── Backend (typed replica, generated from scala_ui_backend.rep) ───────
-    readonly property var backend: logos.module("scala_ui")
+    // ── Core access (PURE QML — call the scala CORE directly, no view backend) ─
+    // A redundant C++ view backend (1:1 proxy to the core) was the ui_qml+backend
+    // +custom-core combo that stopped this view from loading in Basecamp. The core
+    // exposes every action the view needs, so we call it directly. logos.callModule
+    // is SYNCHRONOUS — never call it during view construction (freezes the view);
+    // the first refresh is deferred with Qt.callLater so the view paints first.
     property bool ready: false
+    property string currentIdentity: ""
 
-    Connections {
-        target: logos
-        function onViewModuleReadyChanged(moduleName, isReady) {
-            if (moduleName === "scala_ui")
-                root.ready = isReady && root.backend !== null
-        }
+    function core(method, args) {
+        if (typeof logos === "undefined" || !logos.callModule) return ""
+        var r = logos.callModule("scala", method, args || [])
+        return (r === undefined || r === null) ? "" : String(r)
     }
-    Component.onCompleted: {
-        root.ready = root.backend !== null && logos.isViewModuleReady("scala_ui")
+    // backend.X(args) → synchronous core call, so every existing call-site works.
+    readonly property var backend: ({
+        getIdentity:         function()     { return root.core("getIdentity", []) },
+        createCalendar:      function(n, c) { return root.core("createCalendar", [n, c]) },
+        listCalendars:       function()     { return root.core("listCalendars", []) },
+        deleteCalendar:      function(id)   { return root.core("deleteCalendar", [id]) },
+        createEvent:         function(c, e) { return root.core("createEvent", [c, e]) },
+        updateEvent:         function(e)    { return root.core("updateEvent", [e]) },
+        deleteEvent:         function(id)   { return root.core("deleteEvent", [id]) },
+        listEvents:          function(id)   { return root.core("listEvents", [id]) },
+        getEvent:            function(id)   { return root.core("getEvent", [id]) },
+        shareCalendar:       function(id)   { return root.core("shareCalendar", [id]) },
+        joinSharedCalendar:  function(i, k) { return root.core("joinSharedCalendar", [i, k]) },
+        getSyncStatus:       function(id)   { return root.core("getSyncStatus", [id]) },
+        generateShareLink:   function(id)   { return root.core("generateShareLink", [id]) },
+        parseShareLink:      function(l)    { return root.core("parseShareLink", [l]) },
+        handleShareLink:     function(l)    { return root.core("handleShareLink", [l]) },
+        searchEvents:        function(q)    { return root.core("searchEvents", [q]) },
+        getPendingReminders: function()     { return root.core("getPendingReminders", []) },
+        setSetting:          function(k, v) { return root.core("setSetting", [k, v]) },
+        getSetting:          function(k, d) { return root.core("getSetting", [k, d]) }
+    })
+    // backend.X() is now synchronous → deliver the value to the success callback
+    // immediately (keeps every _watch(...) call-site unchanged).
+    function _watch(value, ok, err) { if (ok) ok(value) }
+
+    Component.onCompleted: Qt.callLater(function() {
+        root.ready = (typeof logos !== "undefined" && !!logos.callModule)
         if (root.ready) {
+            root.currentIdentity = root.core("getIdentity", [])
             _loadSettings()
             _refreshAll()
         }
-    }
+    })
 
     // ── Theme colors (from Logos design system) ───────────────────────────
     readonly property color primaryColor: "#89b4fa"
@@ -61,7 +91,7 @@ Item {
 
     function _refreshCalendars() {
         if (!root.ready) return
-        logos.watch(backend.listCalendars(),
+        _watch(backend.listCalendars(),
             function(value) {
                 calendarList = JSON.parse(value || "[]")
                 updateSidebarModel()
@@ -77,7 +107,7 @@ Item {
         var remaining = calendarList.length
         for (var i = 0; i < calendarList.length; i++) {
             var calId = calendarList[i].id
-            logos.watch(backend.listEvents(calId),
+            _watch(backend.listEvents(calId),
                 function(value) {
                     var evts = JSON.parse(value || "[]")
                     allEvents = allEvents.concat(evts)
@@ -258,7 +288,7 @@ Item {
     // ── Settings helpers ───────────────────────────────────────────────────
     function _loadSettings() {
         if (!root.ready) return
-        logos.watch(backend.getSetting("defaultView", "month"),
+        _watch(backend.getSetting("defaultView", "month"),
             function(value) {
                 if (value === "month" || value === "week" || value === "day")
                     viewMode = value
@@ -285,7 +315,7 @@ Item {
             Layout.preferredWidth: 220
             Layout.fillHeight: true
             calendarModel: sidebarCalendarModel
-            currentIdentity: (root.ready && root.backend) ? backend.currentIdentity : ""
+            currentIdentity: (root.ready && root.backend) ? root.currentIdentity : ""
 
             onCalendarToggled: function(calId, vis) {
                 console.log("Calendar toggled:", calId, vis);
@@ -299,7 +329,7 @@ Item {
             }
             onShareRequested: function(calId, calName) {
                 if (!root.ready) return
-                logos.watch(backend.generateShareLink(calId),
+                _watch(backend.generateShareLink(calId),
                     function(value) {
                         shareDialog.shareLink = value
                         shareDialog.open()
@@ -329,7 +359,7 @@ Item {
                 }
 
                 LogosText {
-                    readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
+                    readonly property string ident: (root.ready && root.backend) ? root.currentIdentity : ""
                     text: ident.length > 0 ? "ID: " + ident.substring(0,8) + "..." : ""
                     font.pixelSize: Theme.typography.caption
                     color: "#9399b2"
@@ -367,7 +397,7 @@ Item {
                 }
 
                     Text {
-                        readonly property string ident: (root.ready && root.backend) ? backend.currentIdentity : ""
+                        readonly property string ident: (root.ready && root.backend) ? root.currentIdentity : ""
                         text: ident.length > 0 ? "ID: " + ident.substring(0,8) + "..." : ""
                         color: "#ccddee"
                         font.pixelSize: 11
@@ -390,7 +420,7 @@ Item {
                     implicitWidth: 180
                     onTextChanged: {
                         if (text.length >= 2 && root.ready) {
-                            logos.watch(backend.searchEvents(text),
+                            _watch(backend.searchEvents(text),
                                 function(value) { searchResults = JSON.parse(value || "[]") },
                                 function(error) { console.warn("[scala] search failed:", error) }
                             )
@@ -964,7 +994,7 @@ Item {
 
                     onEditRequested: function(evId) {
                         if (!root.ready) return
-                        logos.watch(backend.getEvent(evId),
+                        _watch(backend.getEvent(evId),
                             function(value) {
                                 _loadEventForEdit(JSON.parse(value || "{}"))
                             },
@@ -995,7 +1025,7 @@ Item {
 
                     onDeleteConfirmed: function(evId) {
                         if (!root.ready) return
-                        logos.watch(backend.deleteEvent(evId),
+                        _watch(backend.deleteEvent(evId),
                             function(value) {
                                 refreshEvents()
                                 calendarGrid.events = eventsForGrid()
@@ -1033,7 +1063,7 @@ Item {
                 evJson.id = eventData.id
                 evJson.calendarId = eventData.calendarId
                 if (!root.ready) return
-                logos.watch(backend.updateEvent(JSON.stringify(evJson)),
+                _watch(backend.updateEvent(JSON.stringify(evJson)),
                     function(value) { _onEventSaved() },
                     function(error) { console.warn("[scala] updateEvent failed:", error) }
                 )
@@ -1042,7 +1072,7 @@ Item {
                     || (calendarList.length > 0 ? calendarList[0].id : "")
                 evJson.calendarId = calId
                 if (!root.ready) return
-                logos.watch(backend.createEvent(calId, JSON.stringify(evJson)),
+                _watch(backend.createEvent(calId, JSON.stringify(evJson)),
                     function(value) { _onEventSaved() },
                     function(error) { console.warn("[scala] createEvent failed:", error) }
                 )
@@ -1137,7 +1167,7 @@ Item {
                         if (!root.ready) return
                         var name = newCalNameField.text.trim()
                         var color = newCalendarDialog.selectedColor
-                        logos.watch(backend.createCalendar(name, color),
+                        _watch(backend.createCalendar(name, color),
                             function(value) {
                                 refreshCalendars()
                                 refreshEvents()
@@ -1169,7 +1199,7 @@ Item {
 
         onJoinRequested: function(link) {
             if (!root.ready) return
-            logos.watch(backend.handleShareLink(link),
+            _watch(backend.handleShareLink(link),
                 function(value) {
                     if (value) {
                         refreshCalendars()

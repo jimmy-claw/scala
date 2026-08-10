@@ -1,13 +1,13 @@
 {
-  description = "Scala Calendar UI — QML view with C++ backend for Logos";
+  description = "Scala Calendar UI — pure-QML view over the scala core module";
 
   inputs = {
-    # Use master (not 0.2.0 tag) — 0.2.0 pins old cpp-sdk missing lidl-frontend files
-    logos-module-builder.url = "github:logos-co/logos-module-builder";
-
-    # Points at scala core module. Override for local dev:
-    # nix flake update --override-input scala path:/home/vpavlin/scala
+    # Pin to the SAME builder the scala core uses (full 40-char SHA) so the view,
+    # core and host stay on one SDK. An unpinned builder was building the view
+    # against a different rev than the core — part of why it never loaded.
+    logos-module-builder.url = "github:logos-co/logos-module-builder/afe4430ee6eb7ba45c08a516a43e18500720c715";
     scala.url = "github:jimmy-claw/scala";
+    scala.inputs.logos-module-builder.follows = "logos-module-builder";
   };
 
   outputs = inputs@{ logos-module-builder, scala, ... }:
